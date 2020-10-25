@@ -1,0 +1,32 @@
+{
+  "content": "<@!{message.author.id}> vielen Dank für deine Frage",
+  "embed": {
+    "title": "Datenschutz",
+    "description": "Datenschutz ich wichtig, darum will ich dir auch gerne sagen, was ich verarbeite und was ich wie lange speichere. Natürlich kann sich dies von Zeit zu Zeit mal ändern, also frag mich gerne regelmäßig mal nach dem neuesten Stand.",
+    "color": 1234122,
+    "footer": {
+      "text": "Erstellt am 07.10.2020 19:20 Uhr"
+    },
+
+    "author": {
+      "name": "Marcel (Anthony)"
+
+    },
+    "fields": [
+      {
+        "name": "passives Verarbeiten:",
+        "value": "Für jedes 'Event' auf diesem Server werde benachrichtigt. Dabei bekomme ich alle Informationen über dieses Event. Wenn du beispielsweise eine Nachricht schreibst, oder einem Sprachkanal beitrittst, dann erlange ich davon Kenntnis. Dies bedeutet aber nicht, dass ich diese Information benutze."
+      },
+
+      {
+        "name": "aktives Verarbeiten:",
+        "value": "Diese Reaktion <:read:762601788200321025> siehst du doch sicher gerade bei deiner Nachricht.\n'!my data' oder? Damit kennzeichne ich Nachrichten, die ich verarbeite."
+      },
+
+            {
+        "name": "Speichern:",
+        "value": "Derzeit speichere ich keine Daten über dich oder andere hier.\nDennoch weise ich wie bei beim passiven Verarbeiten darauf hin, dass einige dieser Events möglicherweise im Cache gespeichert sind. Dieser wird nach einiger Zeit aber wieder gelöscht."
+      }
+    ]
+  }
+}
