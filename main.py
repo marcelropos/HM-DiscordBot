@@ -12,7 +12,7 @@ bot.remove_command('help')
 
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py") and \
-            filename != "__init__.py":
+            filename != "main.py":
         bot.load_extension(f"cogs.{filename[:-3]}")
 
 

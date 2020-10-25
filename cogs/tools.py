@@ -1,0 +1,34 @@
+from discord.ext import commands
+# noinspection PyUnresolvedReferences
+import discord
+from utils import Roles
+
+
+class Tools(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command(aliases="get-members")
+    @commands.has_role(Roles.HM)
+    async def get_members(self, ctx):
+        rolecount = dict()
+        reply = "Liste aller Rollen und ihre Mitgliederzahl:\n"
+        async for member in ctx.guild.fetch_members(limit=500):
+            for x in member.roles:
+                name = x.name.replace("@", "")
+                if name not in rolecount:
+                    rolecount[name] = 1
+                else:
+                    rolecount[name] += 1
+
+        rolecount["Not verified"] = rolecount[Roles.INFORMATIK] + rolecount[Roles.WIRTSCHAFTSINFORMATIK] + \
+                                    rolecount[Roles.DATA_SCIENCE] - rolecount[Roles.HM]
+
+        for x in rolecount:
+            reply += f"{x}: {rolecount[x]}\n"
+
+        await ctx.send(reply)
+
+
+def setup(bot):
+    bot.add_cog(Tools(bot))

@@ -83,18 +83,6 @@ class Admin(commands.Cog):
     async def reply(self, ctx, *, args):
         await ctx.send(args)
 
-    @commands.command()
-    @commands.is_owner()
-    async def get_members(self, ctx):
-        rolecount = dict()
-        reply = ""
-        async for member in ctx.guild.fetch_members(limit=500):
-            for x in member.roles:
-                if x.name not in rolecount:
-                    rolecount[x.name] = 1
-                else:
-                    rolecount[x.name] += 1
-
 
 def setup(bot):
     bot.add_cog(Admin(bot))
