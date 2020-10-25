@@ -33,7 +33,7 @@ class ServerIds:
     CUSTOM_CHANNELS = 763071118042333226
 
 
-class Roles:
+class ServerRoles:
     INFORMATIK = "IF"
     WIRTSCHAFTSINFORMATIK = "IB"
     DATA_SCIENCE = "DC"
@@ -45,6 +45,7 @@ class Roles:
     IB1C = "IB1C"
     IB1D = "IB1D"
     NSFW = "NSFW"
+    CODEING = "coding"
 
     ALL_COURSES = {
         "Informatik",

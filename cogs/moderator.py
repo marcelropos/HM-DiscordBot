@@ -2,7 +2,7 @@
 from discord.ext import commands
 from utils import *
 # noinspection PyUnresolvedReferences
-from settings import Roles
+from settings import ServerRoles
 
 
 class Moderator(commands.Cog):

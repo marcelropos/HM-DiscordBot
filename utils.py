@@ -2,7 +2,7 @@ from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
 # noinspection PyUnresolvedReferences
-from settings import Roles, ServerIds, ReadWrite
+from settings import ServerRoles, ServerIds, ReadWrite
 import pyotp
 
 
@@ -17,7 +17,7 @@ class ModuleError(commands.CommandError):
 def mods_or_owner():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.check_any(commands.is_owner(), commands.has_role(Roles.MODERATOR_ROLE_NAME))
+        return commands.check_any(commands.is_owner(), commands.has_role(ServerRoles.MODERATOR_ROLE_NAME))
 
     return commands.check(predicate)
 
@@ -25,7 +25,7 @@ def mods_or_owner():
 def is_study():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.has_any_role(Roles.INFORMATIK, Roles.WIRTSCHAFTSINFORMATIK, Roles.DATA_SCIENCE)
+        return commands.has_any_role(ServerRoles.INFORMATIK, ServerRoles.WIRTSCHAFTSINFORMATIK, ServerRoles.DATA_SCIENCE)
 
     return commands.check(predicate)
 
@@ -33,7 +33,7 @@ def is_study():
 def is_in_group():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.has_any_role(Roles.IF1A, Roles.IF1B, Roles.IB1A, Roles.IB1B, Roles.IB1C, Roles.IB1D)
+        return commands.has_any_role(ServerRoles.IF1A, ServerRoles.IF1B, ServerRoles.IB1A, ServerRoles.IB1B, ServerRoles.IB1C, ServerRoles.IB1D)
 
     return commands.check(predicate)
 

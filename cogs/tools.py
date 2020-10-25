@@ -1,15 +1,15 @@
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
-from utils import Roles
+from utils import ServerRoles
 
 
 class Tools(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases="get-members")
-    @commands.has_role(Roles.HM)
+    @commands.command(aliases=["get-members"])
+    @commands.has_role(ServerRoles.HM)
     async def get_members(self, ctx):
         rolecount = dict()
         reply = "Liste aller Rollen und ihre Mitgliederzahl:\n"
@@ -21,8 +21,8 @@ class Tools(commands.Cog):
                 else:
                     rolecount[name] += 1
 
-        rolecount["Not verified"] = rolecount[Roles.INFORMATIK] + rolecount[Roles.WIRTSCHAFTSINFORMATIK] + \
-                                    rolecount[Roles.DATA_SCIENCE] - rolecount[Roles.HM]
+        rolecount["Not verified"] = rolecount[ServerRoles.INFORMATIK] + rolecount[ServerRoles.WIRTSCHAFTSINFORMATIK] + \
+                                    rolecount[ServerRoles.DATA_SCIENCE] - rolecount[ServerRoles.HM]
 
         for x in rolecount:
             reply += f"{x}: {rolecount[x]}\n"

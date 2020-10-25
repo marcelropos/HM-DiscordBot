@@ -22,7 +22,7 @@ class TempChannels(commands.Cog):
 
     # noinspection PyBroadException
     @commands.command()
-    @commands.has_role(Roles.HM)
+    @commands.has_role(ServerRoles.HM)
     async def tmpc(self, ctx, *, arg):
         member = await ctx.guild.fetch_member(ctx.author.id)
         if member.id in TMP_CHANNELS.tmp_channels:
