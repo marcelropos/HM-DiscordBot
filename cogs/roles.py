@@ -165,6 +165,12 @@ class Roles(commands.Cog):
         role = discord.utils.get(ctx.guild.roles, name=Roles.NSFW)
         await ctx.author.remove_roles(role)
 
+    @commands.command()
+    @commands.has_role(Roles.HM)
+    async def coding(self, ctx):
+        role = discord.utils.get(ctx.guild.roles, name="coding")
+        await ctx.author.add_roles(role)
+
 
 def setup(bot):
     bot.add_cog(Roles(bot))

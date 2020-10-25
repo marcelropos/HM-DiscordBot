@@ -42,6 +42,9 @@ class Help(commands.Cog):
                                 Schritt 6.
                                 Alle verlassen den Channel, der Channel wird gelöscht.
                                 """)
+
+            embed.add_field(name="Bot Coder", value="Mit `!coding` kannst du teil des Botcoding Teams werden.")
+
             embed.add_field(name="Demnächst:",
                             value="Hier werden bald noch weitere tolle Funktionen erscheinen. Ich bitte "
                                   "allerdings noch um Geduld.")
