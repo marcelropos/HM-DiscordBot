@@ -1,7 +1,8 @@
+# noinspection PyPackageRequirements
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
-from utils import ServerRoles
+from utils import ServerRoles, DictSort
 
 
 class Tools(commands.Cog):
@@ -10,10 +11,10 @@ class Tools(commands.Cog):
 
     @commands.command(aliases=["get-members"])
     @commands.has_role(ServerRoles.HM)
-    async def get_members(self, ctx):
+    async def get_members(self, ctx, sort_type="ByName", rev="False"):
         rolecount = dict()
         reply = "Liste aller Rollen und ihre Mitgliederzahl:\n"
-        async for member in ctx.guild.fetch_members(limit=500):
+        async for member in ctx.guild.fetch_members(limit=None):
             for x in member.roles:
                 name = x.name.replace("@", "")
                 if name not in rolecount:
@@ -23,6 +24,16 @@ class Tools(commands.Cog):
 
         rolecount["Not verified"] = rolecount[ServerRoles.INFORMATIK] + rolecount[ServerRoles.WIRTSCHAFTSINFORMATIK] + \
                                     rolecount[ServerRoles.DATA_SCIENCE] - rolecount[ServerRoles.HM]
+
+        if rev.lower() == "true":
+            rev = True
+        else:
+            rev = False
+
+        if "bycount" == sort_type.lower():
+            rolecount = DictSort.sort_by_value(rolecount, rev)
+        else:
+            rolecount = DictSort.sort_by_key(rolecount, rev)
 
         for x in rolecount:
             reply += f"{x}: {rolecount[x]}\n"

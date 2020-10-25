@@ -25,7 +25,8 @@ def mods_or_owner():
 def is_study():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.has_any_role(ServerRoles.INFORMATIK, ServerRoles.WIRTSCHAFTSINFORMATIK, ServerRoles.DATA_SCIENCE)
+        return commands.has_any_role(ServerRoles.INFORMATIK, ServerRoles.WIRTSCHAFTSINFORMATIK,
+                                     ServerRoles.DATA_SCIENCE)
 
     return commands.check(predicate)
 
@@ -33,7 +34,8 @@ def is_study():
 def is_in_group():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.has_any_role(ServerRoles.IF1A, ServerRoles.IF1B, ServerRoles.IB1A, ServerRoles.IB1B, ServerRoles.IB1C, ServerRoles.IB1D)
+        return commands.has_any_role(ServerRoles.IF1A, ServerRoles.IF1B, ServerRoles.IB1A, ServerRoles.IB1B,
+                                     ServerRoles.IB1C, ServerRoles.IB1D)
 
     return commands.check(predicate)
 
@@ -43,6 +45,27 @@ def mk_token():
     totp = pyotp.TOTP(secret)
     otp = totp.now()
     return str(otp)
+
+
+class DictSort:
+
+    @staticmethod
+    def sort_by_key(payload: dict, reverse=False):
+        is_sorted = sorted(payload.items(), key=lambda t: t[0], reverse=reverse)
+        return DictSort.make_dict(is_sorted)
+
+    @staticmethod
+    def sort_by_value(payload: dict, reverse=False):
+        is_sorted = sorted(payload.items(), key=lambda t: t[1], reverse=reverse)
+        return DictSort.make_dict(is_sorted)
+
+    @staticmethod
+    def make_dict(payload: list):
+        result = dict()
+        for x in payload:
+            key, val = x
+            result[key] = val
+        return result
 
 
 # noinspection PyPep8Naming
@@ -70,6 +93,7 @@ class TMP_CHANNELS:
         if not cls.bot:
             cls.bot = bot
         else:
+            # noinspection PyUnusedLocal
             bot = cls.bot
 
         try:

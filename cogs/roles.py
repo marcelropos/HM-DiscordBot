@@ -19,24 +19,6 @@ class MultipleCoursesError(UserError):
     pass
 
 
-"""async def check_is_study(ctx):
-    for x in ctx.author.roles:
-        if x.name == INFORMATIK or \
-                x.name == WIRTSCHAFTSINFORMATIK or \
-                x.name == DATA_SCIENCE:
-            await ctx.send(f"Verweigert, du besitzt bereits einen Studiengang.")
-            return False
-    return True
-
-
-async def check_hash_group(ctx):
-    for x in ctx.author.roles:
-        if x.name in ALL_GROUPS:
-            await ctx.send(f"Verweigert, du bist bereits teil einer Gruppe.")
-            return False
-    return True"""
-
-
 class Course(Enum):
     INFORMATIK = "IF"
     WIRTSCHAFTSINFORMATIK = "IB"

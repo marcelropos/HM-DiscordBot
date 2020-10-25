@@ -3,7 +3,6 @@ import json
 import os
 from settings import Directories
 from threading import Lock
-import pickle
 
 
 class ReadWrite:
@@ -23,7 +22,7 @@ class ReadWrite:
                 # Backup old data
                 if file_exists:
                     with open(file, "rb") as f:
-                        tmpf.write(f.read())
+                        tmpf.write(f.read().decode())
 
                 # noinspection PyBroadException
                 try:
@@ -35,7 +34,7 @@ class ReadWrite:
                     if file_exists:
                         with open(file, "wb") as f:
                             tmpf.seek(0)
-                            f.write(tmpf.read())
+                            f.write(tmpf.read().encode())
                     raise e
 
                 finally:
@@ -51,6 +50,7 @@ class ReadWrite:
                 with open(file, "r")as f:
                     payload = json.loads(f.read())
             except Exception as e:
+                print(e)
                 payload = dict()
             finally:
                 os.chdir(Directories.ROOT_DIR)

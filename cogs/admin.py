@@ -24,7 +24,6 @@ class Admin(commands.Cog):
     async def activity(self, ctx, *, arg):
         activity = discord.Game(name=arg)
         await discord.Client.change_presence(self=self.bot, activity=activity)
-        channel = discord.Client.get_channel(self=self.bot, id=762736695116169217)
 
     @commands.command()
     @commands.is_owner()
@@ -40,7 +39,6 @@ class Admin(commands.Cog):
             status = discord.Status.dnd
 
         await discord.Client.change_presence(self=self.bot, status=status)
-        channel = discord.Client.get_channel(self=self.bot, id=762736695116169217)
 
     @commands.command()
     @commands.is_owner()
