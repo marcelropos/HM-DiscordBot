@@ -2,7 +2,7 @@ from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
 # noinspection PyUnresolvedReferences
-from settings import ServerRoles, ServerIds, ReadWrite
+from settings import ServerRoles, ServerIds, ReadWrite, EmojiIds
 import pyotp
 
 
@@ -135,3 +135,19 @@ class TMP_CHANNELS:
         except Exception as e:
             print(e)
             pass
+
+
+async def nerd_ecke(bot, member):
+    all_roles = member.guild.roles
+    role = None
+    for x in all_roles:
+        if x.name == "@everyone":
+            role = x
+
+    channel = await bot.fetch_channel(760453011188875303)
+    members = len(channel.members)
+
+    if members > 0:
+        await channel.set_permissions(role, connect=True)
+    else:
+        await channel.set_permissions(role, connect=False)

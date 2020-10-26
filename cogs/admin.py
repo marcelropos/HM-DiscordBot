@@ -79,6 +79,7 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def reply(self, ctx, *, args):
+        print(args)
         await ctx.send(args)
 
 

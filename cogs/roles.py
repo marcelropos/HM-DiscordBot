@@ -85,7 +85,7 @@ class Roles(commands.Cog):
     @commands.has_role(ServerRoles.HM)
     async def study(self, ctx, arg: StudyCourseConverter):
         got_roles = {role.name for role in ctx.author.roles}
-        if len(got_roles.intersection(ALL_COURSES)):
+        if len(got_roles.intersection(ServerRoles.ALL_COURSES)):
             raise MultipleCoursesError("Du kannst darfst nur einen Studiengang haben")
 
         if arg == Course.INFORMATIK:
@@ -107,15 +107,15 @@ class Roles(commands.Cog):
     @commands.has_role(ServerRoles.HM)
     async def group(self, ctx, arg: StudyGroupsConverter):
         got_roles = {role.name for role in ctx.author.roles}
-        if len(got_roles.intersection(ALL_GROUPS)):
+        if len(got_roles.intersection(ServerRoles.ALL_GROUPS)):
             raise MultipleGroupsError("Du darfst nicht mehr als einer Gruppe angehören.")
 
         if arg.course == Course.INFORMATIK:
-            if not any((role.name == INFORMATIK for role in ctx.author.roles)):
+            if not any((role.name == ServerRoles.INFORMATIK for role in ctx.author.roles)):
                 raise RoleNotFoundError("Nicht im Studiengang Informatik. ```!help roles``` für mehr Informationen.")
 
         elif arg.course == Course.WIRTSCHAFTSINFORMATIK:
-            if not any((role.name == WIRTSCHAFTSINFORMATIK for role in ctx.author.roles)):
+            if not any((role.name == ServerRoles.WIRTSCHAFTSINFORMATIK for role in ctx.author.roles)):
                 raise RoleNotFoundError("Nicht im Studiengang Wirtschaftsinformatik. ```!help roles``` für mehr "
                                         "Informationen.")
 

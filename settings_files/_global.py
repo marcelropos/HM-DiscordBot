@@ -7,6 +7,11 @@ class Directories:
     DATA_DIR = os.path.join(ROOT_DIR, 'data')
 
 
+class EmojiIds:
+    Success = 769239335668809779
+    Failed = 769239337887596624
+
+
 class DefaultMessages:
     GREETINGS = "System online, waiting for your demands."
     ACTIVITY = "Hört auf !help"
@@ -21,7 +26,7 @@ def DISCORD_BOT_TOKEN():
 # noinspection PyPep8Naming
 def DEBUG_STATUS():
     DEBUG = int(os.environ["DEBUG"])
-    if DEBUG:
+    if DEBUG == "1" or DEBUG == "true":
         return True
     else:
         return False

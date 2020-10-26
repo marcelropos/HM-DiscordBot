@@ -22,7 +22,7 @@ class ReadWrite:
                 # Backup old data
                 if file_exists:
                     with open(file, "rb") as f:
-                        tmpf.write(f.read().decode())
+                        tmpf.write(f.read())
 
                 # noinspection PyBroadException
                 try:
@@ -34,7 +34,7 @@ class ReadWrite:
                     if file_exists:
                         with open(file, "wb") as f:
                             tmpf.seek(0)
-                            f.write(tmpf.read().encode())
+                            f.write(tmpf.read())
                     raise e
 
                 finally:

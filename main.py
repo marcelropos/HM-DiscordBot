@@ -4,7 +4,7 @@ from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import os
 from settings import ServerIds, DISCORD_BOT_TOKEN, ReadWrite
-from utils import UserError, ModuleError
+from utils import UserError, ModuleError, EmojiIds
 from discord.ext.commands import CommandNotFound
 
 bot = commands.Bot(command_prefix="!")
@@ -19,9 +19,10 @@ for filename in os.listdir("./cogs"):
 @bot.after_invoke
 async def reply_with_read(ctx):
     if not ctx.command_failed:
-        await ctx.message.add_reaction("✅")
+        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
     else:
-        await ctx.message.add_reaction("❌")
+        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+    await ctx.message.add_reaction(emoji=emoji)
 
 
 @bot.event
