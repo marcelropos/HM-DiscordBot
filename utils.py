@@ -144,7 +144,7 @@ async def nerd_ecke(bot, member):
         if x.name == "@everyone":
             role = x
 
-    channel = await bot.fetch_channel(760453011188875303)
+    channel = await bot.fetch_channel(ServerIds.NERD_ECKE)
     members = len(channel.members)
 
     if members > 0:

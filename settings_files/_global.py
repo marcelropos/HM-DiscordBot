@@ -19,7 +19,7 @@ class DefaultMessages:
 
 # noinspection PyPep8Naming
 def DISCORD_BOT_TOKEN():
-    token = os.environ["token"]
+    token = os.environ["TOKEN"]
     return token
 
 
@@ -36,6 +36,7 @@ class ServerIds:
     DEBUG_CHAT = 762736695116169217
     GUILD_ID = 760453010752143372
     CUSTOM_CHANNELS = 763071118042333226
+    NERD_ECKE = 760453011188875303
 
 
 class ServerRoles:

@@ -82,6 +82,12 @@ class Admin(commands.Cog):
         print(args)
         await ctx.send(args)
 
+    @commands.command()
+    @commands.is_owner()
+    async def msg(self, ctx, channel_id, *, args):
+        channel = await self.bot.fetch_channel(channel_id)
+        await channel.send(args)
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))

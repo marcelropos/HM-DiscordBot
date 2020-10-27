@@ -141,6 +141,8 @@ class Help(commands.Cog):
         embed.add_field(name="data-Science:", value="```!study DC``` ")
         embed.add_field(name="Falsche(r) Studiengang/Gruppe", value="```Deine Rolle kan nur"
                                                                     " vom Admin entfern werden```")
+        embed.add_field(name="NSFW", value="Mit `!nsfw-add` oder `!nsfw-rem` kannst du dir die Rolle für den Channel: "
+                                           "`!nsfw-memes` geben.")
 
         await ctx.send(content=f"<@!{ctx.author.id}> vielen Dank für deine Frage.", embed=embed)
 
