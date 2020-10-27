@@ -1,0 +1,6 @@
+version: '3'
+services:
+  hm-bot:
+    image: hm-bot:latest
+    environment:
+      TOKEN: [TOKEN-HERE]
