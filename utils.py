@@ -119,8 +119,8 @@ class TMP_CHANNELS:
             if len(members) == 0:
                 del cls.tmp_channels[x]
                 del cls.token[token]
-                await text.delete()
-                await voice.delete()
+                await text.delete(reason="No longer used")
+                await voice.delete(reason="No longer used")
         cls.save_data()
 
     @classmethod
@@ -148,6 +148,6 @@ async def nerd_ecke(bot, member):
     members = len(channel.members)
 
     if members > 0:
-        await channel.set_permissions(role, connect=True)
+        await channel.set_permissions(role, connect=True, reason="Nerd is here.")
     else:
-        await channel.set_permissions(role, connect=False)
+        await channel.set_permissions(role, connect=False, reason="No nerds are here.")

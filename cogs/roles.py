@@ -101,7 +101,7 @@ class Roles(commands.Cog):
             print("Debug")
             return
 
-        await ctx.author.add_roles(role)
+        await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
     @commands.has_role(ServerRoles.HM)
@@ -120,7 +120,7 @@ class Roles(commands.Cog):
                                         "Informationen.")
 
         role = discord.utils.get(ctx.guild.roles, name=str(arg))
-        await ctx.author.add_roles(role)
+        await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
     @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
@@ -133,25 +133,25 @@ class Roles(commands.Cog):
         # noinspection PyUnboundLocalVariable
         member = await ctx.guild.fetch_member(user_id)
         role = discord.utils.get(ctx.guild.roles, name=ServerRoles.HM)
-        await member.add_roles(role)
+        await member.add_roles(role, reason="request by Mod")
 
     @commands.command(aliases=["nsfw-add"])
     @commands.has_role(ServerRoles.HM)
     async def nsfw_add(self, ctx):
         role = discord.utils.get(ctx.guild.roles, name=ServerRoles.NSFW)
-        await ctx.author.add_roles(role)
+        await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command(aliases=["nsfw-rem"])
     @commands.has_role(ServerRoles.HM)
     async def nsfw_rem(self, ctx):
         role = discord.utils.get(ctx.guild.roles, name=ServerRoles.NSFW)
-        await ctx.author.remove_roles(role)
+        await ctx.author.remove_roles(role, reason="request by user")
 
     @commands.command()
     @commands.has_role(ServerRoles.HM)
     async def coding(self, ctx):
         role = discord.utils.get(ctx.guild.roles, name=ServerRoles.CODEING)
-        await ctx.author.add_roles(role)
+        await ctx.author.add_roles(role, reason="request by user")
 
 
 def setup(bot):

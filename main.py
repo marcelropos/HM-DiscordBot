@@ -28,20 +28,31 @@ async def reply_with_read(ctx):
 @bot.event
 async def on_command_error(ctx, e):
     if isinstance(e, CommandNotFound):
-        await ctx.send("Befehl nicht gefunden.")
-        await ctx.message.add_reaction("❌")
+        await ctx.send("Befehl nicht gefunden. `!help` für mehr Information.")
+        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+        await ctx.message.add_reaction(emoji=emoji)
+
     elif isinstance(e, UserError) or\
             isinstance(e, discord.ext.commands.BadArgument) or\
             isinstance(e, ModuleError):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n{str(e)}")
+        await ctx.send(f"<@!{ctx.message.author.id}>\n`{str(e)}`")
+
     elif isinstance(e, discord.ext.commands.MissingRole):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n Du hast nicht genügend Rechte für diesen Befehl.")
+        await ctx.send(f"<@!{ctx.message.author.id}>\n Du hast nicht genügend Rechte für diesen Befehl.\n`{str(e)}`")
+
     elif isinstance(e, discord.ext.commands.errors.NoPrivateMessage):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n Dieser Befehl kann nicht privat an den Bot gesendet werden.")
+        await ctx.send(f"<@!{ctx.message.author.id}>\n Dieser Befehl kann nicht privat an den Bot gesendet werden."
+                       f"\n`{str(e)}`")
+
+    elif isinstance(e, discord.ext.commands.MissingRequiredArgument):
+        await ctx.send(f"<@!{ctx.message.author.id}>\n Diese Befehl benötigt noch weitere Argumente.\n`{str(e)}`\n"
+                       f"`!help` für mehr Information.")
+
     else:
-        await ctx.send("Nicht klassifizierter Fehler.")
+        await ctx.send("Nicht klassifizierter Fehler. Ein Report wurde erstellt.")
         channel = bot.get_channel(id=ServerIds.DEBUG_CHAT)
-        await channel.send(e)
+        msg = f"Error:\n```{e}```\n```{ctx.message.content}```"
+        await channel.send(msg)
         raise e
     return
 

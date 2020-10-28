@@ -29,6 +29,14 @@ class Activities(commands.Cog):
         except Exception:
             pass
 
+        channel = await self.bot.fetch_channel(ServerIds.AFK_CHANNEL)
+        for x in channel.members:
+            # noinspection PyBroadException
+            try:
+                await x.move_to(None, reason="AFK")
+            except Exception:
+                pass
+
         await nerd_ecke(self.bot, member)
 
     # noinspection PyUnresolvedReferences

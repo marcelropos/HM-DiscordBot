@@ -7,7 +7,7 @@ class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group()
+    @commands.group(aliases=["hilfe"])
     async def help(self, ctx):
         if ctx.invoked_subcommand is None:
             embed = discord.Embed(title="Hilfsübersicht", colour=discord.Colour(0x12d4ca),
@@ -139,8 +139,8 @@ class Help(commands.Cog):
                         value="```!study IB```Exclusiv für diesen Studiengang stehen noch folgende Befehle zur "
                               "Verfügung ```!group IB1A``` ```!group IB1B``` ```!group IB1C``` ```!group IB1D```")
         embed.add_field(name="data-Science:", value="```!study DC``` ")
-        embed.add_field(name="Falsche(r) Studiengang/Gruppe", value="```Deine Rolle kan nur"
-                                                                    " vom Admin entfern werden```")
+        embed.add_field(name="Falsche(r) Studiengang/Gruppe", value="```Deine Rolle kann nur"
+                                                                    " vom Admin entfernt werden```")
         embed.add_field(name="NSFW", value="Mit `!nsfw-add` oder `!nsfw-rem` kannst du dir die Rolle für den Channel: "
                                            "`!nsfw-memes` geben.")
 

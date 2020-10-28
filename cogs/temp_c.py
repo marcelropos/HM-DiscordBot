@@ -26,9 +26,11 @@ class TempChannels(commands.Cog):
     async def tmpc(self, ctx, *, arg):
         member = await ctx.guild.fetch_member(ctx.author.id)
         if member.id in TMP_CHANNELS.tmp_channels:
-            raise PrivateChannelsAlreadyExistsError("Du hast bereits einen Privaten Channel erstellt")
-        voice_c = await ctx.guild.create_voice_channel(arg, category=TMP_CHANNELS)
-        text_c = await ctx.guild.create_text_channel(arg, category=TMP_CHANNELS)
+            raise PrivateChannelsAlreadyExistsError("Du hast bereits einen Privaten Channel erstellt.")
+        voice_c = await ctx.guild.create_voice_channel(arg, category=TMP_CHANNELS,
+                                                       reason=f"request by {str(ctx.author)}")
+        text_c = await ctx.guild.create_text_channel(arg, category=TMP_CHANNELS, reason=f"request by {str(ctx.author)}",
+                                                     topic=f"Erstellt von: {str(ctx.author)}")
         token = mk_token()
 
         TMP_CHANNELS.update(member, text_c, voice_c, token)
@@ -42,27 +44,27 @@ class TempChannels(commands.Cog):
         overwrite.connect = True
         overwrite.read_messages = True
 
-        await voice_c.set_permissions(member, overwrite=overwrite)
-        await text_c.set_permissions(member, overwrite=overwrite)
+        await voice_c.set_permissions(member, overwrite=overwrite, reason="owner")
+        await text_c.set_permissions(member, overwrite=overwrite, reason="owner")
         try:
-            await member.move_to(voice_c)
+            await member.move_to(voice_c, reason="created this channel.")
         except Exception:
             pass
 
     # noinspection PyBroadException
     @commands.command()
     async def join(self, ctx, arg):
-        my_guild = await self.bot.fetch_guild(GUILD_ID)
+        my_guild = await self.bot.fetch_guild(ServerIds.GUILD_ID)
         member = await my_guild.fetch_member(ctx.author.id)
         if arg in TMP_CHANNELS.token:
             text_c, voice_c = TMP_CHANNELS.token[arg]
             overwrite = discord.PermissionOverwrite()
             overwrite.connect = True
             overwrite.read_messages = True
-            await voice_c.set_permissions(member, overwrite=overwrite)
-            await text_c.set_permissions(member, overwrite=overwrite)
+            await voice_c.set_permissions(member, overwrite=overwrite, reason="access by token")
+            await text_c.set_permissions(member, overwrite=overwrite, reason="access by token")
             try:
-                await member.move_to(voice_c)
+                await member.move_to(voice_c, reason="want to join this Channel.")
             except Exception:
                 pass
         else:
