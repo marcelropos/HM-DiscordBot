@@ -73,7 +73,7 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def purge(self, ctx, arg: int):
-        await ctx.channel.purge(limit=arg, bulk=False)
+        await ctx.channel.purge(limit=arg, bulk=True)
         await ctx.send("Purged messages")
 
     @commands.command()
