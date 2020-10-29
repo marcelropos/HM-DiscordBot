@@ -133,7 +133,7 @@ class Roles(commands.Cog):
         # noinspection PyUnboundLocalVariable
         member = await ctx.guild.fetch_member(user_id)
         role = discord.utils.get(ctx.guild.roles, name=ServerRoles.HM)
-        await member.add_roles(role, reason="request by Mod")
+        await member.add_roles(role, reason=f"request by {str(ctx.author)}")
 
     @commands.command(aliases=["nsfw-add"])
     @commands.has_role(ServerRoles.HM)
