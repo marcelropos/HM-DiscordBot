@@ -113,15 +113,19 @@ class TMP_CHANNELS:
 
     @classmethod
     async def rem_channel(cls):
-        for x in cls.tmp_channels:
-            text, voice, token = cls.tmp_channels[x]
-            members = voice.members
-            if len(members) == 0:
-                del cls.tmp_channels[x]
-                del cls.token[token]
-                await text.delete(reason="No longer used")
-                await voice.delete(reason="No longer used")
-        cls.save_data()
+        # noinspection PyBroadException
+        try:
+            for x in cls.tmp_channels:
+                text, voice, token = cls.tmp_channels[x]
+                members = voice.members
+                if len(members) == 0:
+                    del cls.tmp_channels[x]
+                    del cls.token[token]
+                    await text.delete(reason="No longer used")
+                    await voice.delete(reason="No longer used")
+            cls.save_data()
+        except Exception:
+            pass
 
     @classmethod
     def save_data(cls):
