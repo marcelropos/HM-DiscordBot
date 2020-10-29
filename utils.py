@@ -135,19 +135,3 @@ class TMP_CHANNELS:
         except Exception as e:
             print(e)
             pass
-
-
-async def nerd_ecke(bot, member):
-    all_roles = member.guild.roles
-    role = None
-    for x in all_roles:
-        if x.name == "@everyone":
-            role = x
-
-    channel = await bot.fetch_channel(ServerIds.NERD_ECKE)
-    members = len(channel.members)
-
-    if members > 0:
-        await channel.set_permissions(role, connect=True, reason="Nerd is here.")
-    else:
-        await channel.set_permissions(role, connect=False, reason="No nerds are here.")

@@ -1,7 +1,7 @@
 # noinspection PyUnresolvedReferences
 import discord
 from discord.ext import commands
-from utils import TMP_CHANNELS, ServerIds, nerd_ecke
+from utils import TMP_CHANNELS, ServerIds
 from settings import DefaultMessages, DEBUG_STATUS
 
 
@@ -33,9 +33,9 @@ class Activities(commands.Cog):
         except Exception:
             pass
 
-        await auto_bot_kick(before)
+        await Channel_Functions.auto_bot_kick(before)
 
-        await nerd_ecke(self.bot, member)
+        await Channel_Functions.nerd_ecke(self.bot, member)
 
     # noinspection PyUnresolvedReferences
     @commands.Cog.listener()
@@ -53,14 +53,33 @@ def setup(bot):
     bot.add_cog(Activities(bot))
 
 
-async def auto_bot_kick(before):
-    bot = []
-    user = []
-    for x in before.channel.members:
-        if x.bot:
-            bot.append(x)
+class Channel_Functions:
+
+    @staticmethod
+    async def auto_bot_kick(before):
+        bot = []
+        user = []
+        for x in before.channel.members:
+            if x.bot:
+                bot.append(x)
+            else:
+                user.append(x)
+        if len(user) == 0:
+            for x in bot:
+                await x.move_to(None, reason="No longer used")
+
+    @staticmethod
+    async def nerd_ecke(bot, member):
+        all_roles = member.guild.roles
+        role = None
+        for x in all_roles:
+            if x.name == "@everyone":
+                role = x
+
+        channel = await bot.fetch_channel(ServerIds.NERD_ECKE)
+        members = len(channel.members)
+
+        if members > 0:
+            await channel.set_permissions(role, connect=True, reason="Nerd is here.")
         else:
-            user.append(x)
-    if len(user) == 0:
-        for x in bot:
-            await x.move_to(None, reason="No longer used")
+            await channel.set_permissions(role, connect=False, reason="No nerds are here.")
