@@ -1,14 +1,7 @@
-# Ignore created by dockerignore-generate
-settings.py
 README.md
 LICENSE
+.dockerignore
 .gitignore
-settings_files
 Dockerfile
-cogs
-main.py
-.idea
-data
 .git
-utils.py
-requirements.txt
+.env

@@ -1,6 +1,6 @@
-version: '3'
+version: '3.8'
 services:
   hm-bot:
-    image: hm-bot:latest
+    build: .
     environment:
-      TOKEN: [TOKEN-HERE]
+      TOKEN: ${TOKEN}
