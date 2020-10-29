@@ -23,19 +23,17 @@ class Activities(commands.Cog):
     async def on_voice_state_update(self, member, before, after):
         if member.bot:
             return
+
+        if after.channel == await self.bot.fetch_channel(ServerIds.AFK_CHANNEL):
+            await member.move_to(None, reason="AFK")
+
         # noinspection PyBroadException
         try:
             await TMP_CHANNELS.rem_channel()
         except Exception:
             pass
 
-        channel = await self.bot.fetch_channel(ServerIds.AFK_CHANNEL)
-        for x in channel.members:
-            # noinspection PyBroadException
-            try:
-                await x.move_to(None, reason="AFK")
-            except Exception:
-                pass
+        await auto_bot_kick(before)
 
         await nerd_ecke(self.bot, member)
 
@@ -53,3 +51,16 @@ class Activities(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Activities(bot))
+
+
+async def auto_bot_kick(before):
+    bot = []
+    user = []
+    for x in before.channel.members:
+        if x.bot:
+            bot.append(x)
+        else:
+            user.append(x)
+    if len(user) == 0:
+        for x in bot:
+            await x.move_to(None, reason="No longer used")
