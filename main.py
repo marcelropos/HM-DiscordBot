@@ -18,11 +18,18 @@ for filename in os.listdir("./cogs"):
 
 @bot.after_invoke
 async def reply_with_read(ctx):
-    if not ctx.command_failed:
-        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
-    else:
-        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-    await ctx.message.add_reaction(emoji=emoji)
+    try:
+        if not ctx.command_failed:
+            emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
+        else:
+            emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+        await ctx.message.add_reaction(emoji=emoji)
+    except AttributeError:
+        if not ctx.command_failed:
+            await ctx.message.add_reaction(emoji="✅")
+        else:
+            await ctx.message.add_reaction(emoji="❌")
+
 
 
 @bot.event
