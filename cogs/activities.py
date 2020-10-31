@@ -51,18 +51,22 @@ def setup(bot):
 
 class Channel_Functions:
 
+    # noinspection PyBroadException
     @staticmethod
     async def auto_bot_kick(before):
         bot = []
         user = []
-        for x in before.channel.members:
-            if x.bot:
-                bot.append(x)
-            else:
-                user.append(x)
-        if len(user) == 0:
-            for x in bot:
-                await x.move_to(None, reason="No longer used")
+        try:
+            for x in before.channel.members:
+                if x.bot:
+                    bot.append(x)
+                else:
+                    user.append(x)
+            if len(user) == 0:
+                for x in bot:
+                    await x.move_to(None, reason="No longer used")
+        except Exception:
+            pass
 
     @staticmethod
     async def nerd_ecke(bot, member):
