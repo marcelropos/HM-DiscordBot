@@ -46,6 +46,7 @@ class ServerRoles:
     WIRTSCHAFTSINFORMATIK = "IB"
     DATA_SCIENCE = "DC"
     HM = "HM"
+    NOHM = "NO-HM"
     IF1A = "IF1A"
     IF1B = "IF1B"
     IB1A = "IB1A"

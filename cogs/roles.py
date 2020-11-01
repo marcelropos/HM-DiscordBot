@@ -134,6 +134,11 @@ class Roles(commands.Cog):
         member = await ctx.guild.fetch_member(user_id)
         role = discord.utils.get(ctx.guild.roles, name=ServerRoles.HM)
         await member.add_roles(role, reason=f"request by {str(ctx.author)}")
+        try:
+            nohm = discord.utils.get(ctx.guild.roles, name=ServerRoles.NOHM)
+            await member.remove_roles(nohm, reason=f"request by {str(ctx.author)}")
+        except Exception:
+            pass
 
     @commands.command(aliases=["nsfw-add"])
     @commands.has_role(ServerRoles.HM)

@@ -22,9 +22,6 @@ class Tools(commands.Cog):
                 else:
                     rolecount[name] += 1
 
-        rolecount["Not verified"] = rolecount[ServerRoles.INFORMATIK] + rolecount[ServerRoles.WIRTSCHAFTSINFORMATIK] + \
-                                    rolecount[ServerRoles.DATA_SCIENCE] - rolecount[ServerRoles.HM]
-
         if rev.lower() == "true":
             rev = True
         else:

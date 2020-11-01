@@ -31,7 +31,6 @@ async def reply_with_read(ctx):
             await ctx.message.add_reaction(emoji="❌")
 
 
-
 @bot.event
 async def on_command_error(ctx, e):
     if isinstance(e, CommandNotFound):
@@ -39,8 +38,8 @@ async def on_command_error(ctx, e):
         emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
         await ctx.message.add_reaction(emoji=emoji)
 
-    elif isinstance(e, UserError) or\
-            isinstance(e, discord.ext.commands.BadArgument) or\
+    elif isinstance(e, UserError) or \
+            isinstance(e, discord.ext.commands.BadArgument) or \
             isinstance(e, ModuleError):
         await ctx.send(f"<@!{ctx.message.author.id}>\n`{str(e)}`")
 
@@ -62,6 +61,7 @@ async def on_command_error(ctx, e):
         await channel.send(msg)
         raise e
     return
+
 
 ReadWrite()  # Init Class
 bot.run(DISCORD_BOT_TOKEN())
