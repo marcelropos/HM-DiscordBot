@@ -31,8 +31,16 @@ async def reply_with_read(ctx):
             await ctx.message.add_reaction(emoji="❌")
 
 
+# noinspection PyBroadException
 @bot.event
 async def on_command_error(ctx, e):
+
+    try:
+        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+        await ctx.message.add_reaction(emoji=emoji)
+    except Exception:
+        await ctx.message.add_reaction(emoji="❌")
+
     if isinstance(e, CommandNotFound):
         await ctx.send("Befehl nicht gefunden. `!help` für mehr Information.")
         emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
@@ -53,6 +61,12 @@ async def on_command_error(ctx, e):
     elif isinstance(e, discord.ext.commands.MissingRequiredArgument):
         await ctx.send(f"<@!{ctx.message.author.id}>\n Diese Befehl benötigt noch weitere Argumente.\n`{str(e)}`\n"
                        f"`!help` für mehr Information.")
+
+    elif isinstance(e, discord.ext.commands.ConversionError):
+        await ctx.send(f"<@!{ctx.message.author.id}>\n Bitte überprüfe ob der Befehl korrekt ist.")
+        channel = bot.get_channel(id=ServerIds.DEBUG_CHAT)
+        msg = f"Error:\n```{e}```\n```{ctx.message.content}```"
+        await channel.send(msg)
 
     else:
         await ctx.send("Nicht klassifizierter Fehler. Ein Report wurde erstellt.")
