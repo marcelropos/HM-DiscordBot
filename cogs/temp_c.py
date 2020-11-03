@@ -35,7 +35,8 @@ class TempChannels(commands.Cog):
 
         TMP_CHANNELS.update(member, text_c, voice_c, token)
 
-        await text_c.send(f"Mit ```!join {token}``` können deine Kommilitonen ebenfalls dem (Voice-)Chat beitreten.")
+        await text_c.send(f"<@!{ctx.message.author.id}>\n"
+                          f"Mit ```!join {token}``` können deine Kommilitonen ebenfalls dem (Voice-)Chat beitreten.")
         overwrite = discord.PermissionOverwrite()
         overwrite.manage_permissions = True
         overwrite.mute_members = True
