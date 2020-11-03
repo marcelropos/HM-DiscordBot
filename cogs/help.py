@@ -140,7 +140,10 @@ class Help(commands.Cog):
         embed.set_footer(text="Erstellt am: 03.11.2020 17:45 Uhr")
 
         embed.add_field(name="Schritt 2", value="`!tmpc {Name des Channels}`", inline=False)
-        embed.add_field(name="Schritt 3", value="Du wirst nun in diesen Channel gezogen.", inline=False)
+        embed.add_field(name="Schritt 3", value="Du wirst nun in diesen Channel gezogen. "
+                                                "In dem dazugehörigen Textchannel erhälst du einen Token. "
+                                                "Dieser Token ist der Zugangsschlüssel für deine erstellten Channel.",
+                        inline=False)
         embed.add_field(name="Schritt 4",
                         value="Gib diesen Token an deine Kommilitonen, damit diese auch beitreten können."
                               "Diese können dem Bot privat schreiben, damit der Token nicht für alle sichtbar ist.",
