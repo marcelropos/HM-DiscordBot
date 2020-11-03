@@ -51,7 +51,7 @@ async def on_command_error(ctx, e):
             isinstance(e, ModuleError):
         await ctx.send(f"<@!{ctx.message.author.id}>\n`{str(e)}`")
 
-    elif isinstance(e, discord.ext.commands.MissingRole):
+    elif isinstance(e, discord.ext.commands.MissingRole) or isinstance(e, discord.ext.commands.NotOwner):
         await ctx.send(f"<@!{ctx.message.author.id}>\n Du hast nicht genügend Rechte für diesen Befehl.\n`{str(e)}`")
 
     elif isinstance(e, discord.ext.commands.errors.NoPrivateMessage):
