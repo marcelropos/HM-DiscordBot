@@ -17,6 +17,10 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def shutdown(self, ctx):
+        status = discord.Status.offline
+        await discord.Client.change_presence(self=self.bot, status=status)
+        await discord.Client.logout(self.bot)
+        await discord.Client.close(self.bot)
         sys.exit(0)
 
     @commands.command()
