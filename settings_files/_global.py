@@ -57,9 +57,9 @@ class ServerRoles:
     CODEING = "coding"
 
     ALL_COURSES = {
-        "Informatik",
-        "Wirtschaftsinformatik"
-        "data-Science"
+        "IF",
+        "IB"
+        "DC"
     }
 
     ALL_GROUPS = {
