@@ -93,18 +93,20 @@ class TempChannels(commands.Cog):
     @tmpc.command()
     @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
     async def nomod(self, ctx):
-        print(TMP_CHANNELS.tmp_channels)
         text_c, voice_c, _ = TMP_CHANNELS.tmp_channels[ctx.author.id]
-        overwrite = discord.PermissionOverwrite()
-        mod = role = discord.utils.get(ctx.guild.roles, name=ServerRoles.MODERATOR_ROLE_NAME)
-        await voice_c.set_permissions(mod,
-                                      overwrite=None,
-                                      reason="access by token")
+        if ctx.author.id in TMP_CHANNELS.tmp_channels:
+            overwrite = discord.PermissionOverwrite()
+            mod = role = discord.utils.get(ctx.guild.roles, name=ServerRoles.MODERATOR_ROLE_NAME)
+            await voice_c.set_permissions(mod,
+                                          overwrite=None,
+                                          reason="access by token")
 
-        await text_c.set_permissions(mod,
-                                     overwrite=None,
-                                     reason="access by token")
-        pass
+            await text_c.set_permissions(mod,
+                                         overwrite=None,
+                                         reason="access by token")
+            pass
+        else:
+            raise TempChannelNotFound("Anscheindend besitzt du keinen Channel")
 
     @tmpc.command()
     @commands.has_role(ServerRoles.HM)
