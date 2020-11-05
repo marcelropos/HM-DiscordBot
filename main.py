@@ -32,7 +32,8 @@ async def reply_with_read(ctx):
 
     except Exception as e:
         msg = str(ctx.message.content)
-        if msg.startswith("!purge"):
+        if msg.startswith("!purge") or \
+                msg.startswith("!tmpc"):
             return
         else:
             error = BugReport(bot, ctx, e)

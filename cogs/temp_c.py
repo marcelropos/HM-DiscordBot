@@ -21,24 +21,28 @@ class TempChannels(commands.Cog):
         self.bot = bot
 
     # noinspection PyBroadException
-    @commands.command()
+    @commands.group()
+    async def tmpc(self, ctx):
+        pass
+
+    @tmpc.command()
     @commands.has_role(ServerRoles.HM)
-    async def tmpc(self, ctx, *, arg):
+    async def mk(self, ctx, *, arg):
         member = await ctx.guild.fetch_member(ctx.author.id)
         if member.id in TMP_CHANNELS.tmp_channels:
             raise PrivateChannelsAlreadyExistsError("Du hast bereits einen Privaten Channel erstellt.")
-        voice_c = await ctx.guild.create_voice_channel(arg, category=TMP_CHANNELS,
+
+        voice_c = await ctx.guild.create_voice_channel(arg,
+                                                       category=TMP_CHANNELS,
                                                        reason=f"request by {str(ctx.author)}")
-        text_c = await ctx.guild.create_text_channel(arg, category=TMP_CHANNELS, reason=f"request by {str(ctx.author)}",
+
+        text_c = await ctx.guild.create_text_channel(arg,
+                                                     category=TMP_CHANNELS,
+                                                     reason=f"request by {str(ctx.author)}",
                                                      topic=f"Erstellt von: {str(ctx.author)}")
         token = mk_token()
 
-        TMP_CHANNELS.update(member, text_c, voice_c, token)
-
-        await text_c.send(f"<@!{ctx.message.author.id}>\n"
-                          f"Mit ```!join {token}``` können deine Kommilitonen ebenfalls dem (Voice-)Chat beitreten.")
         overwrite = discord.PermissionOverwrite()
-        overwrite.manage_permissions = True
         overwrite.mute_members = True
         overwrite.deafen_members = True
         overwrite.move_members = True
@@ -47,29 +51,67 @@ class TempChannels(commands.Cog):
 
         await voice_c.set_permissions(member, overwrite=overwrite, reason="owner")
         await text_c.set_permissions(member, overwrite=overwrite, reason="owner")
+        # noinspection PyBroadException
         try:
             await member.move_to(voice_c, reason="created this channel.")
         except Exception:
             pass
 
+        await text_c.send(f"<@!{ctx.message.author.id}>\n"
+                          f"Mit ```!join {token}``` können deine Kommilitonen ebenfalls dem (Voice-)Chat beitreten.")
+
+        TMP_CHANNELS.update(member, text_c, voice_c, token)
+
     # noinspection PyBroadException
-    @commands.command()
+    @tmpc.command()
     async def join(self, ctx, arg):
+        await ctx.message.delete()
         my_guild = await self.bot.fetch_guild(ServerIds.GUILD_ID)
         member = await my_guild.fetch_member(ctx.author.id)
+
         if arg in TMP_CHANNELS.token:
             text_c, voice_c = TMP_CHANNELS.token[arg]
+
             overwrite = discord.PermissionOverwrite()
             overwrite.connect = True
             overwrite.read_messages = True
-            await voice_c.set_permissions(member, overwrite=overwrite, reason="access by token")
-            await text_c.set_permissions(member, overwrite=overwrite, reason="access by token")
+            await voice_c.set_permissions(member,
+                                          overwrite=overwrite,
+                                          reason="access by token")
+
+            await text_c.set_permissions(member,
+                                         overwrite=overwrite,
+                                         reason="access by token")
+
             try:
                 await member.move_to(voice_c, reason="want to join this Channel.")
             except Exception:
                 pass
         else:
             raise TempChannelNotFound("Sorry, dieser Channel scheint nicht zu existieren.")
+
+    @tmpc.command()
+    @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
+    async def nomod(self, ctx):
+        print(TMP_CHANNELS.tmp_channels)
+        text_c, voice_c, _ = TMP_CHANNELS.tmp_channels[ctx.author.id]
+        overwrite = discord.PermissionOverwrite()
+        mod = role = discord.utils.get(ctx.guild.roles, name=ServerRoles.MODERATOR_ROLE_NAME)
+        await voice_c.set_permissions(mod,
+                                      overwrite=None,
+                                      reason="access by token")
+
+        await text_c.set_permissions(mod,
+                                     overwrite=None,
+                                     reason="access by token")
+        pass
+
+    @tmpc.command()
+    @commands.has_role(ServerRoles.HM)
+    async def rem(self, ctx):
+        member = ctx.author.id
+        text_c, voice_c, token = TMP_CHANNELS.tmp_channels[member]
+        await TMP_CHANNELS.rem_channel(member, text_c, voice_c, token)
 
 
 def setup(bot):
