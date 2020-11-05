@@ -5,6 +5,7 @@ from discord.ext import commands
 
 # noinspection PyUnresolvedReferences
 from utils import *
+from settings import Embedgenerator
 
 
 class PrivateChannelsAlreadyExistsError(UserError):
@@ -57,8 +58,14 @@ class TempChannels(commands.Cog):
         except Exception:
             pass
 
-        await text_c.send(f"<@!{ctx.message.author.id}>\n"
-                          f"Mit ```!join {token}``` können deine Kommilitonen ebenfalls dem (Voice-)Chat beitreten.")
+        gen = Embedgenerator("tmpc_func")
+        embed = gen.generate()
+        embed.add_field(name="Kommilitonen einladen",
+                        value=f"Mit ```!join {token}``` "
+                              f"können deine Kommilitonen ebenfalls dem (Voice-)Chat beitreten.",
+                        inline=False)
+        await text_c.send(content=f"<@!{ctx.author.id}>",
+                          embed=embed)
 
         TMP_CHANNELS.update(member, text_c, voice_c, token)
 
