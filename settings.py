@@ -4,4 +4,5 @@ import os
 from settings_files._global import *
 # noinspection PyProtectedMember,PyUnresolvedReferences
 from data.ReadWrite import ReadWrite
-from data.embed_generator import Embedgenerator
+# noinspection PyUnresolvedReferences
+from data.embed_generator import *
