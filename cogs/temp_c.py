@@ -24,7 +24,9 @@ class TempChannels(commands.Cog):
     # noinspection PyBroadException
     @commands.group()
     async def tmpc(self, ctx):
-        pass
+        if ctx.invoked_subcommand is None:
+            raise ModuleError("Befehl nicht gefunden")
+
 
     @tmpc.command()
     @commands.has_role(ServerRoles.HM)
@@ -61,7 +63,7 @@ class TempChannels(commands.Cog):
         gen = Embedgenerator("tmpc_func")
         embed = gen.generate()
         embed.add_field(name="Kommilitonen einladen",
-                        value=f"Mit ```!join {token}``` "
+                        value=f"Mit ```!tmpc join {token}``` "
                               f"können deine Kommilitonen ebenfalls dem (Voice-)Chat beitreten.",
                         inline=False)
         await text_c.send(content=f"<@!{ctx.author.id}>",
@@ -72,7 +74,10 @@ class TempChannels(commands.Cog):
     # noinspection PyBroadException
     @tmpc.command()
     async def join(self, ctx, arg):
-        await ctx.message.delete()
+        try:
+            await ctx.message.delete()
+        except Exception:
+            pass
         my_guild = await self.bot.fetch_guild(ServerIds.GUILD_ID)
         member = await my_guild.fetch_member(ctx.author.id)
 
