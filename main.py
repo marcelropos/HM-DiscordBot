@@ -5,7 +5,6 @@ from discord.ext import commands
 import os
 from settings import ServerIds, DISCORD_BOT_TOKEN, ReadWrite, BugReport
 from utils import UserError, ModuleError, EmojiIds
-from discord.ext.commands import CommandNotFound
 
 bot = commands.Bot(command_prefix="!")
 bot.remove_command('help')
@@ -51,7 +50,7 @@ async def on_command_error(ctx, e):
     except Exception:
         await ctx.message.add_reaction(emoji="❌")
 
-    if isinstance(e, CommandNotFound):
+    if isinstance(e, commands.CommandNotFound):
         await ctx.send("Befehl nicht gefunden. `!help` für mehr Information.")
         emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
         await ctx.message.add_reaction(emoji=emoji)

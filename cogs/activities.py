@@ -27,22 +27,33 @@ class Activities(commands.Cog):
         if after.channel == await self.bot.fetch_channel(ServerIds.AFK_CHANNEL):
             await member.move_to(None, reason="AFK")
 
-        await TMP_CHANNELS.rem_channels()
+        await TMP_CHANNELS.rem_channels(member)
 
         await Channel_Functions.auto_bot_kick(before)
 
         await Channel_Functions.nerd_ecke(self.bot, member)
 
-    # noinspection PyUnresolvedReferences
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        message_id = payload.message_id
-        channel_id = payload.channel_id
-        channel = await self.bot.fetch_channel(channel_id)
-        message = await channel.fetch_message(message_id)
+        if payload.member.bot:
+            return
+        # noinspection PyBroadException
+        try:
+            message_id = payload.message_id
+            channel_id = payload.channel_id
+            channel = await self.bot.fetch_channel(channel_id)
+            message = await channel.fetch_message(message_id)
+        except Exception:
+            pass
+        else:
+            if DEBUG_STATUS():
+                print(message.reactions)
 
-        if DEBUG_STATUS():
-            print(message.reactions)
+            if message_id in TMP_CHANNELS.invite_dict:
+                owner_id = TMP_CHANNELS.invite_dict[message_id].owner
+                text = TMP_CHANNELS.tmp_channels[owner_id].text
+                voice = TMP_CHANNELS.tmp_channels[owner_id].voice
+                await TMP_CHANNELS.join(payload.member, voice, text)
 
 
 def setup(bot):
