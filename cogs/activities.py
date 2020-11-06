@@ -21,13 +21,14 @@ class Activities(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
+
+        await TMP_CHANNELS.rem_channel()
+
         if member.bot:
             return
 
         if after.channel == await self.bot.fetch_channel(ServerIds.AFK_CHANNEL):
             await member.move_to(None, reason="AFK")
-
-        await TMP_CHANNELS.rem_channel()
 
         await Channel_Functions.auto_bot_kick(before)
 
