@@ -8,7 +8,7 @@ class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(aliases=["hilfe"])
     async def help(self, ctx, arg=None):
 
         print(arg)
