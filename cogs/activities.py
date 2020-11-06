@@ -36,13 +36,22 @@ class Activities(commands.Cog):
     # noinspection PyUnresolvedReferences
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        message_id = payload.message_id
-        channel_id = payload.channel_id
-        channel = await self.bot.fetch_channel(channel_id)
-        message = await channel.fetch_message(message_id)
+        # noinspection PyBroadException
+        try:
+            if payload.member.bot:
+                return
 
-        if DEBUG_STATUS():
-            print(message.reactions)
+            message_id = payload.message_id
+            channel_id = payload.channel_id
+            channel = await self.bot.fetch_channel(channel_id)
+            message = await channel.fetch_message(message_id)
+
+        except Exception:
+            pass
+
+        else:
+            if DEBUG_STATUS():
+                print(message.reactions)
 
 
 def setup(bot):
