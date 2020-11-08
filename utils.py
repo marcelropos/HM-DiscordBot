@@ -257,6 +257,10 @@ def invite_embed(member, token):
                     inline=False)
 
     embed.add_field(name="Token",
+                    value="Die Reaktion mit 🔓 ist gleichbedeutend mit der Eingabe des Tokens.",
+                    inline=False)
+
+    embed.add_field(name="Token",
                     value=token,
                     inline=False)
     return embed
