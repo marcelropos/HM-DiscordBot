@@ -27,7 +27,7 @@ class ReadWrite:
                 # noinspection PyBroadException
                 try:
                     with open(file, "w") as f:
-                        f.write(json.dumps(payload))
+                        f.write(json.dumps(payload, indent=4))
 
                 except Exception as e:
                     # Restore old data

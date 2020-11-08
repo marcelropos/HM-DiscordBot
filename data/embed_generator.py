@@ -17,7 +17,7 @@ class Embedgenerator:
         self.file = rf'{os.getcwd()}/{file}.json'
 
         if not os.path.isfile(self.file):
-            raise HelpError("Befehl nicht gefunden.\n"
+            raise HelpError("Hilfe fehlgeschlagen.\n"
                             "!help für mehr Informationen")
 
     def read(self):
