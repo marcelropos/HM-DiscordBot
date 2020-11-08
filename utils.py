@@ -19,6 +19,10 @@ class ModuleError(commands.CommandError):
     pass
 
 
+class ChannelNotFoundError(UserError):
+    pass
+
+
 def mods_or_owner():
     # noinspection PyUnusedLocal
     def predicate(ctx):
@@ -129,10 +133,14 @@ class TMP_CHANNELS:
 
     @classmethod
     def update(cls, member, text, voice, token, invites=None):
-
         if not invites:
             invites = dict()
-
+        # noinspection PyBroadException
+        try:
+            *_, existing_invites = cls.tmp_channels[member.id]
+            invites.update(existing_invites)
+        except Exception:
+            pass
         channel_attr = cls.Channel_attr(text=text,
                                         voice=voice,
                                         token=token,
@@ -152,11 +160,9 @@ class TMP_CHANNELS:
     @classmethod
     async def save_invite(cls, member, message):
         text, voice, token, invites = cls.tmp_channels[member.id]
-
         invite_attr = cls.Invite_attr(message.channel.id, member.id)
-        invite_dict = {message.id: invite_attr}
-        cls.invite_dict.update(invite_dict)
-        invites.update(invite_dict)
+        cls.invite_dict[message.id] = invite_attr
+        invites[message.id] = invite_attr
         cls.tmp_channels[member.id] = cls.Channel_attr(text=text,
                                                        voice=voice,
                                                        token=token,
@@ -180,7 +186,7 @@ class TMP_CHANNELS:
             text, voice, token, invites = cls.tmp_channels[member.id]
             return text, voice, token, invites
         else:
-            raise NoCommandError()
+            raise ChannelNotFoundError("Channel nicht gefunden.")
 
     @classmethod
     async def rem_channels(cls, ctx):
@@ -198,7 +204,7 @@ class TMP_CHANNELS:
     @classmethod
     async def rem_channel(cls, user_id, text, voice, token, ctx):
         member = await ctx.guild.fetch_member(user_id)
-        _, _, _, invites = await TMP_CHANNELS.get_ids(member)
+        *_, invites = await TMP_CHANNELS.get_ids(member)
         loop = invites.copy()  # Avoid RuntimeError: dictionary changed size during iteration
         for x in loop:
             await cls.delete_invite(member.id, invites[x].channel, x, ctx)
