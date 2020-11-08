@@ -16,6 +16,10 @@ class TempChannelNotFound(UserError):
     pass
 
 
+class CouldNotSendMessage(UserError):
+    pass
+
+
 # noinspection PyUnusedLocal,PyUnresolvedReferences,PyDunderSlots
 class TempChannels(commands.Cog):
     def __init__(self, bot):
@@ -117,8 +121,20 @@ class TempChannels(commands.Cog):
                 start, end = match.span()
                 user_id = args[start:end]
                 user = await discord.Client.fetch_user(self.bot, user_id)
-                message = await user.send(embed=embed)
-                await TMP_CHANNELS.save_invite(ctx.author, message)
+                send_error = False
+                error_user = set()
+                # noinspection PyBroadException
+                try:
+                    message = await user.send(embed=embed)
+                    await TMP_CHANNELS.save_invite(ctx.author, message)
+                    await message.add_reaction(emoji="🔓")
+                except Exception:
+                    error_user.add(str(user))
+                    send_error = True
+
+                if send_error:
+                    raise CouldNotSendMessage(f"Einladung konnte nicht an: {error_user} gesendet werden."
+                                              f"Möglicherweise liegt dies an den Einstellungen der User")
 
     @tmpc.command()
     @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
