@@ -139,7 +139,7 @@ class TempChannels(commands.Cog):
     @tmpc.command()
     @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
     async def nomod(self, ctx):
-        text_c, voice_c, _ = TMP_CHANNELS.tmp_channels[ctx.author.id]
+        text_c, voice_c, *_ = TMP_CHANNELS.tmp_channels[ctx.author.id]
         if ctx.author.id in TMP_CHANNELS.tmp_channels:
             overwrite = discord.PermissionOverwrite()
             mod = role = discord.utils.get(ctx.guild.roles, name=ServerRoles.MODERATOR_ROLE_NAME)

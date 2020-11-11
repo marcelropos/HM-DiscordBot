@@ -135,6 +135,7 @@ class TMP_CHANNELS:
     def update(cls, member, text, voice, token, invites=None):
         if not invites:
             invites = dict()
+            invites.update(cls.invite_dict)
         # noinspection PyBroadException
         try:
             *_, existing_invites = cls.tmp_channels[member.id]
@@ -219,13 +220,14 @@ class TMP_CHANNELS:
         # noinspection PyUnusedLocal,PyBroadException
         tmp_channels = dict()
         for x in cls.tmp_channels:
-            text, voice, token, invites = cls.tmp_channels[x]
-            tmp_channels[x] = (text.id, voice.id, token, invites)
-        try:
-            ReadWrite.write(tmp_channels, cls.file_name)
-        except Exception as e:
-            print(e)
-            pass
+            try:
+                text, voice, token, invites = cls.tmp_channels[x]
+                tmp_channels[x] = (text.id, voice.id, token, invites)
+
+                ReadWrite.write(tmp_channels, cls.file_name)
+            except Exception as e:
+                print(e)
+                pass
 
     # noinspection PyDunderSlots,PyUnresolvedReferences,PyBroadException
     @staticmethod
