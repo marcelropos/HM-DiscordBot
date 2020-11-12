@@ -26,7 +26,7 @@ class ChannelNotFoundError(UserError):
 def mods_or_owner():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.check_any(commands.is_owner(), commands.has_role(ServerRoles.MODERATOR_ROLE_NAME))
+        return commands.check_any(commands.is_owner(), commands.has_role(ServerIds.MODERATOR))
 
     return commands.check(predicate)
 
@@ -34,8 +34,8 @@ def mods_or_owner():
 def is_study():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.has_any_role(ServerRoles.INFORMATIK, ServerRoles.WIRTSCHAFTSINFORMATIK,
-                                     ServerRoles.DATA_SCIENCE)
+        return commands.has_any_role(ServerIds.INFORMATIK, ServerIds.WIRTSCHAFTSINFORMATIK,
+                                     ServerIds.DATA_SCIENCE)
 
     return commands.check(predicate)
 
@@ -43,8 +43,8 @@ def is_study():
 def is_in_group():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.has_any_role(ServerRoles.IF1A, ServerRoles.IF1B, ServerRoles.IB1A, ServerRoles.IB1B,
-                                     ServerRoles.IB1C, ServerRoles.IB1D)
+        return commands.has_any_role(ServerIds.IF1A, ServerIds.IF1B, ServerIds.IB1A, ServerIds.IB1B,
+                                     ServerIds.IB1C)
 
     return commands.check(predicate)
 

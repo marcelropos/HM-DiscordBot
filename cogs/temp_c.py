@@ -32,7 +32,7 @@ class TempChannels(commands.Cog):
             raise ModuleError("Befehl nicht gefunden")
 
     @tmpc.command()
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def mk(self, ctx, *, arg):
         member = await ctx.guild.fetch_member(ctx.author.id)
         if member.id in TMP_CHANNELS.tmp_channels:
@@ -155,7 +155,7 @@ class TempChannels(commands.Cog):
             raise TempChannelNotFound("Anscheindend besitzt du keinen Channel")
 
     @tmpc.command()
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def rem(self, ctx):
         member = ctx.author.id
         text_c, voice_c, token = TMP_CHANNELS.tmp_channels[member]

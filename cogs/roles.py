@@ -82,20 +82,20 @@ class Roles(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def study(self, ctx, arg: StudyCourseConverter):
         got_roles = {role.name for role in ctx.author.roles}
         if len(got_roles.intersection(ServerRoles.ALL_COURSES)):
             raise MultipleCoursesError("Du kannst darfst nur einen Studiengang haben")
 
         if arg == Course.INFORMATIK:
-            role = discord.utils.get(ctx.guild.roles, name=ServerRoles.INFORMATIK)
+            role = discord.utils.get(ctx.guild.roles, id=ServerIds.INFORMATIK)
 
         elif arg == Course.WIRTSCHAFTSINFORMATIK:
-            role = discord.utils.get(ctx.guild.roles, name=ServerRoles.WIRTSCHAFTSINFORMATIK)
+            role = discord.utils.get(ctx.guild.roles, id=ServerIds.WIRTSCHAFTSINFORMATIK)
 
         elif arg == Course.DATA_SCIENCE:
-            role = discord.utils.get(ctx.guild.roles, name=ServerRoles.DATA_SCIENCE)
+            role = discord.utils.get(ctx.guild.roles, id=ServerIds.DATA_SCIENCE)
 
         else:
             print("Debug")
@@ -104,7 +104,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def group(self, ctx, arg: StudyGroupsConverter):
         got_roles = {role.name for role in ctx.author.roles}
         if len(got_roles.intersection(ServerRoles.ALL_GROUPS)):
@@ -123,7 +123,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
-    @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
+    @commands.has_role(ServerIds.MODERATOR)
     async def hm(self, ctx):
         msg = ctx.message.content
         matches = re.finditer(r"[0-9]+", msg)
@@ -132,30 +132,30 @@ class Roles(commands.Cog):
             user_id = msg[start:end]
         # noinspection PyUnboundLocalVariable
         member = await ctx.guild.fetch_member(user_id)
-        role = discord.utils.get(ctx.guild.roles, name=ServerRoles.HM)
+        role = discord.utils.get(ctx.guild.roles, id=ServerIds.HM)
         await member.add_roles(role, reason=f"request by {str(ctx.author)}")
         try:
-            nohm = discord.utils.get(ctx.guild.roles, name=ServerRoles.NOHM)
+            nohm = discord.utils.get(ctx.guild.roles, id=ServerIds.NOHM)
             await member.remove_roles(nohm, reason=f"request by {str(ctx.author)}")
         except Exception:
             pass
 
     @commands.command(aliases=["nsfw-add"])
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def nsfw_add(self, ctx):
-        role = discord.utils.get(ctx.guild.roles, name=ServerRoles.NSFW)
+        role = discord.utils.get(ctx.guild.roles, id=ServerIds.NSFW)
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command(aliases=["nsfw-rem"])
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def nsfw_rem(self, ctx):
-        role = discord.utils.get(ctx.guild.roles, name=ServerRoles.NSFW)
+        role = discord.utils.get(ctx.guild.roles, id=ServerIds.NSFW)
         await ctx.author.remove_roles(role, reason="request by user")
 
     @commands.command()
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def coding(self, ctx):
-        role = discord.utils.get(ctx.guild.roles, name=ServerRoles.CODEING)
+        role = discord.utils.get(ctx.guild.roles, id=ServerIds.CODEING)
         await ctx.author.add_roles(role, reason="request by user")
 
 
