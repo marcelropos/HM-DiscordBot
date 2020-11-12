@@ -2,6 +2,7 @@
 import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
+from settings import Embedgenerator
 from utils import *
 from enum import Enum
 import re
@@ -128,6 +129,7 @@ class Roles(commands.Cog):
     @commands.has_role(ServerIds.MODERATOR)
     async def hm(self, ctx):
         await accepted_channels(self.bot, ctx)
+        print("test")
         msg = ctx.message.content
         matches = re.finditer(r"[0-9]+", msg)
         for match in matches:
@@ -141,6 +143,14 @@ class Roles(commands.Cog):
         try:
             nohm = discord.utils.get(ctx.guild.roles, id=ServerIds.NOHM)
             await member.remove_roles(nohm, reason=f"request by {str(ctx.author)}")
+        except Exception:
+            pass
+
+        # noinspection PyBroadException
+        try:
+            for x in ["help", "roles", "rules"]:
+                embed = Embedgenerator(x)
+                await member.send(embed=embed.generate())
         except Exception:
             pass
 
