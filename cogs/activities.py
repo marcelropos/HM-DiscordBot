@@ -14,8 +14,11 @@ class Activities(commands.Cog):
     async def on_ready(self):
         TMP_CHANNELS(self.bot)
         activity = discord.Game(name=DefaultMessages.ACTIVITY)
-        await discord.Client.change_presence(self=self.bot, status=discord.Status.online, activity=activity)
-        channel = discord.Client.get_channel(self=self.bot, id=ServerIds.DEBUG_CHAT)
+        await self.bot.change_presence(status=discord.Status.online,
+                                       activity=discord.Activity(type=discord.ActivityType.listening,
+                                                                 name=DefaultMessages.ACTIVITY))
+        channel = discord.Client.get_channel(self=self.bot,
+                                             id=ServerIds.DEBUG_CHAT)
         await channel.send(DefaultMessages.GREETINGS)
         print(DefaultMessages.GREETINGS)
 

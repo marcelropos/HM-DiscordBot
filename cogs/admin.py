@@ -6,43 +6,65 @@ import asyncio
 import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
+from settings import DefaultMessages
 from utils import *
 
 
 # noinspection PyUnusedLocal
 class Admin(commands.Cog):
     def __init__(self, bot):
+        self.activity = discord.Activity(type=discord.ActivityType.listening,
+                                         name=DefaultMessages.ACTIVITY)
+
+        self.status = discord.Status.online
         self.bot = bot
 
     @commands.command()
     @commands.is_owner()
     async def shutdown(self, ctx):
         status = discord.Status.offline
-        await discord.Client.change_presence(self=self.bot, status=status)
+        await discord.Client.change_presence(self=self.bot,
+                                             status=status)
+
         await discord.Client.logout(self.bot)
         await discord.Client.close(self.bot)
         sys.exit(0)
 
     @commands.command()
     @commands.is_owner()
-    async def activity(self, ctx, *, arg):
-        activity = discord.Game(name=arg)
-        await discord.Client.change_presence(self=self.bot, activity=activity)
+    async def activity(self, ctx, activity, *, arg):
+
+        if activity == "listen":
+
+            # Setting `Listening ` status
+            self.activity = discord.Activity(type=discord.ActivityType.listening,
+                                                                     name=arg)
+        elif activity == "watch":
+            # Setting `Watching ` status
+            self.activity = discord.Activity(type=discord.ActivityType.watching,
+                                                                     name=arg)
+        else:
+            # Setting `Playing ` status
+            self.activity = discord.Game(name=arg)
+
+        await self.bot.change_presence(status=self.status,
+                                       activity=self.activity)
 
     @commands.command()
     @commands.is_owner()
     async def status(self, ctx, *, arg: str):
         arg = arg.lower()
         if arg == "online":
-            status = discord.Status.online
+            self.status = discord.Status.online
         elif arg == "offline":
-            status = discord.Status.offline
+            self.status = discord.Status.offline
         elif arg == "idle":
-            status = discord.Status.idle
+            self.status = discord.Status.idle
         else:
-            status = discord.Status.dnd
+            self.status = discord.Status.dnd
 
-        await discord.Client.change_presence(self=self.bot, status=status)
+        await discord.Client.change_presence(self=self.bot,
+                                             status=self.status)
 
     @commands.command()
     @commands.is_owner()

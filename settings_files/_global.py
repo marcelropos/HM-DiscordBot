@@ -14,7 +14,7 @@ class EmojiIds:
 
 class DefaultMessages:
     GREETINGS = "System online, waiting for your demands."
-    ACTIVITY = "Hört auf !help"
+    ACTIVITY = "!help"
 
 
 # noinspection PyPep8Naming
