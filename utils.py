@@ -15,6 +15,10 @@ class UserError(commands.CommandError):
     pass
 
 
+class WrongChatError(UserError):
+    pass
+
+
 class ModuleError(commands.CommandError):
     pass
 
@@ -266,3 +270,22 @@ def invite_embed(member, token):
                     value=token,
                     inline=False)
     return embed
+
+
+async def accepted_channels(bot, ctx):
+    channels = {ServerIds.BOT_COMMANDS_CHANNEL,
+                ServerIds.DEBUG_CHAT}
+    try:
+        ctx.author.dm_channel.id
+    except AttributeError:
+        pass
+    for x in TMP_CHANNELS.tmp_channels:
+        try:
+            channels.add(x.text.id)
+        except AttributeError:
+            pass
+    if ctx.channel.id not in channels:
+        channel = discord.Client.get_channel(self=bot,
+                                             id=ServerIds.BOT_COMMANDS_CHANNEL)
+        await channel.send(f"<@!{ctx.author.id}>\n Schreibe mir doch bitte hier nochmal oder ggf. Privat.")
+        raise WrongChatError("Falscher Chat")

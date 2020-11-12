@@ -84,6 +84,7 @@ class Roles(commands.Cog):
     @commands.command()
     @commands.has_role(ServerIds.HM)
     async def study(self, ctx, arg: StudyCourseConverter):
+        await accepted_channels(self.bot, ctx)
         got_roles = {role.name for role in ctx.author.roles}
         if len(got_roles.intersection(ServerRoles.ALL_COURSES)):
             raise MultipleCoursesError("Du kannst darfst nur einen Studiengang haben")
@@ -106,6 +107,7 @@ class Roles(commands.Cog):
     @commands.command()
     @commands.has_role(ServerIds.HM)
     async def group(self, ctx, arg: StudyGroupsConverter):
+        await accepted_channels(self.bot, ctx)
         got_roles = {role.name for role in ctx.author.roles}
         if len(got_roles.intersection(ServerRoles.ALL_GROUPS)):
             raise MultipleGroupsError("Du darfst nicht mehr als einer Gruppe angehören.")
@@ -125,6 +127,7 @@ class Roles(commands.Cog):
     @commands.command()
     @commands.has_role(ServerIds.MODERATOR)
     async def hm(self, ctx):
+        await accepted_channels(self.bot, ctx)
         msg = ctx.message.content
         matches = re.finditer(r"[0-9]+", msg)
         for match in matches:
@@ -134,6 +137,7 @@ class Roles(commands.Cog):
         member = await ctx.guild.fetch_member(user_id)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.HM)
         await member.add_roles(role, reason=f"request by {str(ctx.author)}")
+        # noinspection PyBroadException
         try:
             nohm = discord.utils.get(ctx.guild.roles, id=ServerIds.NOHM)
             await member.remove_roles(nohm, reason=f"request by {str(ctx.author)}")
@@ -143,18 +147,21 @@ class Roles(commands.Cog):
     @commands.command(aliases=["nsfw-add"])
     @commands.has_role(ServerIds.HM)
     async def nsfw_add(self, ctx):
+        await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.NSFW)
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command(aliases=["nsfw-rem"])
     @commands.has_role(ServerIds.HM)
     async def nsfw_rem(self, ctx):
+        await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.NSFW)
         await ctx.author.remove_roles(role, reason="request by user")
 
     @commands.command()
     @commands.has_role(ServerIds.HM)
     async def coding(self, ctx):
+        await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.CODEING)
         await ctx.author.add_roles(role, reason="request by user")
 

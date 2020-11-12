@@ -34,6 +34,7 @@ class TempChannels(commands.Cog):
     @tmpc.command()
     @commands.has_role(ServerIds.HM)
     async def mk(self, ctx, *, arg):
+        await accepted_channels(self.bot, ctx)
         member = await ctx.guild.fetch_member(ctx.author.id)
         if member.id in TMP_CHANNELS.tmp_channels:
             raise PrivateChannelsAlreadyExistsError("Du hast bereits einen Privaten Channel erstellt.")
@@ -78,6 +79,7 @@ class TempChannels(commands.Cog):
     # noinspection PyBroadException
     @tmpc.command()
     async def join(self, ctx, arg):
+        await accepted_channels(self.bot, ctx)
         try:
             await ctx.message.delete()
         except Exception:
@@ -95,6 +97,7 @@ class TempChannels(commands.Cog):
 
     @tmpc.command()
     async def token(self, ctx, command: str, *, args=None):
+        await accepted_channels(self.bot, ctx)
         text, voice, token, invites = await TMP_CHANNELS.get_ids(ctx.author)
 
         if command.startswith("gen"):
@@ -139,6 +142,7 @@ class TempChannels(commands.Cog):
     @tmpc.command()
     @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
     async def nomod(self, ctx):
+        await accepted_channels(self.bot, ctx)
         text_c, voice_c, *_ = TMP_CHANNELS.tmp_channels[ctx.author.id]
         if ctx.author.id in TMP_CHANNELS.tmp_channels:
             overwrite = discord.PermissionOverwrite()
@@ -157,6 +161,7 @@ class TempChannels(commands.Cog):
     @tmpc.command()
     @commands.has_role(ServerIds.HM)
     async def rem(self, ctx):
+        await accepted_channels(self.bot, ctx)
         member = ctx.author.id
         text_c, voice_c, token = TMP_CHANNELS.tmp_channels[member]
         await TMP_CHANNELS.rem_channel(member, text_c, voice_c, token, ctx)
