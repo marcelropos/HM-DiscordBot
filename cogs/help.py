@@ -11,7 +11,6 @@ class Help(commands.Cog):
     @commands.command(aliases=["hilfe"])
     async def help(self, ctx, arg=None):
 
-        print(arg)
         if arg is None:
             embed = Embedgenerator("help")
         else:
