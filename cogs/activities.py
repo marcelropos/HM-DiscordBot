@@ -38,8 +38,17 @@ class Activities(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if payload.member.bot:
-            return
+        try:
+            if payload.member.bot:
+                return
+        except AttributeError:
+            pass
+
+        if payload.member:
+            member = payload.member  # For Guild
+        else:
+            member = await discord.Client.fetch_user(self.bot, payload.user_id)  # For private Messages
+
         # noinspection PyBroadException
         try:
             message_id = payload.message_id
@@ -56,7 +65,7 @@ class Activities(commands.Cog):
                 owner_id = TMP_CHANNELS.invite_dict[message_id].owner
                 text = TMP_CHANNELS.tmp_channels[owner_id].text
                 voice = TMP_CHANNELS.tmp_channels[owner_id].voice
-                await TMP_CHANNELS.join(payload.member, voice, text)
+                await TMP_CHANNELS.join(member, voice, text)
 
 
 def setup(bot):
