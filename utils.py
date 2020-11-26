@@ -225,8 +225,8 @@ class TMP_CHANNELS:
         tmp_channels = dict()
         for x in cls.tmp_channels:
             try:
-                text, voice, token, invites = cls.tmp_channels[x]
-                tmp_channels[x] = (text.id, voice.id, token, invites)
+                tmp_attrs = cls.tmp_channels[x]
+                tmp_channels[x] = (tmp_attrs.text.id, tmp_attrs.voice.id, tmp_attrs.token, tmp_attrs.invites)
 
                 ReadWrite.write(tmp_channels, cls.file_name)
             except Exception as e:
