@@ -276,14 +276,17 @@ async def accepted_channels(bot, ctx):
     channels = {ServerIds.BOT_COMMANDS_CHANNEL,
                 ServerIds.DEBUG_CHAT}
     try:
-        ctx.author.dm_channel.id
+        channels.add(ctx.author.dm_channel.id)
     except AttributeError:
         pass
-    for x in TMP_CHANNELS.tmp_channels:
+
+    for x in ctx.guild.channels:
         try:
-            channels.add(x.text.id)
+            if ctx.channel.id == ServerIds.CUSTOM_CHANNELS:
+                channels.add(x.category.id)
         except AttributeError:
             pass
+
     if ctx.channel.id not in channels:
         channel = discord.Client.get_channel(self=bot,
                                              id=ServerIds.BOT_COMMANDS_CHANNEL)

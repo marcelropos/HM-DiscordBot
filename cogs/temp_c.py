@@ -20,12 +20,11 @@ class CouldNotSendMessage(UserError):
     pass
 
 
-# noinspection PyUnusedLocal,PyUnresolvedReferences,PyDunderSlots
+# noinspection PyUnusedLocal,PyUnresolvedReferences,PyDunderSlots,PyBroadException
 class TempChannels(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # noinspection PyBroadException
     @commands.group()
     async def tmpc(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -58,10 +57,13 @@ class TempChannels(commands.Cog):
 
         await voice_c.set_permissions(member, overwrite=overwrite, reason="owner")
         await text_c.set_permissions(member, overwrite=overwrite, reason="owner")
-        # noinspection PyBroadException
+
         try:
             await member.move_to(voice_c, reason="created this channel.")
+        except Exception:
+            pass
 
+        try:
             gen = Embedgenerator("tmpc-func")
             embed = gen.generate()
             embed.add_field(name="Kommilitonen einladen",
@@ -76,14 +78,13 @@ class TempChannels(commands.Cog):
 
         TMP_CHANNELS.update(member, text_c, voice_c, token)
 
-    # noinspection PyBroadException
     @tmpc.command()
     async def join(self, ctx, arg):
-        await accepted_channels(self.bot, ctx)
         try:
             await ctx.message.delete()
         except Exception:
             pass
+        await accepted_channels(self.bot, ctx)
         my_guild = await self.bot.fetch_guild(ServerIds.GUILD_ID)
         member = await my_guild.fetch_member(ctx.author.id)
 
@@ -97,7 +98,6 @@ class TempChannels(commands.Cog):
 
     @tmpc.command()
     async def token(self, ctx, command: str, *, args=None):
-        await accepted_channels(self.bot, ctx)
         text, voice, token, invites = await TMP_CHANNELS.get_ids(ctx.author)
 
         if command.startswith("gen"):
@@ -117,6 +117,7 @@ class TempChannels(commands.Cog):
             await message.add_reaction(emoji="🔓")
 
         if command.startswith("send") and args:
+            await accepted_channels(self.bot, ctx)
             embed = invite_embed(ctx.author, f"```!tmpc join {token}```")
 
             matches = re.finditer(r"[0-9]+", args)
@@ -126,7 +127,7 @@ class TempChannels(commands.Cog):
                 user = await discord.Client.fetch_user(self.bot, user_id)
                 send_error = False
                 error_user = set()
-                # noinspection PyBroadException
+
                 try:
                     message = await user.send(embed=embed)
                     await TMP_CHANNELS.save_invite(ctx.author, message)
@@ -163,7 +164,7 @@ class TempChannels(commands.Cog):
     async def rem(self, ctx):
         await accepted_channels(self.bot, ctx)
         member = ctx.author.id
-        text_c, voice_c, token = TMP_CHANNELS.tmp_channels[member]
+        text_c, voice_c, token, *_ = TMP_CHANNELS.tmp_channels[member]
         await TMP_CHANNELS.rem_channel(member, text_c, voice_c, token, ctx)
 
 
