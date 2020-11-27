@@ -28,7 +28,7 @@ class TempChannels(commands.Cog):
     @commands.group()
     async def tmpc(self, ctx):
         if ctx.invoked_subcommand is None:
-            raise ModuleError("Befehl nicht gefunden")
+            raise ModuleError()
 
     @tmpc.command()
     @commands.has_role(ServerIds.HM)
@@ -36,7 +36,7 @@ class TempChannels(commands.Cog):
         await accepted_channels(self.bot, ctx)
         member = await ctx.guild.fetch_member(ctx.author.id)
         if member.id in TMP_CHANNELS.tmp_channels:
-            raise PrivateChannelsAlreadyExistsError("Du hast bereits einen Privaten Channel erstellt.")
+            raise PrivateChannelsAlreadyExistsError()
 
         voice_c = await ctx.guild.create_voice_channel(arg,
                                                        category=TMP_CHANNELS,
@@ -94,7 +94,7 @@ class TempChannels(commands.Cog):
             await TMP_CHANNELS.join(ctx.author, voice_c, text_c)
 
         else:
-            raise TempChannelNotFound("Sorry, dieser Channel scheint nicht zu existieren.")
+            raise TempChannelNotFound()
 
     @tmpc.command()
     async def token(self, ctx, command: str, *, args=None):
@@ -138,7 +138,7 @@ class TempChannels(commands.Cog):
 
                 if send_error:
                     raise CouldNotSendMessage(f"Einladung konnte nicht an: {error_user} gesendet werden."
-                                              f"Möglicherweise liegt dies an den Einstellungen der User")
+                                              f"M\u00f6glicherweise liegt dies an den Einstellungen der User")
 
     @tmpc.command()
     @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
@@ -157,15 +157,51 @@ class TempChannels(commands.Cog):
                                          reason="access by token")
             pass
         else:
-            raise TempChannelNotFound("Anscheindend besitzt du keinen Channel")
+            raise TempChannelNotFound()
 
     @tmpc.command()
     @commands.has_role(ServerIds.HM)
     async def rem(self, ctx):
-        await accepted_channels(self.bot, ctx)
-        member = ctx.author.id
-        text_c, voice_c, token, *_ = TMP_CHANNELS.tmp_channels[member]
-        await TMP_CHANNELS.rem_channel(member, text_c, voice_c, token, ctx)
+        if ctx.author.id in TMP_CHANNELS.tmp_channels:
+            await accepted_channels(self.bot, ctx)
+            member = ctx.author.id
+            text_c, voice_c, token, *_ = TMP_CHANNELS.tmp_channels[member]
+            await TMP_CHANNELS.rem_channel(member, text_c, voice_c, token, ctx)
+        else:
+            raise TempChannelNotFound()
+
+    @tmpc.error
+    @mk.error
+    @join.error
+    @token.error
+    @nomod.error
+    @rem.error
+    async def temp_errorhandler(self, ctx, error):
+        if isinstance(error, TempChannels):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Es wurde kein Channel gefunden, der dir geh\u00f6rt.")
+
+        elif isinstance(error, CouldNotSendMessage):
+            await ctx.send(error)
+
+        elif isinstance(error, PrivateChannelsAlreadyExistsError):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Du hast bereits einen Privaten Channel erstellt.\n"
+                           f"Mit `!tmpc rem` kannst du diesen L\u00f6schen.")
+
+        elif isinstance(error, ModuleError):
+            embed = Embedgenerator("tmpc")
+            await ctx.send(content=f"<@!{ctx.author.id}>\n"
+                                   f"Dieser Befehl wurde nicht gefunden.",
+                           embed=embed.generate())
+            embed = Embedgenerator("tmpc-func")
+            await ctx.send(embed=embed.generate())
+
+        else:
+            error = BugReport(self.bot, ctx, error)
+            error.user_details()
+            await error.reply()
+            raise error
 
 
 def setup(bot):

@@ -45,7 +45,8 @@ class StudyCourseConverter(discord.ext.commands.MemberConverter):
         try:
             course = Course(argument[:2])
         except ValueError:
-            raise commands.BadArgument("Kein valider Studiengang.")
+            raise commands.BadArgument("Kein valider Studiengang."
+                                       f"`!help roles` f\u00fcr mehr Informationen")
 
         return course
 
@@ -57,23 +58,25 @@ class StudyGroupsConverter(discord.ext.commands.MemberConverter):
         try:
             course = Course(argument[:2])
         except ValueError:
-            raise commands.BadArgument("Kein valider Studiengang.")
+            raise commands.BadArgument("Kein valider Studiengang."
+                                       f"`!help roles` f\u00fcr mehr Informationen")
 
         if course == Course.INFORMATIK:
             if argument[3] in ["A", "B"]:
                 group = argument[3]
             else:
-                raise commands.BadArgument("Keine valide Gruppe des Studienganges Informatik.")
+                raise commands.BadArgument("Keine valide Gruppe des Studienganges Informatik."
+                                           f"`!help roles` f\u00fcr mehr Informationen")
 
         elif course == Course.WIRTSCHAFTSINFORMATIK:
             if argument[3] in ["A", "B", "C", "D"]:
                 group = argument[3]
             else:
-                raise commands.BadArgument("Keine valide Gruppe des Studienganges Wirtschaftsinformatik.")
-
+                raise commands.BadArgument("Keine valide Gruppe des Studienganges Wirtschaftsinformatik."
+                                           f"`!help roles` f\u00fcr mehr Informationen")
         else:
-            raise commands.BadArgument("data-Science hat keine Gruppen.")
-
+            raise commands.BadArgument("data-Science hat keine Gruppen."
+                                       f"`!help roles` f\u00fcr mehr Informationen")
         return StudyGroups(course, group)
 
 
@@ -88,7 +91,7 @@ class Roles(commands.Cog):
         await accepted_channels(self.bot, ctx)
         got_roles = {role.name for role in ctx.author.roles}
         if len(got_roles.intersection(ServerRoles.ALL_COURSES)):
-            raise MultipleCoursesError("Du kannst darfst nur einen Studiengang haben")
+            raise MultipleCoursesError()
 
         if arg == Course.INFORMATIK:
             role = discord.utils.get(ctx.guild.roles, id=ServerIds.INFORMATIK)
@@ -111,16 +114,15 @@ class Roles(commands.Cog):
         await accepted_channels(self.bot, ctx)
         got_roles = {role.name for role in ctx.author.roles}
         if len(got_roles.intersection(ServerRoles.ALL_GROUPS)):
-            raise MultipleGroupsError("Du darfst nicht mehr als einer Gruppe angehören.")
+            raise MultipleGroupsError()
 
         if arg.course == Course.INFORMATIK:
             if not any((role.name == ServerRoles.INFORMATIK for role in ctx.author.roles)):
-                raise RoleNotFoundError("Nicht im Studiengang Informatik. ```!help roles``` für mehr Informationen.")
+                raise RoleNotFoundError()
 
         elif arg.course == Course.WIRTSCHAFTSINFORMATIK:
             if not any((role.name == ServerRoles.WIRTSCHAFTSINFORMATIK for role in ctx.author.roles)):
-                raise RoleNotFoundError("Nicht im Studiengang Wirtschaftsinformatik. ```!help roles``` für mehr "
-                                        "Informationen.")
+                raise RoleNotFoundError()
 
         role = discord.utils.get(ctx.guild.roles, name=str(arg))
         await ctx.author.add_roles(role, reason="request by user")
@@ -154,6 +156,17 @@ class Roles(commands.Cog):
         except Exception:
             pass
 
+    @hm.error
+    async def hm_errorhandler(self, ctx, error):
+        if isinstance(error, MissingRole):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Dieser Befehl ist Moderatoren vorbehalten.")
+        else:
+            error = BugReport(bot, ctx, e)
+            error.user_details()
+            await error.reply()
+            raise e
+
     @commands.command(aliases=["nsfw-add"])
     @commands.has_role(ServerIds.HM)
     async def nsfw_add(self, ctx):
@@ -174,6 +187,38 @@ class Roles(commands.Cog):
         await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.CODEING)
         await ctx.author.add_roles(role, reason="request by user")
+
+    @group.error
+    @study.error
+    @nsfw_add.error
+    @nsfw_rem.error
+    @coding.error
+    async def roles_errorhanler(self, ctx, error):
+        if isinstance(error, RoleNotFoundError):
+            embed = Embedgenerator("roles")
+            await ctx.send(content=f"<@!{ctx.author.id}>\n"
+                                   f"Es ist erforderlich, dass du dich zuerst in einen Studiengang einschreibst.",
+                           embed=embed.generate())
+
+        elif isinstance(error, MultipleGroupsError) or isinstance(error, MultipleCoursesError):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Es ist nicht gestattet in mehreren Gruppen oder Studieng\u00e4ngen eingeschrieben zu sein."
+                           f"\n F\u00fcr eine \u00c4nderung stelle eine Anfrage in <#{ServerIds.HELP}>")
+
+        elif isinstance(error, MissingRole):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"F\u00fcr diesen Befehl ist eine Verifikation erforderlich.\n"
+                           f"Stelle hierzu eine Anfrage in <#{ServerIds.HELP}>.")
+
+        elif isinstance(error, MissingRequiredArgument):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Anscheinend war der Befehl nicht Volls\u00e4ndig.\n")
+
+        else:
+            error = BugReport(self.bot, ctx, error)
+            error.user_details()
+            await error.reply()
+            raise error
 
 
 def setup(bot):

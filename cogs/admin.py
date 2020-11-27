@@ -6,7 +6,11 @@ import asyncio
 import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
-from settings import DefaultMessages
+# noinspection PyUnresolvedReferences
+from discord.ext.commands import errors
+from settings import DefaultMessages, BugReport
+# noinspection PyUnresolvedReferences
+from discord.errors import *
 from utils import *
 
 
@@ -38,11 +42,11 @@ class Admin(commands.Cog):
 
             # Setting `Listening ` status
             self.activity = discord.Activity(type=discord.ActivityType.listening,
-                                                                     name=arg)
+                                             name=arg)
         elif activity == "watch":
             # Setting `Watching ` status
             self.activity = discord.Activity(type=discord.ActivityType.watching,
-                                                                     name=arg)
+                                             name=arg)
         else:
             # Setting `Playing ` status
             self.activity = discord.Game(name=arg)
@@ -105,16 +109,31 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def reply(self, ctx, *, args):
-        print(args)
-        message = await ctx.send(args)
-        print(message.channel.id)
-        print(message.id)
+        print(ctx.message.content)
 
     @commands.command()
     @commands.is_owner()
     async def msg(self, ctx, channel_id, *, args):
         channel = await self.bot.fetch_channel(channel_id)
         await channel.send(args)
+
+    @shutdown.error
+    @activity.error
+    @status.error
+    @unload.error
+    @reload.error
+    @load.error
+    @reply.error
+    @msg.error
+    @purge.error
+    async def admin_errorhandler(self, ctx, error):
+        if isinstance(error, MissingRole):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Dieser Befehl ist nur dem Admin vorbehalten.")
+        else:
+            error = BugReport(self.bot, ctx, error)
+            error.user_details()
+            await error.reply()
 
 
 def setup(bot):
