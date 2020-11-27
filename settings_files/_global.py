@@ -32,6 +32,10 @@ def DEBUG_STATUS():
         return False
 
 
+class Links:
+    EVENTS = "https://www.cs.hm.edu/aktuelles/termine/index.de.html"
+
+
 class ServerIds:
     DEBUG_CHAT = 762736695116169217
     GUILD_ID = 760453010752143372
@@ -52,6 +56,7 @@ class ServerIds:
     IB1C = 763714528424361995
     NSFW = 766020273664294953
     CODEING = 769870767759818772
+    HELP = 765141613881720862
 
 
 class ServerRoles:

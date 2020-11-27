@@ -3,6 +3,8 @@ from discord.ext import commands
 import discord
 # noinspection PyUnresolvedReferences
 from settings import ServerRoles, ServerIds, ReadWrite, EmojiIds
+# noinspection PyUnresolvedReferences
+from discord.ext.commands.errors import *
 from collections import namedtuple
 import pyotp
 

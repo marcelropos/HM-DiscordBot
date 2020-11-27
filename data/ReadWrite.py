@@ -47,7 +47,7 @@ class ReadWrite:
         with cls.lock:
             # noinspection PyBroadException
             try:
-                with open(file, "r")as f:
+                with open(file, "r", encoding="UTF-8")as f:
                     payload = json.loads(f.read())
             except Exception as e:
                 print(e)
