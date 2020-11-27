@@ -6,7 +6,7 @@ import discord
 import requests
 from bs4 import BeautifulSoup
 from discord.ext import commands, tasks
-from utils import ReadWrite
+from utils import ReadWrite, MissingRole
 from settings import Links
 
 # noinspection PyUnresolvedReferences
@@ -95,6 +95,10 @@ class Announcements(commands.Cog):
         if isinstance(error, RequestError):
             await ctx.send()
 
+        elif isinstance(error, MissingRole):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"F\u00fcr diesen Befehl ist eine Verifikation erforderlich.\n"
+                           f"Stelle hierzu eine Anfrage in <#{ServerIds.HELP}>.")
         else:
             raise error
 
