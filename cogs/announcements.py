@@ -79,7 +79,7 @@ class Announcements(commands.Cog):
         return embed
 
     @commands.command()
-    @commands.is_owner()
+    @commands.has_role(ServerIds.HM)
     async def events(self, ctx):
         await ctx.send(embed=self.__events())
 
