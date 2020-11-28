@@ -214,6 +214,13 @@ class Roles(commands.Cog):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"Anscheinend war der Befehl nicht Volls\u00e4ndig.\n")
 
+        elif isinstance(error, WrongChatError):
+            await ctx.message.delete()
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Dieser Befehl darf in diesem Chat nicht verwendet werden.\n"
+                           f"Nutzebitte den dafür vorgesehenen Chat <#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
+                           delete_after=60)
+
         else:
             error = BugReport(self.bot, ctx, error)
             error.user_details()
