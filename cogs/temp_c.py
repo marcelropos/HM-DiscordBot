@@ -5,19 +5,9 @@ from discord.ext import commands
 import re
 # noinspection PyUnresolvedReferences
 from settings import Embedgenerator, BugReport
+# noinspection PyUnresolvedReferences
+from settings_files.all_errors import *
 from utils import *
-
-
-class PrivateChannelsAlreadyExistsError(UserError):
-    pass
-
-
-class TempChannelNotFound(UserError):
-    pass
-
-
-class CouldNotSendMessage(UserError):
-    pass
 
 
 # noinspection PyUnusedLocal,PyUnresolvedReferences,PyDunderSlots,PyBroadException

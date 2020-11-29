@@ -5,16 +5,14 @@ from collections import namedtuple
 import discord
 import requests
 from bs4 import BeautifulSoup
-from discord.ext import commands, tasks
+from discord.ext import tasks
+
+from settings_files.all_errors import *
 from utils import ReadWrite, MissingRole
 from settings import Links
 
 # noinspection PyUnresolvedReferences
-from utils import ServerIds, ModuleError
-
-
-class RequestError(ModuleError):
-    pass
+from utils import ServerIds
 
 
 class Announcements(commands.Cog):

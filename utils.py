@@ -4,29 +4,11 @@ import discord
 # noinspection PyUnresolvedReferences
 from settings import ServerRoles, ServerIds, ReadWrite, EmojiIds
 # noinspection PyUnresolvedReferences
-from discord.ext.commands.errors import *
+
 from collections import namedtuple
 import pyotp
 
-
-class NoCommandError(commands.CommandNotFound):
-    pass
-
-
-class UserError(commands.CommandError):
-    pass
-
-
-class WrongChatError(UserError):
-    pass
-
-
-class ModuleError(commands.CommandError):
-    pass
-
-
-class ChannelNotFoundError(UserError):
-    pass
+from settings_files.all_errors import *
 
 
 def mods_or_owner():
