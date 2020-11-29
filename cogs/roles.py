@@ -2,22 +2,10 @@
 import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
-from settings import Embedgenerator
+from settings import Embedgenerator, BugReport
 from utils import *
 from enum import Enum
 import re
-
-
-class RoleNotFoundError(UserError):
-    pass
-
-
-class MultipleGroupsError(UserError):
-    pass
-
-
-class MultipleCoursesError(UserError):
-    pass
 
 
 class Course(Enum):
@@ -131,7 +119,6 @@ class Roles(commands.Cog):
     @commands.has_role(ServerIds.MODERATOR)
     async def hm(self, ctx):
         await accepted_channels(self.bot, ctx)
-        print("test")
         msg = ctx.message.content
         matches = re.finditer(r"[0-9]+", msg)
         for match in matches:
@@ -162,7 +149,7 @@ class Roles(commands.Cog):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"Dieser Befehl ist Moderatoren vorbehalten.")
         else:
-            error = BugReport(bot, ctx, e)
+            error = BugReport(self.bot, ctx, e)
             error.user_details()
             await error.reply()
             raise e
