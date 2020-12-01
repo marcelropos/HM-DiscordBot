@@ -160,14 +160,18 @@ class TMP_CHANNELS:
 
     @classmethod
     async def delete_invite(cls, member_id, channel_id, message_id, ctx):
-        member = await ctx.guild.fetch_member(member_id)
+        # noinspection PyBroadException
+        try:
+            member = await ctx.guild.fetch_member(member_id)
 
-        embed = invite_embed(member, "Abgelaufen")
-        channel = await discord.Client.fetch_channel(cls.bot, channel_id)
-        message = await channel.fetch_message(message_id)
-        await message.edit(embed=embed)
-        del cls.invite_dict[message_id]
-        del cls.tmp_channels[member_id][3][message_id]
+            embed = invite_embed(member, "Abgelaufen")
+            channel = await discord.Client.fetch_channel(cls.bot, channel_id)
+            message = await channel.fetch_message(message_id)
+            await message.edit(embed=embed)
+            del cls.invite_dict[message_id]
+            del cls.tmp_channels[member_id][3][message_id]
+        except Exception:
+            pass
 
     @classmethod
     async def get_ids(cls, member):
@@ -182,7 +186,9 @@ class TMP_CHANNELS:
         # noinspection PyBroadException
         try:
             for x in cls.tmp_channels:
-                text, voice, token, invites = cls.tmp_channels[x]
+                text = cls.tmp_channels[x].text
+                voice = cls.tmp_channels[x].voice
+                token = cls.tmp_channels[x].token
                 members = voice.members
                 if len(members) == 0:
                     await cls.rem_channel(x, text, voice, token, ctx)
@@ -203,19 +209,23 @@ class TMP_CHANNELS:
         await voice.delete(reason="No longer used")
         cls.save_data()
 
+    # noinspection PyUnusedLocal,PyBroadException
     @classmethod
     def save_data(cls):
-        # noinspection PyUnusedLocal,PyBroadException
         tmp_channels = dict()
         for x in cls.tmp_channels:
             try:
                 tmp_attrs = cls.tmp_channels[x]
                 tmp_channels[x] = (tmp_attrs.text.id, tmp_attrs.voice.id, tmp_attrs.token, tmp_attrs.invites)
 
-                ReadWrite.write(tmp_channels, cls.file_name)
             except Exception as e:
                 print(e)
                 pass
+
+        try:
+            ReadWrite.write(tmp_channels, cls.file_name)
+        except Exception:
+            pass
 
     # noinspection PyDunderSlots,PyUnresolvedReferences,PyBroadException
     @staticmethod
