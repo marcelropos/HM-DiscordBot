@@ -16,19 +16,21 @@ for filename in os.listdir("./cogs"):
         logger.debug(f"Loaded: cogs.{filename[:-3]}")
 
 
+# noinspection PyBroadException
 @bot.after_invoke
 async def reply_with_read(ctx):
     try:
-        if not ctx.command_failed:
-            emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
-        else:
-            emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-        await ctx.message.add_reaction(emoji=emoji)
-    except AttributeError:
-        if not ctx.command_failed:
-            await ctx.message.add_reaction(emoji="✅")
-        else:
-            await ctx.message.add_reaction(emoji="❌")
+        try:
+            if not ctx.command_failed:
+                emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
+            else:
+                emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+            await ctx.message.add_reaction(emoji=emoji)
+        except AttributeError:
+            if not ctx.command_failed:
+                await ctx.message.add_reaction(emoji="✅")
+            else:
+                await ctx.message.add_reaction(emoji="❌")
 
     except Exception as e:
         msg = str(ctx.message.content)
