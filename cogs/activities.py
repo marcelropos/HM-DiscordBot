@@ -44,9 +44,11 @@ class Activities(commands.Cog):
 
         await MaintainChannel.rem_channels(member)
 
+        #TODO: Implement this again
+
         # await Channel_Functions.auto_bot_kick(before)
 
-        await Channel_Functions.auto_bot_kick(before)
+        # await Channel_Functions.nerd_ecke(self.bot, member)
 
         await Channel_Functions.nerd_ecke(self.bot, member)
 
