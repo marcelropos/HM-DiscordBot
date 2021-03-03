@@ -1,6 +1,6 @@
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
-from utils import *
+from utils.utils import *
 # noinspection PyUnresolvedReferences
 from settings import ServerRoles
 

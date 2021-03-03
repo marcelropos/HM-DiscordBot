@@ -1,8 +1,12 @@
 # noinspection PyUnresolvedReferences
 import discord
-from discord.ext import commands
-from utils import TMP_CHANNELS, ServerIds
-from settings import DefaultMessages, DEBUG_STATUS
+from discord.ext import commands, tasks
+from utils.utils import ServerIds, EmojiIds
+from settings import DefaultMessages
+import re
+from cogs.temp_c import MaintainChannel
+from utils.database import DB
+from utils.logbot import LogBot
 
 
 # noinspection PyUnusedLocal,PyPep8Naming

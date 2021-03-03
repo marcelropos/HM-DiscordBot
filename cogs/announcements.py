@@ -12,7 +12,7 @@ from utils import ReadWrite, MissingRole
 from settings import Links
 
 # noinspection PyUnresolvedReferences
-from utils import ServerIds
+from utils.utils import ServerIds
 
 
 class Announcements(commands.Cog):
