@@ -2,7 +2,7 @@ import json
 import os
 import discord
 from settings import Directories, ServerIds
-from utils import UserError
+from settings_files.all_errors import UserError
 import time
 
 

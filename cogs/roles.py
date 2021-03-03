@@ -74,6 +74,7 @@ class Roles(commands.Cog):
         self.bot = bot
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def study(self, ctx, arg: StudyCourseConverter):
         await accepted_channels(self.bot, ctx)
@@ -97,6 +98,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def group(self, ctx, arg: StudyGroupsConverter):
         await accepted_channels(self.bot, ctx)
@@ -116,6 +118,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.MODERATOR)
     async def hm(self, ctx):
         await accepted_channels(self.bot, ctx)
@@ -140,6 +143,8 @@ class Roles(commands.Cog):
             for x in ["help", "roles", "rules"]:
                 embed = Embedgenerator(x)
                 await member.send(embed=embed.generate())
+            await member.send("Achte auch bitte darauf, dass du neue Nachrichten bei Mittteilungen liest. Diese sind "
+                              "meist wichtig und interessant. Du findest diese ganz oben.")
         except Exception:
             pass
 
@@ -155,6 +160,7 @@ class Roles(commands.Cog):
             raise e
 
     @commands.command(aliases=["nsfw-add"])
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def nsfw_add(self, ctx):
         await accepted_channels(self.bot, ctx)
@@ -162,6 +168,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command(aliases=["nsfw-rem"])
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def nsfw_rem(self, ctx):
         await accepted_channels(self.bot, ctx)
@@ -169,6 +176,7 @@ class Roles(commands.Cog):
         await ctx.author.remove_roles(role, reason="request by user")
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def coding(self, ctx):
         await accepted_channels(self.bot, ctx)
@@ -207,6 +215,12 @@ class Roles(commands.Cog):
                            f"Dieser Befehl darf in diesem Chat nicht verwendet werden.\n"
                            f"Nutzebitte den dafür vorgesehenen Chat <#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
                            delete_after=60)
+        
+        elif isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
+            await ctx.send(f"Dieser Befehl kann nur im Chat <#{ServerIds.BOT_COMMANDS_CHANNEL}> gestellt werden.")
+
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send(error)
 
         else:
             error = BugReport(self.bot, ctx, error)

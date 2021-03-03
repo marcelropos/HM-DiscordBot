@@ -5,3 +5,7 @@ LICENSE
 Dockerfile
 .git
 .env
+venv/
+bin/
+docker-compose.yml
+Dockerfile-base-bot

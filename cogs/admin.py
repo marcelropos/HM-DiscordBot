@@ -10,7 +10,7 @@ from discord.ext import commands
 from discord.ext.commands import errors
 from settings import DefaultMessages, BugReport
 # noinspection PyUnresolvedReferences
-from utils import *
+from utils.utils import *
 
 
 # noinspection PyUnusedLocal

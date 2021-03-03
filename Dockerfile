@@ -1,10 +1,8 @@
-FROM python:3.8-alpine
-
-WORKDIR /data
-COPY . /data
-
-RUN apk add --no-cache --virtual .build-deps gcc libc-dev \
- && python3 -m pip install -r requirements.txt \
- && apk del .build-deps
-
-CMD [ "python3", "./main.py" ]
+FROM python:latest
+RUN python -m pip install discord
+RUN python -m pip install pyotp
+RUN python -m pip install requests
+RUN python -m pip install bs4
+WORKDIR /app:
+ADD . .
+CMD ["python", "main.py"]

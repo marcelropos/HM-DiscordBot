@@ -1,18 +1,22 @@
 # noinspection PyUnresolvedReferences
 import discord
-from discord.ext import commands
-from utils import TMP_CHANNELS, ServerIds
-from settings import DefaultMessages, DEBUG_STATUS
+from discord.ext import commands, tasks
+from utils.utils import ServerIds, EmojiIds
+from settings import DefaultMessages
+import re
+from cogs.temp_c import MaintainChannel
+from utils.database import DB
+from utils.logbot import LogBot
 
 
-# noinspection PyUnusedLocal,PyPep8Naming
+# noinspection PyUnusedLocal,PyPep8Naming,SqlResolve
 class Activities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.fetch_emojis.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
-        TMP_CHANNELS(self.bot)
         activity = discord.Game(name=DefaultMessages.ACTIVITY)
         await self.bot.change_presence(status=discord.Status.online,
                                        activity=discord.Activity(type=discord.ActivityType.listening,
@@ -22,6 +26,14 @@ class Activities(commands.Cog):
         await channel.send(DefaultMessages.GREETINGS)
         print(DefaultMessages.GREETINGS)
 
+    @tasks.loop(minutes=15)
+    async def fetch_emojis(self):
+        guild = await discord.Client.fetch_guild(self.bot, ServerIds.GUILD_ID)
+        emojis = dict()
+        for x in guild.emojis:
+            emojis[re.sub(r"[^a-zA-Z0-9]", "", x.name.lower())] = x.id
+        EmojiIds.nameset = emojis
+
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if member.bot:
@@ -30,11 +42,13 @@ class Activities(commands.Cog):
         if after.channel == await self.bot.fetch_channel(ServerIds.AFK_CHANNEL):
             await member.move_to(None, reason="AFK")
 
-        await TMP_CHANNELS.rem_channels(member)
+        await MaintainChannel.rem_channels(member)
 
-        await Channel_Functions.auto_bot_kick(before)
+        # TODO: Implement this again
 
-        await Channel_Functions.nerd_ecke(self.bot, member)
+        # await Channel_Functions.auto_bot_kick(before)
+
+        # await Channel_Functions.nerd_ecke(self.bot, member)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
@@ -52,27 +66,22 @@ class Activities(commands.Cog):
         # noinspection PyBroadException
         try:
             message_id = payload.message_id
-            channel_id = payload.channel_id
-            channel = await self.bot.fetch_channel(channel_id)
-            message = await channel.fetch_message(message_id)
+            token = DB.conn.execute(f"""SELECT token FROM Invites where message_id={message_id}""").fetchone()[0]
+            text_c, voice_c = DB.conn.execute(
+                f"""SELECT textChannel, voiceChannel FROM TempChannels where token={token}""") \
+                .fetchone()
+            text_c = await self.bot.fetch_channel(text_c)
+            voice_c = await self.bot.fetch_channel(voice_c)
+            await MaintainChannel.join(member, voice_c, text_c)
         except Exception:
-            pass
-        else:
-            if DEBUG_STATUS():
-                print(message.reactions)
-
-            if message_id in TMP_CHANNELS.invite_dict:
-                owner_id = TMP_CHANNELS.invite_dict[message_id].owner
-                text = TMP_CHANNELS.tmp_channels[owner_id].text
-                voice = TMP_CHANNELS.tmp_channels[owner_id].voice
-                await TMP_CHANNELS.join(member, voice, text)
+            LogBot.logger.exception("Activite error")
 
 
 def setup(bot):
     bot.add_cog(Activities(bot))
 
 
-class Channel_Functions:
+class ChannelFunctions:
 
     # noinspection PyBroadException
     @staticmethod

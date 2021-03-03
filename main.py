@@ -1,33 +1,43 @@
-# noinspection PyUnresolvedReferences
+import os
 import discord
 from discord.ext import commands
-# noinspection PyUnresolvedReferences
-import os
-from settings import ServerIds, DISCORD_BOT_TOKEN, ReadWrite, BugReport
-from utils import UserError, ModuleError, EmojiIds
+from discord.ext.commands import *
+import re
+from settings import DISCORD_BOT_TOKEN, ReadWrite, BugReport
+from utils.utils import EmojiIds, ServerIds
 
-bot = commands.Bot(command_prefix="!")
+from utils.logbot import LogBot
+
+logger = LogBot.logger
+
+intents = discord.Intents.default()
+intents.members = True
+
+bot = commands.Bot(command_prefix="!", case_insensitive=True)
 bot.remove_command('help')
 
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py") and \
             filename != "main.py":
         bot.load_extension(f"cogs.{filename[:-3]}")
+        logger.debug(f"Loaded: cogs.{filename[:-3]}")
 
 
+# noinspection PyBroadException
 @bot.after_invoke
 async def reply_with_read(ctx):
     try:
-        if not ctx.command_failed:
-            emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
-        else:
-            emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-        await ctx.message.add_reaction(emoji=emoji)
-    except AttributeError:
-        if not ctx.command_failed:
-            await ctx.message.add_reaction(emoji="✅")
-        else:
-            await ctx.message.add_reaction(emoji="❌")
+        try:
+            if not ctx.command_failed:
+                emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
+            else:
+                emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+            await ctx.message.add_reaction(emoji=emoji)
+        except AttributeError:
+            if not ctx.command_failed:
+                await ctx.message.add_reaction(emoji="✅")
+            else:
+                await ctx.message.add_reaction(emoji="❌")
 
     except Exception as e:
         msg = str(ctx.message.content)

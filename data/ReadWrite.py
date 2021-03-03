@@ -43,7 +43,7 @@ class ReadWrite:
     @classmethod
     def read(cls, file):
         os.chdir(Directories.DATA_DIR)
-        file = rf'{os.getcwd()}\{file}.json'
+        file = rf'{os.getcwd()}/{file}.json'
         with cls.lock:
             # noinspection PyBroadException
             try:
