@@ -74,6 +74,7 @@ class Roles(commands.Cog):
         self.bot = bot
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def study(self, ctx, arg: StudyCourseConverter):
         await accepted_channels(self.bot, ctx)
@@ -97,6 +98,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def group(self, ctx, arg: StudyGroupsConverter):
         await accepted_channels(self.bot, ctx)
@@ -116,6 +118,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.MODERATOR)
     async def hm(self, ctx):
         await accepted_channels(self.bot, ctx)
@@ -155,6 +158,7 @@ class Roles(commands.Cog):
             raise e
 
     @commands.command(aliases=["nsfw-add"])
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def nsfw_add(self, ctx):
         await accepted_channels(self.bot, ctx)
@@ -169,6 +173,7 @@ class Roles(commands.Cog):
         await ctx.author.remove_roles(role, reason="request by user")
 
     @commands.command()
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def coding(self, ctx):
         await accepted_channels(self.bot, ctx)
