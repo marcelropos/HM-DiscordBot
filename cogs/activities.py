@@ -9,7 +9,7 @@ from utils.database import DB
 from utils.logbot import LogBot
 
 
-# noinspection PyUnusedLocal,PyPep8Naming
+# noinspection PyUnusedLocal,PyPep8Naming,SqlResolve
 class Activities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
