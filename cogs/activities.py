@@ -50,8 +50,6 @@ class Activities(commands.Cog):
 
         # await Channel_Functions.nerd_ecke(self.bot, member)
 
-        await Channel_Functions.nerd_ecke(self.bot, member)
-
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         try:
