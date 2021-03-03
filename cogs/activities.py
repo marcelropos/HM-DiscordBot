@@ -13,6 +13,7 @@ from utils.logbot import LogBot
 class Activities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.fetch_emojis.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -25,6 +26,14 @@ class Activities(commands.Cog):
                                              id=ServerIds.DEBUG_CHAT)
         await channel.send(DefaultMessages.GREETINGS)
         print(DefaultMessages.GREETINGS)
+
+    @tasks.loop(minutes=15)
+    async def fetch_emojis(self):
+        guild = await discord.Client.fetch_guild(self.bot, ServerIds.GUILD_ID)
+        emojis = dict()
+        for x in guild.emojis:
+            emojis[re.sub(r"[^a-zA-Z0-9]", "", x.name.lower())] = x.id
+        EmojiIds.nameset = emojis
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
