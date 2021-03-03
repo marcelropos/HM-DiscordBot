@@ -82,7 +82,7 @@ def setup(bot):
     bot.add_cog(Activities(bot))
 
 
-class Channel_Functions:
+class ChannelFunctions:
 
     # noinspection PyBroadException
     @staticmethod
