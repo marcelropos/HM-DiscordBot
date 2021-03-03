@@ -44,7 +44,7 @@ class Activities(commands.Cog):
 
         await MaintainChannel.rem_channels(member)
 
-        #TODO: Implement this again
+        # TODO: Implement this again
 
         # await Channel_Functions.auto_bot_kick(before)
 
@@ -67,7 +67,8 @@ class Activities(commands.Cog):
         try:
             message_id = payload.message_id
             token = DB.conn.execute(f"""SELECT token FROM Invites where message_id={message_id}""").fetchone()[0]
-            text_c, voice_c = DB.conn.execute(f"""SELECT textChannel, voiceChannel FROM TempChannels where token={token}""")\
+            text_c, voice_c = DB.conn.execute(
+                f"""SELECT textChannel, voiceChannel FROM TempChannels where token={token}""") \
                 .fetchone()
             text_c = await self.bot.fetch_channel(text_c)
             voice_c = await self.bot.fetch_channel(voice_c)
