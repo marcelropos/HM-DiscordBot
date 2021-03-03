@@ -68,20 +68,14 @@ class Activities(commands.Cog):
         # noinspection PyBroadException
         try:
             message_id = payload.message_id
-            channel_id = payload.channel_id
-            channel = await self.bot.fetch_channel(channel_id)
-            message = await channel.fetch_message(message_id)
+            token = DB.conn.execute(f"""SELECT token FROM Invites where message_id={message_id}""").fetchone()[0]
+            text_c, voice_c = DB.conn.execute(f"""SELECT textChannel, voiceChannel FROM TempChannels where token={token}""")\
+                .fetchone()
+            text_c = await self.bot.fetch_channel(text_c)
+            voice_c = await self.bot.fetch_channel(voice_c)
+            await MaintainChannel.join(member, voice_c, text_c)
         except Exception:
-            pass
-        else:
-            if DEBUG_STATUS():
-                print(message.reactions)
-
-            if message_id in TMP_CHANNELS.invite_dict:
-                owner_id = TMP_CHANNELS.invite_dict[message_id].owner
-                text = TMP_CHANNELS.tmp_channels[owner_id].text
-                voice = TMP_CHANNELS.tmp_channels[owner_id].voice
-                await TMP_CHANNELS.join(member, voice, text)
+            LogBot.logger.exception("Activite error")
 
 
 def setup(bot):
