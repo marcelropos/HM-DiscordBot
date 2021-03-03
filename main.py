@@ -1,12 +1,19 @@
 # noinspection PyUnresolvedReferences
 import discord
 from discord.ext import commands
-# noinspection PyUnresolvedReferences
-import os
-from settings import ServerIds, DISCORD_BOT_TOKEN, ReadWrite, BugReport
-from utils import UserError, ModuleError, EmojiIds
+from discord.ext.commands import *
+import re
+from settings import DISCORD_BOT_TOKEN, ReadWrite, BugReport
+from utils.utils import EmojiIds, ServerIds
 
-bot = commands.Bot(command_prefix="!")
+from utils.logbot import LogBot
+
+logger = LogBot.logger
+
+intents = discord.Intents.default()
+intents.members = True
+
+bot = commands.Bot(command_prefix="!", case_insensitive=True)
 bot.remove_command('help')
 
 for filename in os.listdir("./cogs"):
