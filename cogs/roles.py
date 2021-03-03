@@ -168,6 +168,7 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @commands.command(aliases=["nsfw-rem"])
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     async def nsfw_rem(self, ctx):
         await accepted_channels(self.bot, ctx)
