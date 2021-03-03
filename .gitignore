@@ -138,3 +138,5 @@ cython_debug/
 
 secrets/
 .idea/
+bin/
+/lib64/
