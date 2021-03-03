@@ -187,6 +187,12 @@ class Roles(commands.Cog):
                            f"This command may not be used in this chat.\n"
                            f"Please use the chat provided for this purpose. <#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
                            delete_after=60)
+        
+        elif isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
+            await ctx.send(f"Dieser Befehl kann nur im Chat <#{ServerIds.BOT_COMMANDS_CHANNEL}> gestellt werden.")
+
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send(error)
 
         elif isinstance(error, commands.BadArgument):
             await ctx.send(str(error))
