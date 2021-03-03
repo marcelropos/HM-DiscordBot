@@ -17,7 +17,6 @@ class Activities(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        TMP_CHANNELS(self.bot)
         activity = discord.Game(name=DefaultMessages.ACTIVITY)
         await self.bot.change_presence(status=discord.Status.online,
                                        activity=discord.Activity(type=discord.ActivityType.listening,
