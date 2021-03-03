@@ -2,15 +2,14 @@
 import datetime
 import re
 from collections import namedtuple
+
 import discord
 import requests
 from bs4 import BeautifulSoup
-from discord.ext import tasks
 
-from settings_files.all_errors import *
-from utils import ReadWrite, MissingRole
 from settings import Links
-
+from settings_files.all_errors import *
+from utils.utils import ReadWrite, MissingRole
 # noinspection PyUnresolvedReferences
 from utils.utils import ServerIds
 
@@ -18,28 +17,29 @@ from utils.utils import ServerIds
 class Announcements(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.events = []
         #  self.event_scedule.start()
 
-    def __event_sort(self):
+    @staticmethod
+    def __event_sort(events):
         def getkey(item):
             return item.end
+        return sorted(events, key=getkey)
 
-        self.events = sorted(self.events, key=getkey)
-
-    def __fetch_event(self, dates, title, message):
+    @staticmethod
+    def __fetch_event(dates, title, message):
         eventobj = namedtuple("Event", ["begin", "end", "title", "message"])
         liste = []
         for x in dates:
             date_string = title[x.start(): x.end()]
             day, month, year = re.split(r"\.", date_string)
             liste.append(datetime.datetime(day=int(day), month=int(month), year=int(year)))
-        if datetime.datetime.today() <= max(liste):
-            if datetime.datetime.today() >= min(liste):
+        if datetime.datetime.today().date() <= max(liste).date():
+            if datetime.datetime.today().date() >= min(liste).date():
                 title = "⚠" + title + "⚠"
-            self.events.append(eventobj(begin=min(liste), end=max(liste), title=title, message=message))
+            return eventobj(begin=min(liste), end=max(liste), title=title, message=message)
 
-    def __events(self):
+    def __events(self, ctx):
+        events_list = []
         link = Links.EVENTS
         r = requests.get(link, timeout=5)
         if not r.ok:
@@ -47,7 +47,7 @@ class Announcements(commands.Cog):
 
         soup = BeautifulSoup(r.content, features="html.parser")
         embed = discord.Embed(title="Veranstaltungen")
-        embed.set_footer(text=f"Quelle: {link}\n und eigene Erg\u00e4nzungen."
+        embed.set_footer(text=f"Quelle: (Sofern nicht anders anegegeben) {link}\n"
                               f"Stand: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M Uhr')}\n"
                               f"Alle Angaben ohne gewähr.")
 
@@ -56,7 +56,9 @@ class Announcements(commands.Cog):
                 column = data.find_all("td")
                 try:
                     dates = re.finditer(r"[0-9]{2}\.[0-9]{2}\.[0-9]{4}", column[0].text)
-                    self.__fetch_event(dates, column[0].text, column[1].text)
+                    ret = self.__fetch_event(dates, column[0].text, column[1].text)
+                    if ret:
+                        events_list.append(ret)
                 except IndexError:
                     pass
                 except ValueError:
@@ -64,14 +66,20 @@ class Announcements(commands.Cog):
                 except TypeError:
                     pass
 
-        payload = ReadWrite.read("events")
-        for event in payload["events"]:
-            dates = re.finditer(r"[0-9]{2}\.[0-9]{2}\.[0-9]{4}", event["date"])
-            self.__fetch_event(dates, event["date"], event["message"])
+        roles = set()
+        for x in ctx.author.roles:
+            roles.add(x.name)
 
-        self.__event_sort()
+        root = ReadWrite.read("events")
 
-        for event in self.events:
+        for role in roles.intersection(ReadWrite.read("events")):
+            for event in root[role]["events"]:
+                dates = re.finditer(r"[0-9]{2}\.[0-9]{2}\.[0-9]{4}", event["date"])
+                ret = self.__fetch_event(dates, event["date"], event["message"])
+                if ret:
+                    events_list.append(ret)
+
+        for event in self.__event_sort(events_list):
             embed.add_field(name=event.title, value=event.message, inline=False)
 
         return embed
@@ -79,14 +87,7 @@ class Announcements(commands.Cog):
     @commands.command()
     @commands.has_role(ServerIds.HM)
     async def events(self, ctx):
-        await ctx.send(embed=self.__events())
-
-    @tasks.loop(minutes=10)
-    async def event_scedule(self):
-        channel = discord.Client.get_channel(self=self.bot,
-                                             id=ServerIds.DEBUG_CHAT)
-        if channel:
-            await channel.send(embed=self.__events())
+        await ctx.author.send(embed=self.__events(ctx))
 
     @events.error
     async def events_errorhandler(self, ctx, error):
