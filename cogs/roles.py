@@ -143,6 +143,8 @@ class Roles(commands.Cog):
             for x in ["help", "roles", "rules"]:
                 embed = Embedgenerator(x)
                 await member.send(embed=embed.generate())
+            await member.send("Achte auch bitte darauf, dass du neue Nachrichten bei Mittteilungen liest. Diese sind "
+                              "meist wichtig und interessant. Du findest diese ganz oben.")
         except Exception:
             pass
 
