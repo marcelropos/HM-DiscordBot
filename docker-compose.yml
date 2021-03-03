@@ -1,6 +1,18 @@
-version: '3.8'
+version: '3.2'
+
 services:
-  hm-bot:
+  hm:
     build: .
+    restart: always
+    volumes:
+      - ./data:/app/data
     environment:
-      TOKEN: ${TOKEN}
+      - DEBUG=0
+    secrets:
+      - TOKEN
+volumes:
+  hm:
+
+secrets:
+  TOKEN:
+    file: ./TOKEN.txt
