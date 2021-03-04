@@ -116,7 +116,8 @@ class TempChannels(commands.Cog):
 
         if command.startswith("gen"):
             self.logger.debug("Generate new token")
-            invites = DB.conn.execute(f"""SELECT * FROM Invites where token={token}""").fetchall()
+            invites = DB.conn.execute(f"""SELECT * FROM Invites where token=?""",
+                                      (str(token),)).fetchall()
             self.logger.debug(f"Deleting {len(invites)} invites")
             for message_id, _, member_id, channel_id in invites:
                 await MaintainChannel.delete_invite(member_id, channel_id, message_id, ctx)
@@ -262,17 +263,18 @@ class MaintainChannel:
 
     @staticmethod
     async def update(ctx, new_token):
-        token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser={ctx.author.id}""").fetchone()
-        invites = DB.conn.execute(f"""SELECT message_id FROM Invites where token={token}""").fetchall()
+        token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser=?""",
+                                (str(ctx.author.id),)).fetchone()
+        invites = DB.conn.execute(f"""SELECT message_id FROM Invites where token=?""", (token,)).fetchall()
         for invite in invites:
             await MaintainChannel.delete_invite(invite, ctx)
-        DB.conn.execute(f"""UPDATE TempChannels SET token={new_token} where discordUser={ctx.author.id}""")
+        DB.conn.execute(f"""UPDATE TempChannels SET token={new_token} where discordUser=?""", (ctx.author.id,))
 
     @staticmethod
     def save_invite(member, message):
         try:
 
-            token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser={member.id}""").fetchone()[0]
+            token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser=?""", (member.id,)).fetchone()[0]
             LogBot.logger.debug(f"Save invite with token {token}")
             DB.conn.execute(f"""INSERT into Invites(message_id,token,member_id,channel_id)
             VALUES('{message.id}','{token}','{member.id}','{message.channel.id}')""")
@@ -292,7 +294,7 @@ class MaintainChannel:
         except Exception:
             LogBot.logger.exception("Can't edit message: ")
         finally:
-            DB.conn.execute(f"""delete from Invites where message_id={message_id}""")
+            DB.conn.execute(f"""delete from Invites where message_id=?""", (message_id,))
 
     @staticmethod
     async def rem_channels(ctx):
@@ -312,10 +314,10 @@ class MaintainChannel:
     @classmethod
     async def rem_channel(cls, user_id, text, voice, token, ctx):
         LogBot.logger.debug("Delete Channel")
-        invites = DB.conn.execute(f"""SELECT message_id FROM Invites where token={token}""").fetchall()
+        invites = DB.conn.execute(f"""SELECT message_id FROM Invites where token=?""", (token,)).fetchall()
         for invite in invites:
             await MaintainChannel.delete_invite(invite, ctx)
-        DB.conn.execute(f"""delete from TempChannels where discordUser={user_id}""")
+        DB.conn.execute(f"""delete from TempChannels where discordUser=?""", (user_id,))
         try:
             text = await discord.Client.fetch_channel(cls.bot, text)
             await text.delete(reason="No longer used")
