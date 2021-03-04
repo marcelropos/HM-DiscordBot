@@ -8,6 +8,7 @@ from settings_files.all_errors import *
 from utils.ReadWrite import ReadWrite
 from utils.database import DB
 from utils.logbot import LogBot
+import asyncio
 
 logger = LogBot.logger
 
@@ -24,24 +25,26 @@ for filename in os.listdir("./cogs"):
         logger.debug(f"Loaded: cogs.{filename[:-3]}")
 
 
-# noinspection PyBroadException
+# noinspection PyBroadException,SqlNoDataSourceInspection
 async def reply_with_read(ctx):
     try:
         ctx_id = ctx.id
     except AttributeError:
         ctx_id = ctx.message.id
     logger.debug(ctx_id)
-
-    error_status = DB.conn.execute("SELECT error_status from comand_ctx WHERE (ctx_id=? AND is_command=?)",
-                                   (ctx_id, 1)).fetchone()
+    error_status = DB.conn.execute("SELECT error_status from comand_ctx WHERE (ctx_id=?)",
+                                   (ctx_id,)).fetchone()
     if error_status:
         error_status = error_status[0]
         try:
             if error_status:
-                try:
+                await asyncio.sleep(1)  # prevents being to fast
+                try:  # remove_reaction
+                    await ctx.clear_reactions()
                     emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
                     await ctx.add_reaction(emoji=emoji)
                 except AttributeError:
+                    await ctx.message.clear_reactions()
                     emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
                     await ctx.message.add_reaction(emoji=emoji)
                 except Exception:
