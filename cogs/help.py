@@ -18,7 +18,7 @@ class Help(commands.Cog):
         await ctx.send(content=f"<@!{ctx.author.id}> vielen Dank für deine Frage.",
                        embed=embed.generate())
 
-    @commands.command
+    @commands.command(aliases=["manpage"])
     async def man(self, ctx, arg=None):
         if arg is None:
             await ctx.send(content="Bitte ein UNIX Kommando angeben")
