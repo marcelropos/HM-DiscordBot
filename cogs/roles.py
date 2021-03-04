@@ -3,9 +3,10 @@ import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
 from utils.embed_generator import BugReport
-from settings_files._global import ServerIds
+from settings_files._global import ServerIds, ServerRoles
 from utils.embed_generator import EmbedGenerator
-from utils import *
+from utils.utils import accepted_channels
+from settings_files.all_errors import *
 from enum import Enum
 import re
 
