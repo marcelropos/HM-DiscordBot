@@ -1,2 +1,4 @@
-discord.py
+discord
 pyotp
+requests
+bs4
