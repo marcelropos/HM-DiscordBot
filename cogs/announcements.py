@@ -7,9 +7,10 @@ import discord
 import requests
 from bs4 import BeautifulSoup
 
-from settings import Links
+from settings_files._global import Links
 from settings_files.all_errors import *
-from utils.utils import ReadWrite, MissingRole
+from utils.utils import MissingRole
+from utils.ReadWrite import ReadWrite
 # noinspection PyUnresolvedReferences
 from utils.utils import ServerIds
 
