@@ -4,7 +4,8 @@ import discord
 from discord.ext import commands
 import re
 # noinspection PyUnresolvedReferences
-from settings import Embedgenerator, BugReport
+from settings import BugReport
+from utils.embed_generator import EmbedGenerator
 # noinspection PyUnresolvedReferences
 from settings_files.all_errors import *
 # noinspection PyProtectedMember,PyUnresolvedReferences
@@ -60,7 +61,7 @@ class TempChannels(commands.Cog):
 
         # noinspection PyBroadException
         try:
-            gen = Embedgenerator("tmpc-func")
+            gen = EmbedGenerator("tmpc-func")
             embed = gen.generate()
             embed.add_field(name="Kommilitonen einladen",
                             value=f"Mit ```!tmpc join {token}``` "
@@ -220,12 +221,12 @@ class TempChannels(commands.Cog):
                            delete_after=60)
 
         elif isinstance(error, ModuleError):
-            embed = Embedgenerator("tmpc")
+            embed = EmbedGenerator("tmpc")
             await ctx.send(content=f"<@!{ctx.author.id}>\n"
                                    f"Dieser Befehl wurde nicht gefunden.",
                            embed=embed.generate(),
                            delete_after=60)
-            embed = Embedgenerator("tmpc-func")
+            embed = EmbedGenerator("tmpc-func")
             await ctx.send(embed=embed.generate(),
                            delete_after=60)
 

@@ -1,7 +1,7 @@
 import json
 import os
 import discord
-from settings import Directories, ServerIds
+from settings_files._global import Directories, ServerIds
 from settings_files.all_errors import UserError
 import time
 
@@ -10,7 +10,7 @@ class HelpError(UserError):
     pass
 
 
-class Embedgenerator:
+class EmbedGenerator:
 
     def __init__(self, file):
         os.chdir(Directories.DATA_DIR)

@@ -10,7 +10,7 @@ class Directories:
 class EmojiIds:
     Success = 769239335668809779
     Failed = 769239337887596624
-    nameset = set()
+    name_set = set()
 
 
 class DefaultMessages:

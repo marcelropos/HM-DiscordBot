@@ -1,7 +1,7 @@
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
 from utils.utils import *
-from settings import Embedgenerator
+from utils.embed_generator import EmbedGenerator
 
 
 class Help(commands.Cog):
@@ -12,9 +12,9 @@ class Help(commands.Cog):
     async def help(self, ctx, arg=None):
 
         if arg is None:
-            embed = Embedgenerator("help")
+            embed = EmbedGenerator("help")
         else:
-            embed = Embedgenerator(arg)
+            embed = EmbedGenerator(arg)
         await ctx.send(content=f"<@!{ctx.author.id}> vielen Dank für deine Frage.",
                        embed=embed.generate())
 

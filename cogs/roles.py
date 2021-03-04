@@ -2,7 +2,9 @@
 import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
-from settings import Embedgenerator, BugReport, ServerIds
+from utils.embed_generator import BugReport
+from settings_files._global import ServerIds
+from utils.embed_generator import EmbedGenerator
 from utils import *
 from enum import Enum
 import re
@@ -133,15 +135,15 @@ class Roles(commands.Cog):
         await member.add_roles(role, reason=f"request by {str(ctx.author)}")
         # noinspection PyBroadException
         try:
-            nohm = discord.utils.get(ctx.guild.roles, id=ServerIds.NOHM)
-            await member.remove_roles(nohm, reason=f"request by {str(ctx.author)}")
+            no_hm = discord.utils.get(ctx.guild.roles, id=ServerIds.NOHM)
+            await member.remove_roles(no_hm, reason=f"request by {str(ctx.author)}")
         except Exception:
             pass
 
         # noinspection PyBroadException
         try:
             for x in ["help", "roles", "rules"]:
-                embed = Embedgenerator(x)
+                embed = EmbedGenerator(x)
                 await member.send(embed=embed.generate())
             await member.send("Achte auch bitte darauf, dass du neue Nachrichten bei Mittteilungen liest. Diese sind "
                               "meist wichtig und interessant. Du findest diese ganz oben.")
@@ -190,7 +192,7 @@ class Roles(commands.Cog):
     @coding.error
     async def roles_errorhanler(self, ctx, error):
         if isinstance(error, RoleNotFoundError):
-            embed = Embedgenerator("roles")
+            embed = EmbedGenerator("roles")
             await ctx.send(content=f"<@!{ctx.author.id}>\n"
                                    f"Es ist erforderlich, dass du dich zuerst in einen Studiengang einschreibst.",
                            embed=embed.generate())

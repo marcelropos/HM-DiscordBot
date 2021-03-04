@@ -2,7 +2,7 @@
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
-from settings import ServerRoles
+from settings_files._global import ServerRoles
 from utils.utils import DictSort
 
 

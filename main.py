@@ -3,8 +3,10 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import *
 import re
-from settings import DISCORD_BOT_TOKEN, ReadWrite, BugReport
-from utils.utils import EmojiIds, ServerIds
+from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds
+from settings_files.all_errors import *
+from utils.ReadWrite import ReadWrite
+from utils.embed_generator import BugReport
 
 from utils.logbot import LogBot
 

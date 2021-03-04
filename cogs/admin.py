@@ -8,7 +8,8 @@ import discord
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
 from discord.ext.commands import errors
-from settings import DefaultMessages, BugReport
+from utils.embed_generator import BugReport
+from settings_files._global import DefaultMessages
 # noinspection PyUnresolvedReferences
 from utils.utils import *
 

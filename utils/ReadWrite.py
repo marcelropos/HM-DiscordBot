@@ -1,7 +1,7 @@
 import tempfile
 import json
 import os
-from settings import Directories
+from settings_files._global import Directories
 from threading import Lock
 
 

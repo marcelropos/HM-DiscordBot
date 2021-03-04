@@ -1,8 +1,7 @@
 # noinspection PyUnresolvedReferences
 import discord
 from discord.ext import commands, tasks
-from utils.utils import ServerIds, EmojiIds
-from settings import DefaultMessages
+from settings_files._global import DefaultMessages, ServerIds, EmojiIds
 import re
 from cogs.temp_c import MaintainChannel
 from utils.database import DB
@@ -32,7 +31,7 @@ class Activities(commands.Cog):
         emojis = dict()
         for x in guild.emojis:
             emojis[re.sub(r"[^a-zA-Z0-9]", "", x.name.lower())] = x.id
-        EmojiIds.nameset = emojis
+        EmojiIds.name_set = emojis
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
