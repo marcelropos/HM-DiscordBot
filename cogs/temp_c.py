@@ -113,8 +113,11 @@ class TempChannels(commands.Cog):
 
     @tmpc.command()
     async def token(self, ctx, command: str, *, args=None):
-        member, text_c, voice_c, token = DB.conn.execute(f"""SELECT * FROM TempChannels WHERE discordUser=?""",
-                                                         (str(ctx.author.id),)).fetchone()
+        try:
+            member, text_c, voice_c, token = DB.conn.execute(f"""SELECT * FROM TempChannels WHERE discordUser=?""",
+                                                             (str(ctx.author.id),)).fetchone()
+        except TypeError:
+            raise TempChannelNotFound()
 
         if command.startswith("gen"):
             self.logger.debug("Generate new token")
@@ -237,9 +240,8 @@ class TempChannels(commands.Cog):
                            delete_after=60)
 
         elif isinstance(error, TempChannelNotFound):
-            await ctx.message.delete()
             await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"Channel not found",
+                           f"Du besitzt keinen temporären Channel",
                            delete_after=60)
 
         else:
