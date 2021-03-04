@@ -4,13 +4,11 @@ import discord
 from discord.ext import commands
 import re
 # noinspection PyUnresolvedReferences
-from settings import BugReport
-from utils.embed_generator import EmbedGenerator
+from utils.embed_generator import EmbedGenerator, BugReport
 # noinspection PyUnresolvedReferences
 from settings_files.all_errors import *
 # noinspection PyProtectedMember,PyUnresolvedReferences
-from settings_files._global import ServerIds
-from utils.utils import *
+from settings_files._global import ServerIds, ServerRoles
 from utils.database import DB
 from utils.logbot import LogBot
 

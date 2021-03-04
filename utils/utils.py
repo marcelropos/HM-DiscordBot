@@ -2,7 +2,7 @@ from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
 # noinspection PyUnresolvedReferences
-from settings import ServerRoles, ServerIds, ReadWrite, EmojiIds
+from settings_files._global import ServerRoles, ServerIds, EmojiIds
 # noinspection PyUnresolvedReferences
 
 from collections import namedtuple

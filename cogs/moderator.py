@@ -1,8 +1,7 @@
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
-from utils.utils import *
 # noinspection PyUnresolvedReferences
-from settings import ServerRoles
+from settings_files._global import ServerRoles
 
 
 class Moderator(commands.Cog):
