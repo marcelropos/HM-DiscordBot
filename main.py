@@ -97,5 +97,33 @@ async def on_command_error(ctx, e):
     return
 
 
+# noinspection PyBroadException
+@bot.event
+async def on_message(ctx):
+    try:
+        if not ctx.author.bot:
+            msg = re.sub(r"[^a-zA-Z0-9\s]", "", ctx.content).lower() + " "
+            msg += re.sub(r"\.", " ", ctx.content).lower()
+            msg_list = list(re.split(r"\s", msg))
+            for keyword in msg_list:
+                if keyword in EmojiIds.name_set:
+                    try:
+                        guild = await discord.Client.fetch_guild(bot, ServerIds.GUILD_ID)
+                        emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set[keyword])
+                        channel = await discord.Client.fetch_channel(bot, ctx.channel.id)
+                        message = await channel.fetch_message(ctx.id)
+                        await message.add_reaction(emoji=emoji)
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+
+    finally:
+        try:
+            await bot.process_commands(ctx)
+        except Exception:
+            logger.exception("An error occurred:")
+
+
 ReadWrite()  # Init Class
 bot.run(DISCORD_BOT_TOKEN())
