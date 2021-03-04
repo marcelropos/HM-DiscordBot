@@ -75,47 +75,21 @@ async def reply_with_read(ctx):
 @bot.event
 async def on_command_error(ctx, e):
     try:
-        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-        await ctx.message.add_reaction(emoji=emoji)
+        logger.debug(ctx.message.id)
+        DB.conn.execute(f"UPDATE comand_ctx SET error_status = 1 WHERE ctx_id=?", (ctx.message.id,))
+        if isinstance(e, CommandNotFound):
+            await ctx.send("Befehl nicht gefunden.")
+        elif isinstance(e, UserError):
+            pass
+        else:
+            raise e
     except Exception:
-        await ctx.message.add_reaction(emoji="❌")
-
-    if isinstance(e, commands.CommandNotFound):
-        await ctx.send("Befehl nicht gefunden. `!help` für mehr Information.")
-        emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-        await ctx.message.add_reaction(emoji=emoji)
-
-    elif isinstance(e, UserError) or \
-            isinstance(e, discord.ext.commands.BadArgument) or \
-            isinstance(e, ModuleError):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n`{str(e)}`")
-
-    elif isinstance(e, discord.ext.commands.MissingRole) or isinstance(e, discord.ext.commands.NotOwner):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n Du hast nicht genügend Rechte für diesen Befehl.\n`{str(e)}`")
-
-    elif isinstance(e, discord.ext.commands.errors.NoPrivateMessage):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n Dieser Befehl kann nicht privat an den Bot gesendet werden."
-                       f"\n`{str(e)}`")
-
-    elif isinstance(e, discord.ext.commands.MissingRequiredArgument):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n Diese Befehl benötigt noch weitere Argumente.\n`{str(e)}`\n"
-                       f"`!help` für mehr Information.")
-
-    elif isinstance(e, discord.ext.commands.ConversionError):
-        await ctx.send(f"<@!{ctx.message.author.id}>\n Bitte überprüfe ob der Befehl korrekt ist.")
-        channel = bot.get_channel(id=ServerIds.DEBUG_CHAT)
-        msg = f"Error:\n```{e}```\n```{ctx.message.content}```"
-        await channel.send(msg)
-
-    else:
-        error = BugReport(bot, ctx, e)
-        error.user_details()
-        await error.reply()
-        raise e
-    return
+        logger.exception("Unhandled exception!")
+    finally:
+        await reply_with_read(ctx)
 
 
-# noinspection PyBroadException
+# noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
 @bot.event
 async def on_message(ctx):
     try:
