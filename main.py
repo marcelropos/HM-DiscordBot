@@ -7,7 +7,7 @@ from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds
 from settings_files.all_errors import *
 from utils.ReadWrite import ReadWrite
 from utils.embed_generator import BugReport
-
+from utils.database import DB
 from utils.logbot import LogBot
 
 logger = LogBot.logger
@@ -26,34 +26,52 @@ for filename in os.listdir("./cogs"):
 
 
 # noinspection PyBroadException
-@bot.after_invoke
 async def reply_with_read(ctx):
     try:
+        ctx_id = ctx.id
+    except AttributeError:
+        ctx_id = ctx.message.id
+    logger.debug(ctx_id)
+
+    error_status = DB.conn.execute("SELECT error_status from comand_ctx WHERE (ctx_id=? AND is_command=?)",
+                                   (ctx_id, 1)).fetchone()
+    if error_status:
+        error_status = error_status[0]
         try:
-            if not ctx.command_failed:
-                emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
+            if error_status:
+                try:
+                    emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+                    await ctx.add_reaction(emoji=emoji)
+                except AttributeError:
+                    emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+                    await ctx.message.add_reaction(emoji=emoji)
+                except Exception:
+                    try:
+                        await ctx.add_reaction(emoji="❌")
+                    except AttributeError:
+                        await ctx.message.add_reaction(emoji="❌")
+
             else:
-                emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-            await ctx.message.add_reaction(emoji=emoji)
-        except AttributeError:
-            if not ctx.command_failed:
-                await ctx.message.add_reaction(emoji="✅")
-            else:
-                await ctx.message.add_reaction(emoji="❌")
+                try:
+                    emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
+                    await ctx.add_reaction(emoji=emoji)
+                except AttributeError:
+                    emoji = await ctx.message.guild.fetch_emoji(emoji_id=EmojiIds.Success)
+                    await ctx.message.add_reaction(emoji=emoji)
+                except Exception:
+                    try:
+                        await ctx.add_reaction(emoji="✅")
+                    except AttributeError:
+                        await ctx.message.add_reaction(emoji="✅")
 
-    except Exception as e:
-        msg = str(ctx.message.content)
-        if msg.startswith("!purge") or \
-                msg.startswith("!tmpc"):
-            return
-        else:
-            error = BugReport(bot, ctx, e)
-            error.user_details()
-            await error.reply()
-            raise e
+            DB.conn.execute("DELETE from comand_ctx WHERE (ctx_id=?)",
+                            (ctx_id,))
+
+        except Exception:
+            logger.exception("Could not add reaction:")
 
 
-# noinspection PyBroadException
+# noinspection PyBroadException,SqlNoDataSourceInspection
 @bot.event
 async def on_command_error(ctx, e):
     try:

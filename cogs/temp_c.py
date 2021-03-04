@@ -209,6 +209,7 @@ class TempChannels(commands.Cog):
     @nomod.error
     @rem.error
     async def temp_errorhandler(self, ctx, error):
+        DB.conn.execute(f"UPDATE comand_ctx SET error_status = 1 WHERE ctx_id=?", (ctx.message.id,))
         if isinstance(error, TempChannels):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"Es wurde kein Channel gefunden, der dir geh\u00f6rt.", delete_after=60)

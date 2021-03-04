@@ -25,6 +25,12 @@ class DB:
                      channel_id INTEGER NOT NULL,
                      FOREIGN KEY (token) references TempChannels(token))''')
 
+    with conn:
+        # Create table
+        conn.execute('''CREATE TABLE if NOT EXISTS comand_ctx
+                     (ctx_id TEXT primary key,
+                     error_status INTEGER DEFAULT 0)''')
+
 
 if __name__ == '__main__':
     DB()
