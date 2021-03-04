@@ -14,6 +14,7 @@ from utils.database import DB
 from utils.logbot import LogBot
 
 
+# noinspection SqlResolve
 class TempChannels(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -74,7 +75,8 @@ class TempChannels(commands.Cog):
         try:
             DB.conn.execute(f"INSERT INTO TempChannels("
                             f"discordUser, textChannel, voiceChannel, token) VALUES"
-                            f"({ctx.author.id}, {text_c.id}, {voice_c.id}, {token})")
+                            f"(?,?,?,?)",
+                            (ctx.author.id, text_c.id, voice_c.id, token))
         except Exception:
             self.logger.exception("Database Error:")
         else:
@@ -268,16 +270,18 @@ class MaintainChannel:
         invites = DB.conn.execute(f"""SELECT message_id FROM Invites where token=?""", (token,)).fetchall()
         for invite in invites:
             await MaintainChannel.delete_invite(invite, ctx)
-        DB.conn.execute(f"""UPDATE TempChannels SET token={new_token} where discordUser=?""", (ctx.author.id,))
+        DB.conn.execute(f"""UPDATE TempChannels SET token=? where discordUser=?""",
+                        (new_token, ctx.author.id))
 
     @staticmethod
     def save_invite(member, message):
         try:
 
-            token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser=?""", (member.id,)).fetchone()[0]
+            token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser=?""",
+                                    (member.id,)).fetchone()[0]
             LogBot.logger.debug(f"Save invite with token {token}")
             DB.conn.execute(f"""INSERT into Invites(message_id,token,member_id,channel_id)
-            VALUES('{message.id}','{token}','{member.id}','{message.channel.id}')""")
+            VALUES(?,?,?,?)""", (message.id, token, member.id, message.channel.id))
         except Exception:
             LogBot.logger.exception("Failed to insert Data")
 

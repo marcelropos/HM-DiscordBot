@@ -66,13 +66,15 @@ class Activities(commands.Cog):
         # noinspection PyBroadException
         try:
             message_id = payload.message_id
-            token = DB.conn.execute(f"""SELECT token FROM Invites where message_id={message_id}""").fetchone()[0]
-            text_c, voice_c = DB.conn.execute(
-                f"""SELECT textChannel, voiceChannel FROM TempChannels where token={token}""") \
-                .fetchone()
-            text_c = await self.bot.fetch_channel(text_c)
-            voice_c = await self.bot.fetch_channel(voice_c)
-            await MaintainChannel.join(member, voice_c, text_c)
+            token = DB.conn.execute(f"""SELECT token FROM Invites where message_id=?""",
+                                    (message_id,)).fetchone()
+            if token:
+                text_c, voice_c = DB.conn.execute(
+                    f"""SELECT textChannel, voiceChannel FROM TempChannels where token=?""",
+                    (token[0],)).fetchone()
+                text_c = await self.bot.fetch_channel(text_c)
+                voice_c = await self.bot.fetch_channel(voice_c)
+                await MaintainChannel.join(member, voice_c, text_c)
         except Exception:
             LogBot.logger.exception("Activite error")
 
