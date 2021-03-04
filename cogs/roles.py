@@ -200,12 +200,11 @@ class Roles(commands.Cog):
 
         elif isinstance(error, MultipleGroupsError) or isinstance(error, MultipleCoursesError):
             await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"Es ist nicht gestattet in mehreren Gruppen oder Studieng\u00e4ngen eingeschrieben zu sein."
-                           f"\n F\u00fcr eine \u00c4nderung stelle eine Anfrage in <#{ServerIds.HELP}>")
+                           f"{error}")
 
-        elif isinstance(error, MissingRole):
+        elif isinstance(error, discord.ext.commands.errors.MissingRole):
             await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"F\u00fcr diesen Befehl ist eine Verifikation erforderlich.\n"
+                           f"`{error}`\n"
                            f"Stelle hierzu eine Anfrage in <#{ServerIds.HELP}>.")
 
         elif isinstance(error, MissingRequiredArgument):
