@@ -23,7 +23,7 @@ class Help(commands.Cog):
         if arg is None:
             await ctx.send(content="Bitte ein UNIX Kommando angeben")
         else:
-            await ctx.send(content=f"<@!{ctx.author.id}> deine Manpage ist hier: http://man.openbsd.org/{arg}",
+            await ctx.send(content=f"<@!{ctx.author.id}> deine Manpage ist hier: http://man.openbsd.org/{arg}")
 
 
 def setup(bot):
