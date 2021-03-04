@@ -1,12 +1,11 @@
 import os
 import discord
-from discord.ext import commands
 from discord.ext.commands import *
 import re
+# noinspection PyProtectedMember
 from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds
 from settings_files.all_errors import *
 from utils.ReadWrite import ReadWrite
-from utils.embed_generator import BugReport
 from utils.database import DB
 from utils.logbot import LogBot
 
