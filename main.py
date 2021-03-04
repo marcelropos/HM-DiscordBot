@@ -137,10 +137,15 @@ async def on_message(ctx):
         pass
 
     finally:
+        if ctx.content.startswith("!"):
+            DB.conn.execute("INSERT INTO comand_ctx(ctx_id) VALUES(?)", (ctx.id,))
         try:
             await bot.process_commands(ctx)
         except Exception:
             logger.exception("An error occurred:")
+        finally:
+            if ctx.content.startswith("!"):
+                await reply_with_read(ctx)
 
 
 ReadWrite()  # Init Class
