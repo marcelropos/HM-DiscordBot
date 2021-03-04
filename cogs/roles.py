@@ -2,7 +2,7 @@
 import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
-from settings import Embedgenerator, BugReport
+from settings import Embedgenerator, BugReport, ServerIds
 from utils import *
 from enum import Enum
 import re

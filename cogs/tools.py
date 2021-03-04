@@ -2,7 +2,8 @@
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
-from utils import ServerRoles, DictSort
+from settings import ServerRoles
+from utils.utils import DictSort
 
 
 class Tools(commands.Cog):
