@@ -81,7 +81,7 @@ async def on_command_error(ctx, e):
         DB.conn.execute(f"UPDATE comand_ctx SET error_status = 1 WHERE ctx_id=?", (ctx.message.id,))
         if isinstance(e, CommandNotFound):
             await ctx.send("Befehl nicht gefunden.")
-        elif isinstance(e, UserError):
+        elif isinstance(e, UserError) or isinstance(e, MissingRole):
             pass
         else:
             raise e
