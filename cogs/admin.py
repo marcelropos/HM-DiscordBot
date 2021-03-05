@@ -109,7 +109,7 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def reply(self, ctx, *, args):
-        print(ctx.message.content)
+        await ctx.send(ctx.message.content)
 
     @commands.command()
     @commands.is_owner()
