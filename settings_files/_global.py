@@ -37,6 +37,14 @@ class Links:
     EVENTS = "https://www.cs.hm.edu/aktuelles/termine/index.de.html"
 
 
+class Messages:
+    ROLE_NOT_FOUND = \
+        """"Gruppe nicht gefunden:
+        Es stehen derzeit folgende Gruppen zur Auswahl:
+        `{}`
+        Falls du eine andere Rolle benötigst, wende dich an die Moderatoren"""
+
+
 class ServerIds:
     DEBUG_CHAT = 762736695116169217
     GUILD_ID = 760453010752143372

@@ -3,7 +3,7 @@ import discord
 # noinspection PyUnresolvedReferences
 from discord.ext import commands
 from utils.embed_generator import BugReport
-from settings_files._global import ServerIds, ServerRoles
+from settings_files._global import ServerIds, ServerRoles, Messages
 from utils.embed_generator import EmbedGenerator
 from utils.utils import accepted_channels, extract_id
 from settings_files.all_errors import *
@@ -49,16 +49,19 @@ class Roles(commands.Cog):
                     role = discord.utils.get(ctx.guild.roles, name=group[:3])
                     await member.add_roles(role, reason=f"request by {str(ctx.author)}")
                 except AttributeError:
-                    raise RoleNotFoundError("Gruppe nicht gefunden")
-                else:
-                    if member.nick:
-                        name = member.nick
-                    else:
-                        name = member.name
-                    raise MultipleGroupsError(f"@{name} ist bereits Mitglied der gruppe von "
-                                              f"`{got_roles.intersection(ServerRoles.ALL_GROUPS).pop()}`")
+                    raise RoleNotFoundError(Messages.ROLE_NOT_FOUND.format(sorted(list(ServerRoles.ALL_GROUPS))))
+
             except IndexError:
-                raise RoleNotFoundError("Gruppe nicht gefunden")
+                raise RoleNotFoundError(Messages.ROLE_NOT_FOUND.format(sorted(list(ServerRoles.ALL_GROUPS))))
+            except ValueError:
+                raise RoleNotFoundError(Messages.ROLE_NOT_FOUND.format(sorted(list(ServerRoles.ALL_GROUPS))))
+        else:
+            if member.nick:
+                name = member.nick
+            else:
+                name = member.name
+            raise MultipleGroupsError(f"@{name} ist bereits Mitglied der gruppe von "
+                                      f"`{got_roles.intersection(ServerRoles.ALL_GROUPS).pop()}`")
 
     @commands.command()
     @commands.guild_only()
