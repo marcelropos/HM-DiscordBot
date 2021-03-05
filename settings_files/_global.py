@@ -50,37 +50,17 @@ class ServerIds:
     DATA_SCIENCE = 762565228826329138
     HM = 766071066468548650
     NOHM = 772091430989987920
-    IF1A = 763714090454745098
-    IF1B = 763714190195294269
-    IB1A = 763714403009953823
-    IB1B = 763714479916711957
-    IB1C = 763714528424361995
     NSFW = 766020273664294953
     CODEING = 769870767759818772
     HELP = 765141613881720862
 
 
 class ServerRoles:
-    MODERATOR_ROLE_NAME = "Mod"
-    INFORMATIK = "IF"
-    WIRTSCHAFTSINFORMATIK = "IB"
-    DATA_SCIENCE = "DC"
-    HM = "HM"
-    NOHM = "NO-HM"
-    NSFW = "NSFW"
-    CODEING = "coding"
-
     ALL_GROUPS = {
-        "IF1A",
         "IF2A",
-        "IF1B",
         "IF2B",
-        "IB1A",
         "IF1A",
-        "IB1B",
         "IB2B",
-        "IB1C",
         "IB2C",
-        "DC1",
         "DC2"
     }
