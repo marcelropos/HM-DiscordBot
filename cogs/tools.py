@@ -2,7 +2,7 @@
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
 import discord
-from settings_files._global import ServerRoles
+from settings_files._global import ServerIds
 from utils.utils import DictSort
 
 
@@ -11,7 +11,7 @@ class Tools(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=["get-members"])
-    @commands.has_role(ServerRoles.HM)
+    @commands.has_role(ServerIds.HM)
     async def get_members(self, ctx, sort_type="ByName", rev="False"):
         role_count = dict()
         reply = "Liste aller Rollen und ihre Mitgliederzahl:\n"

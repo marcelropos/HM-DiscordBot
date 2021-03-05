@@ -165,7 +165,7 @@ class TempChannels(commands.Cog):
                                               f"M\u00f6glicherweise liegt dies an den Einstellungen der User")
 
     @tmpc.command()
-    @commands.has_role(ServerRoles.MODERATOR_ROLE_NAME)
+    @commands.has_role(ServerIds.MODERATOR)
     async def nomod(self, ctx):
         await accepted_channels(self.bot, ctx)
         try:
