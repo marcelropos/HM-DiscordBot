@@ -39,7 +39,7 @@ class Links:
 
 class Messages:
     ROLE_NOT_FOUND = \
-        """"Gruppe nicht gefunden:
+        """Gruppe nicht gefunden:
         Es stehen derzeit folgende Gruppen zur Auswahl:
         `{}`
         Falls du eine andere Rolle benötigst, wende dich an die Moderatoren"""
@@ -61,6 +61,7 @@ class ServerIds:
     NSFW = 766020273664294953
     CODEING = 769870767759818772
     HELP = 765141613881720862
+    NEWS = 781453512793128990
 
 
 class ServerRoles:

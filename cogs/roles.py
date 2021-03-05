@@ -118,6 +118,22 @@ class Roles(commands.Cog):
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.NSFW)
         await ctx.author.remove_roles(role, reason="request by user")
 
+    @commands.command(aliases=["news-add"])
+    @commands.guild_only()
+    @commands.has_role(ServerIds.HM)
+    async def news_add(self, ctx):
+        await accepted_channels(self.bot, ctx)
+        role = discord.utils.get(ctx.guild.roles, id=ServerIds.NEWS)
+        await ctx.author.add_roles(role, reason="request by user")
+
+    @commands.command(aliases=["news-rem"])
+    @commands.guild_only()
+    @commands.has_role(ServerIds.HM)
+    async def news_rem(self, ctx):
+        await accepted_channels(self.bot, ctx)
+        role = discord.utils.get(ctx.guild.roles, id=ServerIds.NEWS)
+        await ctx.author.remove_roles(role, reason="request by user")
+
     @commands.command()
     @commands.guild_only()
     @commands.has_role(ServerIds.HM)
