@@ -67,26 +67,20 @@ class ServerRoles:
     DATA_SCIENCE = "DC"
     HM = "HM"
     NOHM = "NO-HM"
-    IF1A = "IF1A"
-    IF1B = "IF1B"
-    IB1A = "IB1A"
-    IB1B = "IB1B"
-    IB1C = "IB1C"
-    IB1D = "IB1D"
     NSFW = "NSFW"
     CODEING = "coding"
 
-    ALL_COURSES = {
-        "IF",
-        "IB"
-        "DC"
-    }
-
     ALL_GROUPS = {
         "IF1A",
+        "IF2A",
         "IF1B",
+        "IF2B",
         "IB1A",
+        "IF1A",
         "IB1B",
+        "IB2B",
         "IB1C",
-        "IB1D"
+        "IB2C",
+        "DC1",
+        "DC2"
     }

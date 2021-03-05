@@ -5,73 +5,16 @@ from discord.ext import commands
 from utils.embed_generator import BugReport
 from settings_files._global import ServerIds, ServerRoles
 from utils.embed_generator import EmbedGenerator
-from utils.utils import accepted_channels
+from utils.utils import accepted_channels, extract_id
 from settings_files.all_errors import *
-from enum import Enum
-import re
 
 
-class Course(Enum):
-    INFORMATIK = "IF"
-    WIRTSCHAFTSINFORMATIK = "IB"
-    DATA_SCIENCE = "DC"
+class MissingRole(MissingRole):
+    def __init__(self, missing_role):
+        self.missing_role = missing_role
+        CheckFailure().__init__(missing_role)
 
 
-class StudyGroups:
-
-    # noinspection PyMissingConstructor
-    def __init__(self, course: Course, group: str):
-        self.course = course
-        self.group = group
-
-    #  This will cause a bug in the second semester
-    def __str__(self):
-        return f"{self.course.value}1{str(self.group)}"  # IF1A
-
-
-class StudyCourseConverter(discord.ext.commands.MemberConverter):
-
-    async def convert(self, ctx, argument):
-        argument = argument.upper()
-        try:
-            course = Course(argument[:2])
-        except ValueError:
-            raise commands.BadArgument("Kein valider Studiengang."
-                                       f"`!help roles` f\u00fcr mehr Informationen")
-
-        return course
-
-
-class StudyGroupsConverter(discord.ext.commands.MemberConverter):
-
-    async def convert(self, ctx, argument):
-        argument = argument.upper()
-        try:
-            course = Course(argument[:2])
-        except ValueError:
-            raise commands.BadArgument("Kein valider Studiengang."
-                                       f"`!help roles` f\u00fcr mehr Informationen")
-
-        if course == Course.INFORMATIK:
-            if argument[3] in ["A", "B"]:
-                group = argument[3]
-            else:
-                raise commands.BadArgument("Keine valide Gruppe des Studienganges Informatik."
-                                           f"`!help roles` f\u00fcr mehr Informationen")
-
-        elif course == Course.WIRTSCHAFTSINFORMATIK:
-            if argument[3] in ["A", "B", "C", "D"]:
-                group = argument[3]
-            else:
-                raise commands.BadArgument("Keine valide Gruppe des Studienganges Wirtschaftsinformatik."
-                                           f"`!help roles` f\u00fcr mehr Informationen")
-        else:
-            raise commands.BadArgument("data-Science hat keine Gruppen."
-                                       f"`!help roles` f\u00fcr mehr Informationen")
-        return StudyGroups(course, group)
-
-
-# noinspection PyUnresolvedReferences
 class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -79,46 +22,43 @@ class Roles(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @commands.has_role(ServerIds.HM)
-    async def study(self, ctx, arg: StudyCourseConverter):
+    async def group(self, ctx, group: str, member=None):
         await accepted_channels(self.bot, ctx)
-        got_roles = {role.name for role in ctx.author.roles}
-        if len(got_roles.intersection(ServerRoles.ALL_COURSES)):
-            raise MultipleCoursesError()
-
-        if arg == Course.INFORMATIK:
-            role = discord.utils.get(ctx.guild.roles, id=ServerIds.INFORMATIK)
-
-        elif arg == Course.WIRTSCHAFTSINFORMATIK:
-            role = discord.utils.get(ctx.guild.roles, id=ServerIds.WIRTSCHAFTSINFORMATIK)
-
-        elif arg == Course.DATA_SCIENCE:
-            role = discord.utils.get(ctx.guild.roles, id=ServerIds.DATA_SCIENCE)
-
+        if member:
+            user_id = extract_id(member)
+            member = await ctx.guild.fetch_member(user_id)
         else:
-            print("Debug")
-            return
+            member = ctx.author
+        got_roles = {role.name for role in member.roles}
+        group = group.upper()
+        if not len(got_roles.intersection(ServerRoles.ALL_GROUPS)):
 
-        await ctx.author.add_roles(role, reason="request by user")
+            try:
+                if int(group[2]) > 1:
+                    is_mod = False
+                    for x in ctx.author.roles:
+                        if ServerIds.MODERATOR == x.id:
+                            is_mod = True
+                    if not is_mod:
+                        raise MissingRole(f"Höhere Semster können nur von Mods vergeben werden")
 
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_role(ServerIds.HM)
-    async def group(self, ctx, arg: StudyGroupsConverter):
-        await accepted_channels(self.bot, ctx)
-        got_roles = {role.name for role in ctx.author.roles}
-        if len(got_roles.intersection(ServerRoles.ALL_GROUPS)):
-            raise MultipleGroupsError()
+                try:
+                    role = discord.utils.get(ctx.guild.roles, name=group)
+                    await member.add_roles(role, reason=f"request by {str(ctx.author)}")
 
-        if arg.course == Course.INFORMATIK:
-            if not any((role.name == ServerRoles.INFORMATIK for role in ctx.author.roles)):
-                raise RoleNotFoundError()
-
-        elif arg.course == Course.WIRTSCHAFTSINFORMATIK:
-            if not any((role.name == ServerRoles.WIRTSCHAFTSINFORMATIK for role in ctx.author.roles)):
-                raise RoleNotFoundError()
-
-        role = discord.utils.get(ctx.guild.roles, name=str(arg))
-        await ctx.author.add_roles(role, reason="request by user")
+                    role = discord.utils.get(ctx.guild.roles, name=group[:3])
+                    await member.add_roles(role, reason=f"request by {str(ctx.author)}")
+                except AttributeError:
+                    raise RoleNotFoundError("Gruppe nicht gefunden")
+                else:
+                    if member.nick:
+                        name = member.nick
+                    else:
+                        name = member.name
+                    raise MultipleGroupsError(f"@{name} ist bereits Mitglied der gruppe von "
+                                              f"`{got_roles.intersection(ServerRoles.ALL_GROUPS).pop()}`")
+            except IndexError:
+                raise RoleNotFoundError("Gruppe nicht gefunden")
 
     @commands.command()
     @commands.guild_only()
@@ -126,10 +66,7 @@ class Roles(commands.Cog):
     async def hm(self, ctx):
         await accepted_channels(self.bot, ctx)
         msg = ctx.message.content
-        matches = re.finditer(r"[0-9]+", msg)
-        for match in matches:
-            start, end = match.span()
-            user_id = msg[start:end]
+        user_id = extract_id(msg)
         # noinspection PyUnboundLocalVariable
         member = await ctx.guild.fetch_member(user_id)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.HM)
@@ -153,14 +90,14 @@ class Roles(commands.Cog):
 
     @hm.error
     async def hm_errorhandler(self, ctx, error):
-        if isinstance(error, MissingRole):
+        if isinstance(error, discord.ext.commands.errors.MissingRole):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"Dieser Befehl ist Moderatoren vorbehalten.")
         else:
-            error = BugReport(self.bot, ctx, e)
+            error = BugReport(self.bot, ctx, error)
             error.user_details()
             await error.reply()
-            raise e
+            raise error
 
     @commands.command(aliases=["nsfw-add"])
     @commands.guild_only()
@@ -187,7 +124,6 @@ class Roles(commands.Cog):
         await ctx.author.add_roles(role, reason="request by user")
 
     @group.error
-    @study.error
     @nsfw_add.error
     @nsfw_rem.error
     @coding.error
@@ -195,8 +131,9 @@ class Roles(commands.Cog):
         if isinstance(error, RoleNotFoundError):
             embed = EmbedGenerator("roles")
             await ctx.send(content=f"<@!{ctx.author.id}>\n"
-                                   f"Es ist erforderlich, dass du dich zuerst in einen Studiengang einschreibst.",
-                           embed=embed.generate())
+                                   f"{error}",
+                           embed=embed.generate(),
+                           delete_after=60)
 
         elif isinstance(error, MultipleGroupsError) or isinstance(error, MultipleCoursesError):
             await ctx.send(f"<@!{ctx.author.id}>\n"
@@ -217,7 +154,7 @@ class Roles(commands.Cog):
                            f"Dieser Befehl darf in diesem Chat nicht verwendet werden.\n"
                            f"Nutzebitte den dafür vorgesehenen Chat <#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
                            delete_after=60)
-        
+
         elif isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
             await ctx.send(f"Dieser Befehl kann nur im Chat <#{ServerIds.BOT_COMMANDS_CHANNEL}> gestellt werden.")
 
