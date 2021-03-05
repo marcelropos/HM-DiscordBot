@@ -15,7 +15,7 @@ logger = LogBot.logger
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", case_insensitive=True)
+bot = commands.Bot(command_prefix="!", case_insensitive=True, intents=intents)
 bot.remove_command('help')
 
 for filename in os.listdir("./cogs"):
