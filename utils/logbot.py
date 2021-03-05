@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import QueueHandler, QueueListener
 import queue
+from settings_files._global import DEBUG_STATUS
 
 
 def below_warning(record):
@@ -19,9 +20,11 @@ class LogBot:
 
     to_filter = logging.Filter("DEBUG ONLY")
 
-    log_stream = logging.StreamHandler()
-    log_stream.setFormatter(formatter)
-    log_stream.setLevel(logging.DEBUG)
+    if DEBUG_STATUS():
+        log_stream = logging.StreamHandler()
+        log_stream.setFormatter(formatter)
+        log_stream.setLevel(logging.DEBUG)
+        logger.addHandler(log_stream)
 
     logfile = logging.FileHandler("./data/bot.log", encoding="UTF-8")
     logfile.setFormatter(formatter)
@@ -30,8 +33,6 @@ class LogBot:
     log_queue = QueueHandler(q)
     log_queue.setFormatter(formatter)
     log_queue.setLevel(logging.WARNING)
-
-    logger.addHandler(log_stream)
 
     logger.addHandler(logfile)
 
