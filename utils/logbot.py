@@ -39,4 +39,3 @@ class LogBot:
     logger.addHandler(log_queue)
 
     logger.debug("Logger active")
-    print("")

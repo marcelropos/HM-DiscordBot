@@ -16,8 +16,6 @@ class Moderator(commands.Cog):
     @tasks.loop(hours=24)
     async def kick_not_verified(self, ctx=None):
         if DEBUG_STATUS():
-            return
-            kick_count = 0
             guild = await discord.Client.fetch_guild(self.bot, ServerIds.GUILD_ID)
             async for member in guild.fetch_members(limit=None):
                 got_roles = {role.name for role in member.roles}
@@ -38,7 +36,6 @@ class Moderator(commands.Cog):
                             channel = await self.bot.fetch_channel(ServerIds.DEBUG_CHAT)
                             await channel.send(f"Failed to kick <@{member.id}>.")
                         else:
-                            kick_count += 1
                             LogBot.logger.info(f"Kicked: {member} for being not verified")
 
 
