@@ -25,7 +25,7 @@ for filename in os.listdir("./cogs"):
         logger.debug(f"Loaded: cogs.{filename[:-3]}")
 
 
-# noinspection PyBroadException,SqlNoDataSourceInspection
+# noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
 async def reply_with_read(ctx):
     try:
         ctx_id = ctx.id
@@ -73,7 +73,7 @@ async def reply_with_read(ctx):
             logger.exception("Could not add reaction:")
 
 
-# noinspection PyBroadException,SqlNoDataSourceInspection
+# noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
 @bot.event
 async def on_command_error(ctx, e):
     try:
