@@ -19,15 +19,6 @@ def mods_or_owner():
     return commands.check(predicate)
 
 
-def is_study():
-    # noinspection PyUnusedLocal
-    def predicate(ctx):
-        return commands.has_any_role(ServerIds.INFORMATIK, ServerIds.WIRTSCHAFTSINFORMATIK,
-                                     ServerIds.DATA_SCIENCE)
-
-    return commands.check(predicate)
-
-
 def is_in_group():
     # noinspection PyUnusedLocal
     def predicate(ctx):
