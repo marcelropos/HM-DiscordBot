@@ -51,3 +51,7 @@ class TempChannelNotFound(UserError):
 
 class CouldNotSendMessage(UserError):
     pass
+
+
+class ManPageNotFound(Exception):
+    pass
