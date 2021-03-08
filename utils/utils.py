@@ -31,8 +31,7 @@ def is_study():
 def is_in_group():
     # noinspection PyUnusedLocal
     def predicate(ctx):
-        return commands.has_any_role(ServerIds.IF1A, ServerIds.IF1B, ServerIds.IB1A, ServerIds.IB1B,
-                                     ServerIds.IB1C)
+        return commands.has_any_role(ServerRoles.ALL_GROUPS)
 
     return commands.check(predicate)
 
