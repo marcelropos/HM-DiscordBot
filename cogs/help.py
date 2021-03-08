@@ -50,13 +50,21 @@ class Help(commands.Cog):
         if type(result) is list:
             result.sort(key=lambda x: x[0])
 
-        for _, page in result:
+            for _, page in result:
+                if page.ok:
+                    await ctx.send(f"`$ man {arg}`\n"
+                                   f"{page.url}")
+                    return
+
+            raise ManPageNotFound(arg)
+
+        else:
+            _, page = result
             if page.ok:
                 await ctx.send(f"`$ man {arg}`\n"
                                f"{page.url}")
-                return
-
-        raise ManPageNotFound(arg)
+            else:
+                raise ManPageNotFound(arg)
 
     @man.error
     async def man_error(self, ctx, error: ManPageNotFound):
