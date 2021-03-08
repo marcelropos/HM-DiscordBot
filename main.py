@@ -1,6 +1,6 @@
 import os
 import discord
-from discord.ext.commands import *
+from discord.ext.commands import Command, Context
 import re
 # noinspection PyProtectedMember
 from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds
@@ -26,51 +26,30 @@ for filename in os.listdir("./cogs"):
 
 
 # noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
-async def reply_with_read(ctx):
+@bot.after_invoke
+async def reply_with_read(ctx: Context):
     try:
-        ctx_id = ctx.id
+        failed = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+        success = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
     except AttributeError:
-        ctx_id = ctx.message.id
-    logger.debug(ctx_id)
-    error_status = DB.conn.execute("SELECT error_status from comand_ctx WHERE (ctx_id=?)",
-                                   (ctx_id,)).fetchone()
-    if error_status:
-        error_status = error_status[0]
-        try:
-            if error_status:
-                await asyncio.sleep(1)  # prevents being to fast
-                try:  # remove_reaction
-                    await ctx.clear_reactions()
-                    emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-                    await ctx.add_reaction(emoji=emoji)
-                except AttributeError:
-                    await ctx.message.clear_reactions()
-                    emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
-                    await ctx.message.add_reaction(emoji=emoji)
-                except Exception:
-                    try:
-                        await ctx.add_reaction(emoji="❌")
-                    except AttributeError:
-                        await ctx.message.add_reaction(emoji="❌")
+        failed = "❌"
+        success = "✅"
+    try:
+        bot_id = ctx.bot.user.id
+        await asyncio.sleep(0.2)
+        if ctx.command_failed:
+            await ctx.message.remove_reaction(success, discord.Object(id=bot_id))
+            await ctx.message.add_reaction(emoji=failed)
+        else:
+            await ctx.message.remove_reaction(failed, discord.Object(id=bot_id))
+            await ctx.message.add_reaction(emoji=success)
 
-            else:
-                try:
-                    emoji = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Success)
-                    await ctx.add_reaction(emoji=emoji)
-                except AttributeError:
-                    emoji = await ctx.message.guild.fetch_emoji(emoji_id=EmojiIds.Success)
-                    await ctx.message.add_reaction(emoji=emoji)
-                except Exception:
-                    try:
-                        await ctx.add_reaction(emoji="✅")
-                    except AttributeError:
-                        await ctx.message.add_reaction(emoji="✅")
-
-            DB.conn.execute("DELETE from comand_ctx WHERE (ctx_id=?)",
-                            (ctx_id,))
-
-        except Exception:
-            logger.exception("Could not add reaction:")
+    except AttributeError:
+        pass
+    except Forbidden:
+        pass
+    except Exception:
+        logger.exception("Could not add reaction:")
 
 
 # noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
@@ -78,7 +57,6 @@ async def reply_with_read(ctx):
 async def on_command_error(ctx, e):
     try:
         logger.debug(ctx.message.id)
-        DB.conn.execute(f"UPDATE comand_ctx SET error_status = 1 WHERE ctx_id=?", (ctx.message.id,))
         if isinstance(e, CommandNotFound):
             await ctx.send("Befehl nicht gefunden.")
         elif isinstance(e, UserError) or isinstance(e, MissingRole):
@@ -88,6 +66,7 @@ async def on_command_error(ctx, e):
     except Exception:
         logger.exception("Unhandled exception!")
     finally:
+        ctx.command_failed = True
         await reply_with_read(ctx)
 
 
@@ -113,15 +92,10 @@ async def on_message(ctx):
         pass
 
     finally:
-        if ctx.content.startswith("!"):
-            DB.conn.execute("INSERT INTO comand_ctx(ctx_id) VALUES(?)", (ctx.id,))
         try:
             await bot.process_commands(ctx)
         except Exception:
             logger.exception("An error occurred:")
-        finally:
-            if ctx.content.startswith("!"):
-                await reply_with_read(ctx)
 
 
 ReadWrite()  # Init Class
