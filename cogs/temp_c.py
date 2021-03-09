@@ -319,19 +319,19 @@ class MaintainChannel:
         finally:
             DB.conn.execute(f"""delete from Invites where message_id=?""", (message_id,))
 
-    @staticmethod
-    async def rem_channels(ctx: Context):
+    @classmethod
+    async def rem_channels(cls, ctx):
 
         channels = DB.conn.execute(f"""SELECT * FROM TempChannels""").fetchall()
 
-        for user_id, text, voice, token in channels:
+        for user_id, text, voice_id, token in channels:
             # noinspection PyBroadException
             try:
-                members = voice.members
-                if len(members) == 0:
-                    await MaintainChannel.rem_channel(user_id, text, voice, token, ctx)
+                member: list = cls.bot.get_channel(voice_id).members
+                if len(member) == 0:
+                    await MaintainChannel.rem_channel(user_id, text, voice_id, token, ctx)
             except Exception:
-                pass
+                LogBot.logger.exception("Could not get member")
 
     # noinspection PyBroadException
     @classmethod
