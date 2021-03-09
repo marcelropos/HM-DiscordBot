@@ -26,7 +26,7 @@ def DISCORD_BOT_TOKEN():
 
 # noinspection PyPep8Naming
 def DEBUG_STATUS():
-    DEBUG = int(os.environ["DEBUG"])
+    DEBUG = str(os.environ["DEBUG"])
     if DEBUG == "1" or DEBUG == "true":
         return True
     else:
