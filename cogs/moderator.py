@@ -23,15 +23,15 @@ class Moderator(commands.Cog):
                     if (datetime.datetime.now() - member.joined_at).days > 60:
                         # noinspection PyBroadException
                         try:
-                            await member.send(content="Du wirst vom Server geickt, "
-                                                      "da du zu lange nicht verifiziert wurdest."
-                                                      "Du kannst dem Server erneut beitreten und einen Antrag auf eine "
-                                                      "Verifikation stellen.", delete_after=86400)
+                            await member.send(content="You will be kicked from the server because you have not been "
+                                                      "verified for too long. You can rejoin the server and "
+                                                      "submit a request for verification."
+                                              , delete_after=86400)
                         except Exception:
                             pass
                         # noinspection PyBroadException
                         try:
-                            await member.kick(reason="Zu lange ohne Verifikation")
+                            await member.kick(reason="Too long without verification")
                         except Exception:
                             channel = await self.bot.fetch_channel(ServerIds.DEBUG_CHAT)
                             await channel.send(f"Failed to kick <@{member.id}>.")

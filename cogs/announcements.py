@@ -22,13 +22,13 @@ class Announcements(commands.Cog):
 
     @staticmethod
     def __event_sort(events):
-        def getkey(item):
+        def get_key(item):
             return item.end
-        return sorted(events, key=getkey)
+        return sorted(events, key=get_key)
 
     @staticmethod
     def __fetch_event(dates, title, message):
-        eventobj = namedtuple("Event", ["begin", "end", "title", "message"])
+        event_obj = namedtuple("Event", ["begin", "end", "title", "message"])
         liste = []
         for x in dates:
             date_string = title[x.start(): x.end()]
@@ -37,7 +37,7 @@ class Announcements(commands.Cog):
         if datetime.datetime.today().date() <= max(liste).date():
             if datetime.datetime.today().date() >= min(liste).date():
                 title = "⚠" + title + "⚠"
-            return eventobj(begin=min(liste), end=max(liste), title=title, message=message)
+            return event_obj(begin=min(liste), end=max(liste), title=title, message=message)
 
     def __events(self, ctx):
         events_list = []
@@ -47,10 +47,10 @@ class Announcements(commands.Cog):
             raise RequestError()
 
         soup = BeautifulSoup(r.content, features="html.parser")
-        embed = discord.Embed(title="Veranstaltungen")
-        embed.set_footer(text=f"Quelle: (Sofern nicht anders anegegeben) {link}\n"
+        embed = discord.Embed(title="Events")
+        embed.set_footer(text=f"Source: (Unless otherwise indicated) {link}\n"
                               f"Stand: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M Uhr')}\n"
-                              f"Alle Angaben ohne gewähr.")
+                              f"All data without warranty.")
 
         for table in soup.find_all("table"):
             for data in table.find_all("tr"):
@@ -97,8 +97,8 @@ class Announcements(commands.Cog):
 
         elif isinstance(error, MissingRole):
             await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"F\u00fcr diesen Befehl ist eine Verifikation erforderlich.\n"
-                           f"Stelle hierzu eine Anfrage in <#{ServerIds.HELP}>.")
+                           f"Verification is required for this command.\n"
+                           f"Make a request for this in <#{ServerIds.HELP}>.")
         else:
             raise error
 

@@ -1,6 +1,7 @@
 import os
 import discord
-from discord.ext.commands import Command, Context
+from discord.ext.commands import *
+from pretty_help import PrettyHelp
 import re
 # noinspection PyProtectedMember
 from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds
@@ -15,8 +16,8 @@ logger = LogBot.logger
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", case_insensitive=True, intents=intents)
-bot.remove_command('help')
+bot = commands.Bot(command_prefix=".!", case_insensitive=True, intents=intents)
+bot.help_command = PrettyHelp(show_index=True, sort_commands=True, no_category=True, color=0x00f2ff)
 
 for filename in os.listdir("./cogs"):
     if filename.endswith(".py") and \
@@ -54,7 +55,7 @@ async def reply_with_read(ctx: Context):
 
 # noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
 @bot.event
-async def on_command_error(ctx, e):
+async def on_command_error(ctx: Context, e):
     try:
         logger.debug(ctx.message.id)
         if isinstance(e, CommandNotFound):

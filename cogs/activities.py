@@ -1,6 +1,7 @@
-# noinspection PyUnresolvedReferences
 import discord
 from discord.ext import commands, tasks
+from discord.ext.commands import Context, Bot
+from discord.member import Member
 from settings_files._global import DefaultMessages, ServerIds, EmojiIds
 import re
 from cogs.temp_c import MaintainChannel
@@ -10,7 +11,9 @@ from utils.logbot import LogBot
 
 # noinspection PyUnusedLocal,PyPep8Naming,SqlResolve
 class Activities(commands.Cog):
-    def __init__(self, bot):
+    """Handle activities related to the users and perform actions depending on them."""
+
+    def __init__(self, bot: Bot):
         self.bot = bot
         self.fetch_emojis.start()
 
@@ -34,7 +37,7 @@ class Activities(commands.Cog):
         EmojiIds.name_set = emojis
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
+    async def on_voice_state_update(self, member: Member, before: discord.VoiceState, after: discord.VoiceState):
         if member.bot:
             return
 
@@ -50,7 +53,7 @@ class Activities(commands.Cog):
         # await Channel_Functions.nerd_ecke(self.bot, member)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         try:
             if payload.member.bot:
                 return
@@ -75,10 +78,10 @@ class Activities(commands.Cog):
                 voice_c = await self.bot.fetch_channel(voice_c)
                 await MaintainChannel.join(member, voice_c, text_c)
         except Exception:
-            LogBot.logger.exception("Activite error")
+            LogBot.logger.exception("Activity error")
 
 
-def setup(bot):
+def setup(bot: Bot):
     bot.add_cog(Activities(bot))
 
 
@@ -86,7 +89,7 @@ class ChannelFunctions:
 
     # noinspection PyBroadException
     @staticmethod
-    async def auto_bot_kick(before):
+    async def auto_bot_kick(before: discord.VoiceState):
         bot = []
         user = []
         try:
@@ -102,7 +105,7 @@ class ChannelFunctions:
             pass
 
     @staticmethod
-    async def nerd_ecke(bot, member):
+    async def nerd_ecke(bot: Bot, member: Member):
         all_roles = member.guild.roles
         role = None
         for x in all_roles:
