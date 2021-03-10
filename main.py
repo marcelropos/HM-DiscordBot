@@ -13,8 +13,7 @@ import asyncio
 
 logger = LogBot.logger
 
-intents = discord.Intents.default()
-intents.members = True
+intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix=".!", case_insensitive=True, intents=intents)
 bot.help_command = PrettyHelp(show_index=True, sort_commands=True, no_category=True, color=0x00f2ff)
@@ -59,7 +58,9 @@ async def on_command_error(ctx: Context, e):
     try:
         logger.debug(ctx.message.id)
         if isinstance(e, CommandNotFound):
-            await ctx.send("Befehl nicht gefunden.")
+            await ctx.send(f"<@{ctx.author.id}>\n"
+                           f"Command not found. Please edit your message and try again.",
+                           delete_after=10)
         elif isinstance(e, UserError) or isinstance(e, MissingRole):
             pass
         else:
