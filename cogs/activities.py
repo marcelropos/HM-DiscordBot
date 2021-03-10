@@ -48,11 +48,22 @@ class Activities(commands.Cog):
         await ChannelFunctions.auto_bot_kick(before)
         await ChannelFunctions.nerd_ecke(self.bot, member)
 
-        # TODO: Implement this again
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: Message, after: Message):
+        if before.content != after.content and not after.author.bot:
+            ctx: Context = await self.bot.get_context(after)
+            bot_id = ctx.bot.user.id
 
-        # await Channel_Functions.auto_bot_kick(before)
+            try:
+                failed = await ctx.guild.fetch_emoji(emoji_id=EmojiIds.Failed)
+            except AttributeError:
+                failed = "❌"
+            await ctx.message.remove_reaction(failed, discord.Object(id=bot_id))
 
-        # await Channel_Functions.nerd_ecke(self.bot, member)
+            for reaction in after.reactions:
+                if reaction.emoji == failed and reaction.me:
+                    await self.bot.process_commands(after)
+                    return
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
