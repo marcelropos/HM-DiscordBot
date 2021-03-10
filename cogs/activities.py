@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Context, Bot
 from discord.member import Member
 from settings_files._global import DefaultMessages, ServerIds, EmojiIds
+from discord.message import Message
 import re
 from cogs.temp_c import MaintainChannel
 from utils.database import DB
