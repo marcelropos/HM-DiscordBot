@@ -6,7 +6,7 @@ from discord.member import Member
 from utils.embed_generator import BugReport
 from settings_files._global import ServerIds, ServerRoles, Messages
 from utils.embed_generator import EmbedGenerator
-from utils.utils import accepted_channels, extract_id
+from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_role
 from settings_files.all_errors import *
 
 
@@ -28,6 +28,7 @@ class Roles(commands.Cog):
                       )
     @commands.guild_only()
     @commands.has_role(ServerIds.HM)
+    @has_not_roles(ServerRoles.ALL_GROUPS)
     async def group(self, ctx: Context, group: str, member=None):
         await accepted_channels(self.bot, ctx)
         if member:
@@ -99,100 +100,71 @@ class Roles(commands.Cog):
         except Exception:
             pass
 
-    @hm.error
-    async def hm_errorhandler(self, ctx: Context, error):
-        if isinstance(error, discord.ext.commands.errors.MissingRole):
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"This command is reserved for moderators.")
-        else:
-            error = BugReport(self.bot, ctx, error)
-            error.user_details()
-            await error.reply()
-            raise error
-
     # ===================Not Safe For Work=================== #
 
-    @commands.group(
-        brief="Not Safe For Work - role",
-        help="Add or remove role NSFW",
-        pass_context=True
-    )
-    @commands.guild_only()
+    @commands.command(name="nsfw-add",
+                      help="Add nsfw role")
     @commands.has_role(ServerIds.HM)
-    async def nsfw(self, ctx: Context):
-        if ctx.invoked_subcommand is None:
-            await ctx.send('Invalid sub mode passed...')
-
-    @nsfw.command(pass_context=True,
-                  help="Add role")
-    async def add(self, ctx: Context):
+    @has_not_role(ServerIds.NSFW)
+    async def nsfw_add(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.NSFW)
         await ctx.author.add_roles(role, reason="request by user")
 
-    @nsfw.command(pass_context=True,
-                  help="Remove role")
-    async def rem(self, ctx: Context):
+    @commands.command(name="nsfw-rem",
+                      help="Remove nsfw role")
+    @commands.has_role(ServerIds.NSFW)
+    async def nsfw_rem(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.NSFW)
         await ctx.author.remove_roles(role, reason="request by user")
 
     # ===================News=================== #
 
-    @commands.group(
-        brief="Newsletter - role",
-        help="Add or remove role newsletter.",
-        pass_context=True
-    )
-    @commands.guild_only()
+    @commands.command(name="add-news",
+                      help="Add news role")
     @commands.has_role(ServerIds.HM)
-    async def news(self, ctx: Context):
-        if ctx.invoked_subcommand is None:
-            await ctx.send('Invalid sub mode passed...')
-
-    @news.command(pass_context=True,
-                  help="Add role")
-    async def add(self, ctx: Context):
+    @has_not_role(ServerIds.NEWS)
+    async def news_add(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.NEWS)
         await ctx.author.add_roles(role, reason="request by user")
 
-    @news.command(pass_context=True,
-                  help="Remove role")
-    async def rem(self, ctx: Context):
+    @commands.command(name="news-rem",
+                      help="Remove news role")
+    @commands.has_role(ServerIds.NEWS)
+    async def news_rem(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.NEWS)
         await ctx.author.remove_roles(role, reason="request by user")
 
     # ===================Coding=================== #
 
-    @commands.group(
-        brief="coding - role",
-        help="Add or remove role coding.",
-        pass_context=True
-    )
-    @commands.guild_only()
+    @commands.command(name="coding-add",
+                      help="Add coding role")
     @commands.has_role(ServerIds.HM)
-    async def coding(self, ctx: commands):
-        if ctx.invoked_subcommand is None:
-            await ctx.send('Invalid sub mode passed...')
-
-    @coding.command(pass_context=True,
-                    help="Add role")
-    async def add(self, ctx: Context):
+    @has_not_role(ServerIds.CODEING)
+    async def coding_add(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.CODEING)
         await ctx.author.add_roles(role, reason="request by user")
 
-    @coding.command(pass_context=True,
-                    help="Remove role")
-    async def rem(self, ctx: Context):
+    @commands.command(name="coding-rem",
+                      help="Remove coding role")
+    @commands.has_role(ServerIds.CODEING)
+    async def coding_rem(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.CODEING)
         await ctx.author.remove_roles(role, reason="request by user")
 
     @group.error
-    @coding.error
+    @coding_add.error
+    @coding_rem.error
+    @nsfw_add.error
+    @nsfw_rem.error
+    @news_add.error
+    @news_rem.error
+    @hm.error
     async def roles_error_handler(self, ctx: Context, error):
         if isinstance(error, RoleNotFoundError):
             embed = EmbedGenerator("roles")
@@ -207,7 +179,8 @@ class Roles(commands.Cog):
 
         elif isinstance(error, discord.ext.commands.errors.MissingRole):
             await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"`{error}`\n"
+                           f"Role `{discord.utils.get(ctx.guild.roles, id=error.missing_role).name}` "
+                           f"is required to run this command.\n"
                            f"Make a request for this in <#{ServerIds.HELP}>.")
 
         elif isinstance(error, MissingRequiredArgument):

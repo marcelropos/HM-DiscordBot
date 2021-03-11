@@ -1,11 +1,8 @@
-from discord.ext import commands
-# noinspection PyUnresolvedReferences
 import discord
-# noinspection PyUnresolvedReferences
-from settings_files._global import ServerRoles, ServerIds, EmojiIds
-# noinspection PyUnresolvedReferences
-
-from collections import namedtuple
+from settings_files._global import ServerRoles, ServerIds
+from discord.ext.commands import Context
+from discord.member import Member
+from discord.role import Role
 import pyotp
 from settings_files.all_errors import *
 import re
@@ -16,6 +13,24 @@ def mods_or_owner():
     def predicate(ctx):
         return commands.check_any(commands.is_owner(), commands.has_role(ServerIds.MODERATOR))
 
+    return commands.check(predicate)
+
+
+def has_not_roles(check_roles: set):
+    def predicate(ctx: Context):
+        for x in ctx.author.roles:
+            if x.name in check_roles:
+                return False
+        return True
+    return commands.check(predicate)
+
+
+def has_not_role(check_role):
+    def predicate(ctx: Context):
+        for x in ctx.author.roles:
+            if x.id == check_role:
+                return False
+        return True
     return commands.check(predicate)
 
 
