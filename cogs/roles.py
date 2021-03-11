@@ -90,16 +90,6 @@ class Roles(commands.Cog):
         except Exception:
             pass
 
-        # noinspection PyBroadException
-        try:
-            for x in ["help", "roles", "rules"]:
-                embed = EmbedGenerator(x)
-                await member.send(embed=embed.generate())
-            await member.send("Also, please make sure that you read new messages at messages. "
-                              "These are usually important and interesting. You can find them at the top.")
-        except Exception:
-            pass
-
     # ===================Not Safe For Work=================== #
 
     @commands.command(name="nsfw-add",
