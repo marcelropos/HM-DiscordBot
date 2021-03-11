@@ -4,7 +4,7 @@ from discord.ext.commands import *
 from pretty_help import PrettyHelp
 import re
 # noinspection PyProtectedMember
-from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds
+from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds, COMMAND_PREFIX
 from settings_files.all_errors import *
 from utils.ReadWrite import ReadWrite
 from utils.database import DB
@@ -15,7 +15,7 @@ logger = LogBot.logger
 
 intents = discord.Intents.all()
 
-bot = commands.Bot(command_prefix=".!", case_insensitive=True, intents=intents)
+bot = commands.Bot(command_prefix=COMMAND_PREFIX(), case_insensitive=True, intents=intents)
 bot.help_command = PrettyHelp(show_index=True, sort_commands=True, no_category=True, color=0x00f2ff)
 
 for filename in os.listdir("./cogs"):

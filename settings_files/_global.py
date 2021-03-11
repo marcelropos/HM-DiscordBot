@@ -25,6 +25,12 @@ def DISCORD_BOT_TOKEN():
 
 
 # noinspection PyPep8Naming
+def COMMAND_PREFIX():
+    prefix = os.environ["COMMAND_PREFIX"]
+    return prefix
+
+
+# noinspection PyPep8Naming
 def DEBUG_STATUS():
     DEBUG = str(os.environ["DEBUG"])
     if DEBUG == "1" or DEBUG == "true":
