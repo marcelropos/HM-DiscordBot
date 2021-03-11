@@ -165,7 +165,7 @@ class Roles(commands.Cog):
 
         if isinstance(error, CheckFailure):
             await ctx.send(f"You have a role that causes that you can't actually execute this command.\n"
-                           f"Make a request for this in <#{ServerIds.HELP}>."
+                           f"Make a request for this in <#{ServerIds.HELP}>.\n"
                            f"Below you will find a list of commands that are currently available to you.")
             await ctx.send_help("Roles")
 
