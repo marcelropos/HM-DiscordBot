@@ -61,7 +61,9 @@ async def on_command_error(ctx: Context, e):
             await ctx.send(f"<@{ctx.author.id}>\n"
                            f"Command not found. Please edit your message and try again.",
                            delete_after=10)
-        elif isinstance(e, UserError) or isinstance(e, MissingRole):
+        elif isinstance(e, UserError)\
+                or isinstance(e, MissingRole)\
+                or isinstance(e, CheckFailure):
             pass
         else:
             raise e
