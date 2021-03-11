@@ -111,7 +111,7 @@ class Roles(commands.Cog):
 
     # ===================News=================== #
 
-    @commands.command(name="add-news",
+    @commands.command(name="news-add",
                       help="Add news role")
     @commands.has_role(ServerIds.HM)
     @has_not_role(ServerIds.NEWS)
