@@ -2,3 +2,4 @@ discord.py
 pyotp
 requests
 bs4
+discord-pretty-help
