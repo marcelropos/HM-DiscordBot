@@ -1,7 +1,3 @@
-# noinspection PyPackageRequirements
-from discord.ext import commands
-# noinspection PyUnresolvedReferences
-import discord
 from discord.ext.commands import Context, Bot
 from settings_files._global import ServerIds
 from settings_files.all_errors import *
