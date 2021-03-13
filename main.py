@@ -61,8 +61,8 @@ async def on_command_error(ctx: Context, e):
             await ctx.send(f"<@{ctx.author.id}>\n"
                            f"Command not found. Please edit your message and try again.",
                            delete_after=10)
-        elif isinstance(e, UserError)\
-                or isinstance(e, MissingRole)\
+        elif isinstance(e, UserError) \
+                or isinstance(e, MissingRole) \
                 or isinstance(e, CheckFailure):
             pass
         else:
@@ -82,6 +82,24 @@ async def on_message(ctx):
             msg = re.sub(r"[^a-zA-Z0-9\s]", "", ctx.content).lower() + " "
             msg += re.sub(r"\.", " ", ctx.content).lower()
             msg_list = list(re.split(r"\s", msg))
+            if "windows ist toll" in msg:
+                guild = await discord.Client.fetch_guild(bot, ServerIds.GUILD_ID)
+                channel = await discord.Client.fetch_channel(bot, ctx.channel.id)
+                message = await channel.fetch_message(ctx.id)
+
+                emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set["f"])
+                await message.add_reaction(emoji=emoji)
+
+                emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set["windows10"])
+                await message.add_reaction(emoji=emoji)
+
+                await message.add_reaction(emoji="🇺")
+                await message.add_reaction(emoji="🇸")
+                await message.add_reaction(emoji="🇪")
+
+                emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set["puffy"])
+                await message.add_reaction(emoji=emoji)
+
             for keyword in msg_list:
                 if keyword in EmojiIds.name_set:
                     try:

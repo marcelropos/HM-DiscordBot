@@ -74,26 +74,20 @@ class Tools(commands.Cog):
     @commands.command(aliases=["manpage"],
                       brief="Find a suitable manpage ",
                       help="The best matching man page is selected from the deposited sources:\n"
-                           "1) http://man.openbsd.org/\n"
-                           "2) https://wiki.archlinux.org/\n"
+                           "1) http://man.openbsd.org/ (default)\n"
+                           "2) https://wiki.archlinux.org/ (flag: linux)\n"
                            "You can force a specific source with the following flags:\n"
                            "- linux")
-    async def man(self, ctx: Context, arg: str = None, flag: str = ""):
-        if arg is None:
-            await ctx.send(content="Please type in a command")
+    async def man(self, ctx: Context, arg: str, flag: str = ""):
+
+        flag = flag.lower()
+        if flag == "linux":
+            result = await Tools.get_page(f"https://wiki.archlinux.org/index.php/{arg}")
         else:
 
-            flag = flag.lower()
-            if flag == "linux":
-                result = await Tools.get_page(f"https://wiki.archlinux.org/index.php/{arg}")
-            elif flag == "ubuntu":
-                result = await Tools.get_page(f"https://wiki.ubuntuusers.de/{arg}")
-            else:
-
-                result = await asyncio.gather(
-                    Tools.get_page(f"http://man.openbsd.org/{arg}", 1),
-                    Tools.get_page(f"https://wiki.archlinux.org/index.php/{arg}", 2),
-                    Tools.get_page(f"https://wiki.ubuntuusers.de/{arg}", 3)
+            result = await asyncio.gather(
+                Tools.get_page(f"http://man.openbsd.org/{arg}", 1),
+                Tools.get_page(f"https://wiki.archlinux.org/index.php/{arg}", 2)
                 )
 
         # noinspection PyUnboundLocalVariable
