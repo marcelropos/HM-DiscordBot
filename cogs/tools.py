@@ -8,6 +8,22 @@ from settings_files.all_errors import *
 import asyncio
 import aiohttp
 from utils.utils import DictSort
+from utils.utils import strtobool
+from enum import Enum
+
+
+class SortType(Enum):
+    BY_NAME = "byname"
+    BY_COUNT = "bycount"
+
+
+def sort_type_converter(arg: str):
+    arg = arg.lower()
+    try:
+        sort_type = SortType(arg)
+    except ValueError:
+        raise BadArgument("Sort type not found")
+    return sort_type
 
 
 class Tools(commands.Cog):
@@ -20,12 +36,14 @@ class Tools(commands.Cog):
                       brief="Lists the roles and their member count.",
                       help="""sort_type:
                       - ByName
-                      - ByCount
+                      - ByCount (default)
                       Invert:
-                      - True
+                      - True (default)
                       - False""")
     @commands.has_role(ServerIds.HM)
-    async def member_count(self, ctx: Context, sort_type="ByName", rev="True"):
+    async def member_count(self, ctx: Context, rev: strtobool = True,
+                           sort_type: sort_type_converter = SortType.BY_COUNT):
+        # Because of the framework, the implementation violates the PEP484 standard.
         role_count = dict()
         reply = "List of all roles und their member count:\n"
         async for member in ctx.guild.fetch_members(limit=None):
@@ -36,14 +54,9 @@ class Tools(commands.Cog):
                 else:
                     role_count[name] += 1
 
-        if rev.lower() == "true":
-            rev = True
-        else:
-            rev = False
-
-        if "bycount" == sort_type.lower():
+        if sort_type == sort_type.BY_COUNT:
             role_count = DictSort.sort_by_value(role_count, rev)
-        else:
+        elif sort_type == sort_type.BY_NAME:
             role_count = DictSort.sort_by_key(role_count, rev)
 
         for x in role_count:
