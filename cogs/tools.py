@@ -7,6 +7,7 @@ from settings_files._global import ServerIds
 from settings_files.all_errors import *
 import asyncio
 import aiohttp
+from utils.logbot import LogBot
 from utils.utils import DictSort
 from utils.utils import strtobool
 from enum import Enum
@@ -66,10 +67,13 @@ class Tools(commands.Cog):
 
     @staticmethod
     async def get_page(url, priority=0):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                pass
-            return priority, response
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    pass
+                return priority, response
+        except aiohttp.ClientError:
+            return priority, None
 
     @commands.command(aliases=["manpage"],
                       brief="Find a suitable manpage ",
@@ -117,8 +121,11 @@ class Tools(commands.Cog):
                 raise ManPageNotFound(arg)
 
     @man.error
-    async def man_error(self, ctx, error: ManPageNotFound):
-        await ctx.send(f"No manpage for `{error.__context__}` could be found.")
+    async def man_error(self, ctx, error):
+        if isinstance(error, ManPageNotFound):
+            await ctx.send(f"No manpage for `{error.__context__}` could be found.")
+        else:
+            LogBot.logger.exception("Issue while fetching Page")
 
 
 def setup(bot):
