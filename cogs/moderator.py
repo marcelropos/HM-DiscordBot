@@ -1,8 +1,7 @@
 # noinspection PyUnresolvedReferences
 from discord.ext import commands, tasks
 import discord
-# noinspection PyUnresolvedReferences
-from settings_files._global import ServerRoles, ServerIds, DEBUG_STATUS
+from settings_files._global import ServerIds, DEBUG_STATUS
 import datetime
 from utils.logbot import LogBot
 
@@ -10,12 +9,12 @@ from utils.logbot import LogBot
 class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        #  self.kick_not_verified.start()
+        self.kick_not_verified.start()
 
     # noinspection PyUnusedLocal
     @tasks.loop(hours=24)
     async def kick_not_verified(self, ctx=None):
-        if DEBUG_STATUS():
+        if not DEBUG_STATUS():
             guild = await discord.Client.fetch_guild(self.bot, ServerIds.GUILD_ID)
             async for member in guild.fetch_members(limit=None):
                 got_roles = {role.name for role in member.roles}
