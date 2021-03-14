@@ -1,18 +1,8 @@
-# noinspection PyUnresolvedReferences
 import sys
-# noinspection PyUnresolvedReferences
-import asyncio
-# noinspection PyUnresolvedReferences
-import discord
-# noinspection PyUnresolvedReferences
-from discord.ext import commands
-from discord.ext.commands import Context, Bot
-# noinspection PyUnresolvedReferences
-from discord.ext.commands import errors
 from utils.embed_generator import BugReport
 from settings_files._global import DefaultMessages
-# noinspection PyUnresolvedReferences
 from utils.utils import *
+from discord.ext.commands import Context, Bot
 
 
 # noinspection PyUnusedLocal

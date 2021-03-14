@@ -3,11 +3,9 @@ import discord
 from discord.ext.commands import *
 from pretty_help import PrettyHelp
 import re
-# noinspection PyProtectedMember
 from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds, COMMAND_PREFIX
 from settings_files.all_errors import *
 from utils.ReadWrite import ReadWrite
-from utils.database import DB
 from utils.logbot import LogBot
 import asyncio
 
