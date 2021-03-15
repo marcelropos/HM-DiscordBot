@@ -170,6 +170,7 @@ class TempChannels(commands.Cog):
                 # noinspection PyBroadException
                 try:
                     message = await user.send(embed=embed)
+                    MaintainChannel.save_invite(ctx.author, message)
                     await message.add_reaction(emoji="🔓")
                 except Exception:
                     error_user.add(str(user))
