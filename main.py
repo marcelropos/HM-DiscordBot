@@ -54,7 +54,6 @@ async def reply_with_read(ctx: Context):
 @bot.event
 async def on_command_error(ctx: Context, e):
     try:
-        logger.debug(ctx.message.id)
         if isinstance(e, CommandNotFound):
             await ctx.send(f"<@{ctx.author.id}>\n"
                            f"Command not found. Please edit your message and try again.",
@@ -63,6 +62,16 @@ async def on_command_error(ctx: Context, e):
                 or isinstance(e, MissingRole) \
                 or isinstance(e, CheckFailure):
             pass
+
+        elif isinstance(e, MissingRequiredArgument):
+            await ctx.send("At least one argument is missing.\n"
+                           "Please read the help below and try again.")
+            await ctx.send_help(ctx.command)
+
+        elif isinstance(e, BadArgument):
+            await ctx.send("Your argument could not be processed.\n"
+                           "Please read the help below and try again.")
+            await ctx.send_help(ctx.command)
         else:
             raise e
     except Exception:
