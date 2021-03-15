@@ -6,6 +6,7 @@ from settings_files._global import DefaultMessages, ServerIds, EmojiIds
 from discord.message import Message
 import re
 from cogs.temp_c import MaintainChannel
+from cogs.botstatus import BotStatusValues
 from utils.database import DB
 from utils.logbot import LogBot
 
@@ -20,12 +21,14 @@ class Activities(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        activity = discord.Game(name=DefaultMessages.ACTIVITY)
-        await self.bot.change_presence(status=discord.Status.online,
-                                       activity=discord.Activity(type=discord.ActivityType.listening,
-                                                                 name=DefaultMessages.ACTIVITY))
+
+        activity = BotStatusValues.get_activity()
+        status = BotStatusValues.get_status()
+        await self.bot.change_presence(status=status, activity=activity)
+
         channel = discord.Client.get_channel(self=self.bot,
                                              id=ServerIds.DEBUG_CHAT)
+
         await channel.send(DefaultMessages.GREETINGS)
         print(DefaultMessages.GREETINGS)
 

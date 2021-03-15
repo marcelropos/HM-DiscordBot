@@ -1,6 +1,5 @@
 import sys
 from utils.embed_generator import BugReport
-from settings_files._global import DefaultMessages
 from utils.utils import *
 from discord.ext.commands import Context, Bot
 
@@ -10,10 +9,6 @@ class Admin(commands.Cog):
     """Bot und Server administrations commands"""
 
     def __init__(self, bot: Bot):
-        self.activity = discord.Activity(type=discord.ActivityType.listening,
-                                         name=DefaultMessages.ACTIVITY)
-
-        self.status = discord.Status.online
         self.bot = bot
 
     @commands.command(help="Bot shutdown")
@@ -26,53 +21,6 @@ class Admin(commands.Cog):
         await discord.Client.logout(self.bot)
         await discord.Client.close(self.bot)
         sys.exit(0)
-
-    @commands.command(brief="Set activity",
-                      help="""modes:
-                      - listen
-                      - watch
-                      - play (default)""")
-    @commands.is_owner()
-    async def activity(self, ctx: Context, activity: str, *, arg: str):
-
-        if activity == "listen":
-
-            # Setting `Listening ` status
-            self.activity = discord.Activity(type=discord.ActivityType.listening,
-                                             name=arg)
-        elif activity == "watch":
-            # Setting `Watching ` status
-            self.activity = discord.Activity(type=discord.ActivityType.watching,
-                                             name=arg)
-        else:
-            # Setting `Playing ` status
-            self.activity = discord.Game(name=arg)
-
-        await self.bot.change_presence(status=self.status,
-                                       activity=self.activity)
-
-    @commands.command(brief="Change online status",
-                      help="""Status:
-                      - online
-                      - offline
-                      - idle
-                      - dnd""")
-    @commands.is_owner()
-    async def status(self, ctx: Context, *, status: str):
-        status = status.lower()
-        if status == "online":
-            self.status = discord.Status.online
-        elif status == "offline":
-            self.status = discord.Status.offline
-        elif status == "idle":
-            self.status = discord.Status.idle
-        elif status == "dnd":
-            self.status = discord.Status.dnd
-        else:
-            ModuleError("Status not found")
-
-        await discord.Client.change_presence(self=self.bot,
-                                             status=self.status)
 
     @commands.command(help="Disable a module")
     @commands.is_owner()
@@ -124,8 +72,6 @@ class Admin(commands.Cog):
         await channel.send(args)
 
     @shutdown.error
-    @activity.error
-    @status.error
     @unload.error
     @reload.error
     @load.error
