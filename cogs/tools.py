@@ -4,7 +4,6 @@ from settings_files.all_errors import *
 import asyncio
 import aiohttp
 from utils.logbot import LogBot
-from utils.utils import DictSort
 from utils.utils import strtobool
 from enum import Enum
 
@@ -51,14 +50,15 @@ class Tools(commands.Cog):
                 else:
                     role_count[name] += 1
 
-        if sort_type == sort_type.BY_COUNT:
-            role_count = DictSort.sort_by_value(role_count, rev)
-        elif sort_type == sort_type.BY_NAME:
-            role_count = DictSort.sort_by_key(role_count, rev)
+        if sort_type == sort_type.BY_NAME:
+            counted_roles = sorted(role_count.items(), key=lambda t: t[0], reverse=rev)
+        elif sort_type == sort_type.BY_COUNT:
+            counted_roles = sorted(role_count.items(), key=lambda t: t[1], reverse=rev)
+        else:
+            raise BadArgument("Sort type not supported.")
 
-        for x in role_count:
-            reply += f"{x}: {role_count[x]}\n"
-
+        for key, value in counted_roles:
+            reply += f"{key}: {value}\n"
         await ctx.send(reply)
 
     @staticmethod

@@ -65,27 +65,6 @@ def strtobool(val):
         raise ValueError("invalid truth value %r" % (val,))
 
 
-class DictSort:
-
-    @staticmethod
-    def sort_by_key(payload: dict, reverse=False):
-        is_sorted = sorted(payload.items(), key=lambda t: t[0], reverse=reverse)
-        return DictSort.make_dict(is_sorted)
-
-    @staticmethod
-    def sort_by_value(payload: dict, reverse=False):
-        is_sorted = sorted(payload.items(), key=lambda t: t[1], reverse=reverse)
-        return DictSort.make_dict(is_sorted)
-
-    @staticmethod
-    def make_dict(payload: list):
-        result = dict()
-        for x in payload:
-            key, val = x
-            result[key] = val
-        return result
-
-
 async def accepted_channels(bot, ctx):
     channels = {ServerIds.BOT_COMMANDS_CHANNEL,
                 ServerIds.DEBUG_CHAT}
