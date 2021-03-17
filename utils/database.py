@@ -3,7 +3,7 @@ import sqlite3
 
 # noinspection SqlNoDataSourceInspection
 class DB:
-    conn = sqlite3.connect(':memory:')
+    conn = sqlite3.connect('./data/database.db')
 
     with conn:
         # Create table
