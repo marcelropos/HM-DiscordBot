@@ -214,7 +214,7 @@ class TempChannels(commands.Cog):
             member, text_c, voice_c, token = DB.conn.execute("""SELECT * FROM TempChannels WHERE discordUser=?""",
                                                              (str(ctx.author.id),)).fetchone()
             if ctx.author.id == member:
-                await MaintainChannel.rem_channel(member, text_c, voice_c, token, ctx)
+                await MaintainChannel.rem_channel(member, text_c, voice_c, token, ctx, self.bot)
         except TypeError:
             raise TempChannelNotFound()
         except Exception:
@@ -272,16 +272,10 @@ class TempChannels(commands.Cog):
 
 def setup(bot: Bot):
     bot.add_cog(TempChannels(bot))
-    MaintainChannel(bot)
 
 
 # noinspection SqlResolve,SqlNoDataSourceInspection,PyBroadException,SqlDialectInspection
 class MaintainChannel:
-    bot = None
-
-    @classmethod
-    def __init__(cls, bot: Bot):
-        cls.bot = bot
 
     @staticmethod
     async def update(ctx: Context, new_token):
@@ -306,13 +300,12 @@ class MaintainChannel:
             LogBot.logger.exception("Failed to insert Data")
 
     @classmethod
-    async def delete_invite(cls, member_id: int, channel_id: int, message_id: int, ctx: Context):
+    async def delete_invite(cls, member_id: int, channel_id: int, message_id: int, ctx: Context, bot: Bot):
         # noinspection PyBroadException
         try:
             member = await ctx.guild.fetch_member(member_id)
-
             embed = MaintainChannel.invite_embed(member, "Expired")
-            channel = await discord.Client.fetch_channel(cls.bot, channel_id)
+            channel = await discord.Client.fetch_channel(bot, channel_id)
             message = await channel.fetch_message(message_id)
             await message.edit(embed=embed)
         except Exception:
@@ -321,34 +314,33 @@ class MaintainChannel:
             DB.conn.execute(f"""delete from Invites where message_id=?""", (message_id,))
 
     @classmethod
-    async def rem_channels(cls, ctx):
+    async def rem_channels(cls, member, bot: Bot):
 
         channels = DB.conn.execute(f"""SELECT * FROM TempChannels""").fetchall()
 
         for user_id, text, voice_id, token in channels:
             # noinspection PyBroadException
             try:
-                member: list = cls.bot.get_channel(voice_id).members
-                if len(member) == 0:
-                    await MaintainChannel.rem_channel(user_id, text, voice_id, token, ctx)
+                if len(member.guild.get_channel(voice_id).members) == 0:
+                    await MaintainChannel.rem_channel(user_id, text, voice_id, token, member, bot)
             except Exception:
                 LogBot.logger.exception("Could not get member")
 
     # noinspection PyBroadException
     @classmethod
-    async def rem_channel(cls, user_id: int, text: int, voice: int, token: int, ctx: Context):
+    async def rem_channel(cls, user_id: int, text: int, voice: int, token: int, ctx: Context, bot: Bot):
         LogBot.logger.debug("Delete Channel")
-        invites = DB.conn.execute(f"""SELECT message_id FROM Invites where token=?""", (token,)).fetchall()
-        for invite in invites:
-            await MaintainChannel.delete_invite(invite, ctx)
+        invites = DB.conn.execute(f"""SELECT message_id, channel_id FROM Invites where token=?""", (token,)).fetchall()
+        for message_id, channel_id in invites:
+            await MaintainChannel.delete_invite(user_id, channel_id, message_id, ctx, bot)
         DB.conn.execute(f"""delete from TempChannels where discordUser=?""", (user_id,))
         try:
-            text = await discord.Client.fetch_channel(cls.bot, text)
+            text = ctx.guild.get_channel(text)
             await text.delete(reason="No longer used")
         except Exception:
             LogBot.logger.exception("Can't delete text channel")
         try:
-            voice = await discord.Client.fetch_channel(cls.bot, voice)
+            voice = ctx.guild.get_channel(voice)
             await voice.delete(reason="No longer used")
         except Exception:
             LogBot.logger.exception("Can't delete voice channel")

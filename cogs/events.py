@@ -48,7 +48,7 @@ class Activities(commands.Cog):
         if after.channel == await self.bot.fetch_channel(ServerIds.AFK_CHANNEL):
             await member.move_to(None, reason="AFK")
 
-        await MaintainChannel.rem_channels(member)
+        await MaintainChannel.rem_channels(member, self.bot)
         await ChannelFunctions.auto_bot_kick(before)
         await ChannelFunctions.nerd_ecke(self.bot, member)
 
