@@ -140,3 +140,5 @@ secrets/
 .idea/
 bin/
 /lib64/
+
+data/
