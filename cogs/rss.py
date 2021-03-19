@@ -157,11 +157,16 @@ class Rss(commands.Cog):
             try:
                 name = item.find("title").text
                 value = item.find("description").text
+                item_link = item.find("link").text
+                if not item_link:
+                    item_link = ""
 
                 if len(name) >= 256:
                     name = name[:253] + "..."
-                if len(value) >= 1024:
-                    value = value[:1023] + "..."
+                if len(value) + len(item_link) >= 1024:
+                    value_limit = 1020 - len(item_link)
+                    value = value[:value_limit] + "..."
+                value = value + f"\n{item_link}"
                 to_hash = name + value
 
                 if character_limit - len(to_hash) >= 0 and field_limit - 1 >= 0:
