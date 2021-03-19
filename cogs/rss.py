@@ -69,7 +69,7 @@ class Rss(commands.Cog):
             config.read_string(raw_config)
             for section in config.sections():
                 self.config[section] = {
-                    "enabled": False,
+                    "enabled": config[section]["enabled"],
                     "rss": config[section]["rss"],
                     "channel": config[section]["channel"],
                 }
