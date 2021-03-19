@@ -16,10 +16,14 @@ def mods_or_owner():
 
 def has_not_roles(check_roles: set):
     def predicate(ctx: Context):
-        for x in ctx.author.roles:
-            if x.name in check_roles:
-                return False
-        return True
+        role_ids = {role.id for role in ctx.author.roles}
+        if ServerIds.MODERATOR in role_ids:
+            return True
+        role_names = {role.name for role in ctx.author.roles}
+        groups = check_roles.intersection(role_names)
+        if len(groups) == 0:
+            return True
+        return False
 
     return commands.check(predicate)
 
