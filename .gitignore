@@ -142,3 +142,4 @@ bin/
 /lib64/
 
 data/
+.sync-exclude.lst
