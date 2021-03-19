@@ -2,11 +2,10 @@ import os
 import discord
 from discord.ext.commands import *
 from pretty_help import PrettyHelp
-import re
 from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds, COMMAND_PREFIX
 from settings_files.all_errors import *
-from utils.ReadWrite import ReadWrite
 from utils.logbot import LogBot
+from utils.message_process import reactions, restricted_messages
 import asyncio
 
 logger = LogBot.logger
@@ -83,49 +82,16 @@ async def on_command_error(ctx: Context, e):
 
 # noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
 @bot.event
-async def on_message(ctx):
+async def on_message(message):
     try:
-        if not ctx.author.bot:
-            msg = re.sub(r"[^a-zA-Z0-9\s]", "", ctx.content).lower() + " "
-            msg += re.sub(r"\.", " ", ctx.content).lower()
-            msg_list = list(re.split(r"\s", msg))
-            if "windows ist toll" in msg:
-                guild = await discord.Client.fetch_guild(bot, ServerIds.GUILD_ID)
-                channel = await discord.Client.fetch_channel(bot, ctx.channel.id)
-                message = await channel.fetch_message(ctx.id)
-
-                emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set["f"])
-                await message.add_reaction(emoji=emoji)
-
-                emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set["windows10"])
-                await message.add_reaction(emoji=emoji)
-
-                await message.add_reaction(emoji="🇺")
-                await message.add_reaction(emoji="🇸")
-                await message.add_reaction(emoji="🇪")
-
-                emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set["puffy"])
-                await message.add_reaction(emoji=emoji)
-
-            for keyword in msg_list:
-                if keyword in EmojiIds.name_set:
-                    try:
-                        guild = await discord.Client.fetch_guild(bot, ServerIds.GUILD_ID)
-                        emoji = await guild.fetch_emoji(emoji_id=EmojiIds.name_set[keyword])
-                        channel = await discord.Client.fetch_channel(bot, ctx.channel.id)
-                        message = await channel.fetch_message(ctx.id)
-                        await message.add_reaction(emoji=emoji)
-                    except Exception:
-                        pass
+        await asyncio.gather(
+            reactions(message, bot),
+            restricted_messages(message),
+            bot.process_commands(message),
+            return_exceptions=True
+        )
     except Exception:
-        pass
-
-    finally:
-        try:
-            await bot.process_commands(ctx)
-        except Exception:
-            logger.exception("An error occurred:")
+        LogBot.logger.exception("An unhandled exception is occurred")
 
 
-ReadWrite()  # Init Class
 bot.run(DISCORD_BOT_TOKEN())
