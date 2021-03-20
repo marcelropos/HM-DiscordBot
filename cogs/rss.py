@@ -29,6 +29,20 @@ def options_converter(option: str) -> Options:
     return Options(option)
 
 
+def empty_embed(argument):
+    """
+    If argument is not empty return the argument
+    else prevent error with an empty embed instance.
+    :param argument:
+    :return argument:
+    :return Embed.Empty:
+    """
+    if argument:
+        return argument
+    else:
+        return Embed.Empty
+
+
 def check(author, sections):
     def inner_check(message: Message):
         if message.author.id == author.id \
@@ -110,7 +124,7 @@ class Rss(commands.Cog):
         LogBot.logger.info("Finished fetching rss feed")
 
     async def process_feed(self, section):
-        if section == "default":
+        if section == "DEFAULT":
             return
         LogBot.logger.info(f"Start processing feed: {section}")
         link = self.config[section]["rss"]
@@ -142,18 +156,35 @@ class Rss(commands.Cog):
         LogBot.logger.debug(f"Create embed for {section}")
         link = self.config[section]["rss"]
         enabled = strtobool(self.config[section]["enabled"])
+        color_config = empty_embed(self.config[section]["color"])
+        author_icon = empty_embed(self.config[section]["author_icon"])
+        author_url = empty_embed(self.config[section]["author_url"])
         channel_id = int(self.config[section]["channel"])
         repeat = False
 
+        try:
+            if color_config is not Embed.Empty:
+                color = int(color_config)
+            else:
+                color = color_config
+        except ValueError:
+            LogBot.logger.warning("The color must be hexadecimal.")
+            color = Embed.Empty
+
         embed = Embed(
             title=section,
+            color=color,
             url=link
         )
-        embed.set_author(name="RSS Reader")
+        embed.set_author(
+            name="RSS Reader",
+            icon_url=author_icon,
+            url=author_url
+        )
         embed.set_footer(text=f"Source: {link}\n")
 
-        character_limit = int(self.config["default"]["character_limit"])
-        field_limit = int(self.config["default"]["field_limit"])
+        character_limit = int(self.config["DEFAULT"]["character_limit"])
+        field_limit = int(self.config["DEFAULT"]["field_limit"])
 
         items_left = items.copy()
         for item in items:
