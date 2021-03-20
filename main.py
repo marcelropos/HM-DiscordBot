@@ -45,6 +45,8 @@ async def reply_with_read(ctx: Context):
         pass
     except Forbidden:
         pass
+    except NotFound:
+        pass
     except Exception:
         logger.exception("Could not add reaction:")
 
