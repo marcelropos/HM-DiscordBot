@@ -40,6 +40,7 @@ def check(author, sections):
 
 
 class Rss(commands.Cog):
+    """Add and manage RSS feeds"""
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -149,6 +150,7 @@ class Rss(commands.Cog):
         )
         embed.set_author(name="RSS Reader")
         embed.set_footer(text=f"Source: {link}\n")
+
         character_limit = int(self.config["default"]["character_limit"])
         field_limit = int(self.config["default"]["field_limit"])
 
@@ -166,7 +168,7 @@ class Rss(commands.Cog):
                 if len(value) + len(item_link) >= 1024:
                     value_limit = 1020 - len(item_link)
                     value = value[:value_limit] + "..."
-                value = value + f"\n{item_link}"
+                value += f"\n{item_link}"
                 to_hash = name + value
 
                 if character_limit - len(to_hash) >= 0 and field_limit - 1 >= 0:
