@@ -163,7 +163,13 @@ class Roles(commands.Cog):
                            embed=embed.generate(),
                            delete_after=60)
 
-        if isinstance(error, CheckFailure):
+        elif isinstance(error, discord.ext.commands.errors.MissingRole) or isinstance(error, MissingRole):
+            await ctx.send(f"<@!{ctx.author.id}>\n"
+                           f"Role `{discord.utils.get(ctx.guild.roles, id=error.missing_role).name}` "
+                           f"is required to run this command.\n"
+                           f"Make a request for this in <#{ServerIds.HELP}>.")
+
+        elif isinstance(error, CheckFailure):
             await ctx.send(f"You have a role that causes that you can't actually execute this command.\n"
                            f"Make a request for this in <#{ServerIds.HELP}>.\n"
                            f"Below you will find a list of commands that are currently available to you.")
@@ -172,12 +178,6 @@ class Roles(commands.Cog):
         elif isinstance(error, MultipleGroupsError) or isinstance(error, MultipleCoursesError):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"{error}")
-
-        elif isinstance(error, discord.ext.commands.errors.MissingRole):
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"Role `{discord.utils.get(ctx.guild.roles, id=error.missing_role).name}` "
-                           f"is required to run this command.\n"
-                           f"Make a request for this in <#{ServerIds.HELP}>.")
 
         elif isinstance(error, MissingRequiredArgument):
             await ctx.send(f"<@!{ctx.author.id}>\n"
