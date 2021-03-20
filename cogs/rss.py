@@ -190,10 +190,14 @@ class Rss(commands.Cog):
         if enabled:
             # noinspection PyBroadException
             try:
-                channel: TextChannel = await Client.fetch_channel(self.bot, channel_id)
-                fields = len(embed.fields)
-                if fields > 0:
-                    await channel.send(embed=embed)
+                if len(embed.fields) > 0:
+                    channel: TextChannel = await Client.fetch_channel(self.bot, channel_id)
+                    message: Message = await channel.send(embed=embed)
+                    # noinspection PyBroadException
+                    try:
+                        await message.publish()
+                    except Exception:
+                        LogBot.logger.warning(f"Could not publish message. Channel: {channel.name}({channel.id})")
             except Exception:
                 LogBot.logger.exception("Unhandled exception")
 
