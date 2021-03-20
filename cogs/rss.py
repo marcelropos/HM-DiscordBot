@@ -164,7 +164,7 @@ class Rss(commands.Cog):
 
         try:
             if color_config is not Embed.Empty:
-                color = int(color_config)
+                color = int(color_config, 16)
             else:
                 color = color_config
         except ValueError:
