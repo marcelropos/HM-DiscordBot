@@ -115,9 +115,10 @@ class Rss(commands.Cog):
         LogBot.logger.info(f"Start processing feed: {section}")
         link = self.config[section]["rss"]
         rss_feed = await Rss.get_page(link)
-        tree = Etree.fromstring(rss_feed)
-        items = tree.findall("./channel/item")
-        await self.create_embed(items, section)
+        if rss_feed:
+            tree = Etree.fromstring(rss_feed)
+            items = tree.findall("./channel/item")
+            await self.create_embed(items, section)
 
     @staticmethod
     async def get_page(url: str) -> str:
