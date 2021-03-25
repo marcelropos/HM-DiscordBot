@@ -1,5 +1,4 @@
 import discord
-from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from discord.role import Role
 from discord.member import Member
@@ -168,12 +167,6 @@ class Roles(commands.Cog):
                            f"is required to run this command.\n"
                            f"Make a request for this in <#{ServerIds.HELP}>.")
 
-        elif isinstance(error, CheckFailure):
-            await ctx.send(f"You have a role that causes that you can't actually execute this command.\n"
-                           f"Make a request for this in <#{ServerIds.HELP}>.\n"
-                           f"Below you will find a list of commands that are currently available to you.")
-            await ctx.send_help("Roles")
-
         elif isinstance(error, MultipleGroupsError):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"{error}")
@@ -182,18 +175,25 @@ class Roles(commands.Cog):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"Apparently, the command was not complete.\n")
 
-        elif isinstance(error, WrongChatError):
-            await ctx.message.delete()
+        elif isinstance(error, (WrongChatError, NoPrivateMessage)):
+            try:
+                await ctx.message.delete()
+            except Forbidden:
+                pass
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"This command may not be used in this chat.\n"
                            f"Please use the chat provided for this purpose. <#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
                            delete_after=60)
 
-        elif isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
-            await ctx.send(f"This command can be placed only in the chat CHAT <#{ServerIds.BOT_COMMANDS_CHANNEL}>.")
-
         elif isinstance(error, commands.BadArgument):
             await ctx.send(str(error))
+
+        # must be last check
+        elif isinstance(error, CheckFailure):
+            await ctx.send(f"You have a role that causes that you can't actually execute this command.\n"
+                           f"Make a request for this in <#{ServerIds.HELP}>.\n"
+                           f"Below you will find a list of commands that are currently available to you.")
+            await ctx.send_help("Roles")
 
         else:
             error = BugReport(self.bot, ctx, error)
