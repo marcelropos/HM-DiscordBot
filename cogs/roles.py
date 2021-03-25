@@ -10,12 +10,6 @@ from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_ro
 from settings_files.all_errors import *
 
 
-class MissingRole(MissingRole):
-    def __init__(self, missing_role):
-        self.missing_role = missing_role
-        CheckFailure().__init__(missing_role)
-
-
 class Roles(commands.Cog):
     """Manage your roles"""
 
@@ -79,7 +73,6 @@ class Roles(commands.Cog):
     async def hm(self, ctx: Context, user):
         await accepted_channels(self.bot, ctx)
         user_id = extract_id(user)
-        # noinspection PyUnboundLocalVariable
         member = await ctx.guild.fetch_member(user_id)
         role = discord.utils.get(ctx.guild.roles, id=ServerIds.HM)
         await member.add_roles(role, reason=f"request by {str(ctx.author)}")
@@ -163,7 +156,7 @@ class Roles(commands.Cog):
                            embed=embed.generate(),
                            delete_after=60)
 
-        elif isinstance(error, discord.ext.commands.errors.MissingRole) or isinstance(error, MissingRole):
+        elif isinstance(error, MissingRole):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"Role `{discord.utils.get(ctx.guild.roles, id=error.missing_role).name}` "
                            f"is required to run this command.\n"
@@ -175,7 +168,7 @@ class Roles(commands.Cog):
                            f"Below you will find a list of commands that are currently available to you.")
             await ctx.send_help("Roles")
 
-        elif isinstance(error, MultipleGroupsError) or isinstance(error, MultipleCoursesError):
+        elif isinstance(error, MultipleGroupsError):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"{error}")
 

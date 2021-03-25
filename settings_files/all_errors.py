@@ -33,10 +33,6 @@ class MultipleGroupsError(UserError):
     pass
 
 
-class MultipleCoursesError(UserError):
-    pass
-
-
 class RequestError(ModuleError):
     pass
 
