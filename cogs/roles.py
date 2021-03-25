@@ -87,6 +87,7 @@ class Roles(commands.Cog):
 
     @commands.command(name="nsfw-add",
                       help="Add nsfw role")
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     @has_not_role(ServerIds.NSFW)
     async def nsfw_add(self, ctx: Context):
@@ -96,6 +97,7 @@ class Roles(commands.Cog):
 
     @commands.command(name="nsfw-rem",
                       help="Remove nsfw role")
+    @commands.guild_only()
     @commands.has_role(ServerIds.NSFW)
     async def nsfw_rem(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
@@ -106,6 +108,7 @@ class Roles(commands.Cog):
 
     @commands.command(name="news-add",
                       help="Add news role")
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     @has_not_role(ServerIds.NEWS)
     async def news_add(self, ctx: Context):
@@ -115,6 +118,7 @@ class Roles(commands.Cog):
 
     @commands.command(name="news-rem",
                       help="Remove news role")
+    @commands.guild_only()
     @commands.has_role(ServerIds.NEWS)
     async def news_rem(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
@@ -125,6 +129,7 @@ class Roles(commands.Cog):
 
     @commands.command(name="coding-add",
                       help="Add coding role")
+    @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     @has_not_role(ServerIds.CODEING)
     async def coding_add(self, ctx: Context):
@@ -134,6 +139,7 @@ class Roles(commands.Cog):
 
     @commands.command(name="coding-rem",
                       help="Remove coding role")
+    @commands.guild_only()
     @commands.has_role(ServerIds.CODEING)
     async def coding_rem(self, ctx: Context):
         await accepted_channels(self.bot, ctx)
