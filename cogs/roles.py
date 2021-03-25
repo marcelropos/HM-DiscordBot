@@ -43,6 +43,9 @@ class Roles(commands.Cog):
                         raise MissingRole(f"Higher semesters can only be assigned by mods.")
 
                 try:
+                    role: Role = discord.utils.get(ctx.guild.roles, id=ServerIds.HM)
+                    await member.add_roles(role, reason=f"request by {str(ctx.author)}")
+
                     role: Role = discord.utils.get(ctx.guild.roles, name=group)
                     await member.add_roles(role, reason=f"request by {str(ctx.author)}")
 
