@@ -1,18 +1,22 @@
-from discord.ext import commands, tasks
-from discord.ext.commands import Bot, Context
-from discord.client import Client
-from discord.message import Message
-from discord.channel import TextChannel
-from discord.embeds import Embed
 import asyncio
-import aiohttp
-from enum import Enum
 import configparser
-from utils.logbot import LogBot
-from xml.etree import ElementTree as Etree
-import aiofile
+import datetime
 import hashlib
 import re
+import sqlite3
+from dataclasses import dataclass
+from enum import Enum
+from xml.etree import ElementTree as Etree
+
+import aiohttp
+from discord.channel import TextChannel
+from discord.client import Client
+from discord.embeds import Embed
+from discord.ext import commands, tasks
+from discord.ext.commands import Bot, Context
+from discord.message import Message
+
+from utils.logbot import LogBot
 from utils.utils import strtobool
 from settings_files._global import DEBUG_STATUS
 
@@ -61,11 +65,11 @@ class Rss(commands.Cog):
         self.config = configparser.ConfigParser()
         self.config_path = "./data/rss.cfg"
         self.config.read(self.config_path)
-        self.feed_fingerprint = "./data/rss.txt"
         self.ini = re.compile("```ini.*```", re.DOTALL)
         self.set = re.compile("{.*}")
         self.void = set()
         self.read = set()
+        self.db = RssDB().make()
         if not DEBUG_STATUS():
             self.get_rss_feeds.start()
 
@@ -117,10 +121,11 @@ class Rss(commands.Cog):
     async def get_rss_feeds(self):
         LogBot.logger.info("Start fetching rss feed")
         self.config.read(self.config_path)
-        await self.read_fingerprints()
+        self.void = self.db.get_feed
         task_list = [self.process_feed(section) for section in self.config.sections()]
         await asyncio.gather(*task_list)
-        await self.write_fingerprints()
+        self.db.add_feed(self.read)
+        self.read.clear()
         LogBot.logger.info("Finished fetching rss feed")
 
     async def process_feed(self, section):
@@ -238,30 +243,40 @@ class Rss(commands.Cog):
         if repeat:
             await self.create_embed(items_left, section)
 
-    async def write_fingerprints(self):
-        # noinspection PyBroadException
-        try:
-            path = self.feed_fingerprint
-            async with aiofile.async_open(path, "w") as f_out:
-                for entry in self.read:
-                    await f_out.write(entry + "\n")
-        except Exception:
-            LogBot.logger.exception("Could not write file:")
-        finally:
-            self.void = self.read.copy()
-            self.read.clear()
-
-    async def read_fingerprints(self):
-        # noinspection PyBroadException
-        try:
-            path = self.feed_fingerprint
-            async with aiofile.AIOFile(path, "r", encoding="UTF-8") as f_in:
-                # noinspection PyUnresolvedReferences
-                void = {entry.replace("\n", "") async for entry in aiofile.LineReader(f_in)}
-            self.void = void.copy()
-        except Exception:
-            LogBot.logger.exception("Could not read file:")
-
 
 def setup(bot: Bot):
     bot.add_cog(Rss(bot))
+
+
+# noinspection SqlResolve
+@dataclass(frozen=True)
+class RssDB:
+    conn = sqlite3.connect("./data/rss.db")
+
+    def make(self):
+        with self.conn as c:
+            c.execute('''CREATE TABLE if NOT EXISTS TempChannels
+                             (lastFetch DATE NOT NULL,
+                             fingerprint TEXT NOT NULL,
+                             PRIMARY KEY (fingerprint)
+                             )''')
+        return self
+
+    @property
+    def get_feed(self) -> set[str]:
+        with self.conn as c:
+            c.execute("DELETE FROM TempChannels WHERE lastFetch <= date('now','-365 day')")
+        with self.conn as c:
+            saved = c.execute(f"""SELECT fingerprint FROM TempChannels""").fetchall()
+        return {entry[0] for entry in saved}
+
+    def add_feed(self, fingerprints: set):
+        saved = self.get_feed
+        for fingerprint in fingerprints:
+            with self.conn as c:
+                if fingerprint in saved:
+                    c.execute(f"""UPDATE TempChannels SET lastFetch=? where fingerprint=?""",
+                              (datetime.datetime.now(), fingerprint))
+                else:
+                    c.execute(f"""INSERT into TempChannels(lastFetch,fingerprint)
+                                VALUES(?,?)""", (datetime.datetime.now(), fingerprint))
