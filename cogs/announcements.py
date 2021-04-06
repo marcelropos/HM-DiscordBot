@@ -9,8 +9,8 @@ from bs4 import BeautifulSoup
 
 from settings_files._global import Links
 from settings_files.all_errors import *
-from utils.utils import MissingRole
 from utils.ReadWrite import ReadWrite
+from utils.utils import MissingRole
 # noinspection PyUnresolvedReferences
 from utils.utils import ServerIds
 
@@ -91,7 +91,8 @@ class Announcements(commands.Cog):
         await ctx.author.send(embed=self.__events(ctx))
 
     @events.error
-    async def events_errorhandler(self, ctx, error):
+    async def events_errorhandler(self, ctx, error: CommandInvokeError):
+        error = error.original
         if isinstance(error, RequestError):
             await ctx.send()
 

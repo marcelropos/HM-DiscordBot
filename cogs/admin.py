@@ -78,7 +78,8 @@ class Admin(commands.Cog):
     @reply.error
     @msg.error
     @purge.error
-    async def admin_errorhandler(self, ctx, error):
+    async def admin_errorhandler(self, ctx, error: CommandInvokeError):
+        error = error.original
         if isinstance(error, MissingRole):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"This command is reserved for the admin.")

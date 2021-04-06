@@ -88,7 +88,7 @@ class Tools(commands.Cog):
             result = await asyncio.gather(
                 Tools.get_page(f"http://man.openbsd.org/{arg}", 1),
                 Tools.get_page(f"https://wiki.archlinux.org/index.php/{arg}", 2)
-                )
+            )
 
         # noinspection PyUnboundLocalVariable
         if type(result) is list:
@@ -111,8 +111,8 @@ class Tools(commands.Cog):
                 raise ManPageNotFound(arg)
 
     @man.error
-    async def man_error(self, ctx, error):
-        if isinstance(error, ManPageNotFound):
+    async def man_error(self, ctx, error: CommandInvokeError):
+        if isinstance(error.original, ManPageNotFound):
             await ctx.send(f"No manpage for `{error.__context__}` could be found.")
         else:
             LogBot.logger.exception("Issue while fetching Page")

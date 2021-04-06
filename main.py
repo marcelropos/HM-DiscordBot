@@ -53,28 +53,29 @@ async def reply_with_read(ctx: Context):
 
 # noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
 @bot.event
-async def on_command_error(ctx: Context, e):
+async def on_command_error(ctx: Context, error: CommandInvokeError):
+    error = error.original
     try:
-        if isinstance(e, CommandNotFound):
+        if isinstance(error, CommandNotFound):
             await ctx.send(f"<@{ctx.author.id}>\n"
                            f"Command not found. Please edit your message and try again.",
                            delete_after=10)
-        elif isinstance(e, UserError) \
-                or isinstance(e, MissingRole) \
-                or isinstance(e, CheckFailure):
+        elif isinstance(error, UserError) \
+                or isinstance(error, MissingRole) \
+                or isinstance(error, CheckFailure):
             pass
 
-        elif isinstance(e, MissingRequiredArgument):
+        elif isinstance(error, MissingRequiredArgument):
             await ctx.send("At least one argument is missing.\n"
                            "Please read the help below and try again.")
             await ctx.send_help(ctx.command)
 
-        elif isinstance(e, BadArgument):
+        elif isinstance(error, BadArgument):
             await ctx.send("Your argument could not be processed.\n"
                            "Please read the help below and try again.")
             await ctx.send_help(ctx.command)
         else:
-            raise e
+            raise error
     except Exception:
         logger.exception("Unhandled exception!")
     finally:

@@ -1,12 +1,13 @@
 # noinspection PyUnresolvedReferences
 import discord
-from discord.ext.commands import Context, Bot
-from discord.member import Member
-from discord.channel import TextChannel, VoiceChannel
-from discord.message import Message
 from discord.abc import GuildChannel
-from utils.embed_generator import EmbedGenerator
+from discord.channel import TextChannel, VoiceChannel
+from discord.ext.commands import Bot
+from discord.member import Member
+from discord.message import Message
+
 from utils.database import DB
+from utils.embed_generator import EmbedGenerator
 from utils.logbot import LogBot
 from utils.utils import *
 
@@ -140,7 +141,7 @@ class TempChannels(commands.Cog):
                                       (str(token),)).fetchall()
             self.logger.debug(f"Deleting {len(invites)} invites")
             for message_id, _, member_id, channel_id in invites:
-                await MaintainChannel.delete_invite(member_id, channel_id, message_id, ctx)
+                await MaintainChannel.delete_invite(member_id, channel_id, message_id, ctx, self.bot)
 
             token = mk_token()
             DB.conn.execute(f"""UPDATE TempChannels SET token = {token} WHERE discordUser=?""",
@@ -226,7 +227,8 @@ class TempChannels(commands.Cog):
     @token.error
     @nomod.error
     @rem.error
-    async def temp_errorhandler(self, ctx: Context, error):
+    async def temp_errorhandler(self, ctx: Context, error: CommandInvokeError):
+        error = error.original
         if isinstance(error, TempChannels):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"No channel was found that belongs to you.", delete_after=60)
