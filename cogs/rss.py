@@ -16,9 +16,9 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 from discord.message import Message
 
+from settings_files._global import DEBUG_STATUS
 from utils.logbot import LogBot
 from utils.utils import strtobool
-from settings_files._global import DEBUG_STATUS
 
 
 class Options(Enum):
@@ -215,6 +215,8 @@ class Rss(commands.Cog):
                     fingerprint = hashlib.sha1(to_hash.encode("UTF-8")).hexdigest()
                     self.read.add(fingerprint)
                     if fingerprint not in self.void or fingerprint not in self.read:
+                        LogBot.logger.info(
+                            f"New feed: Name:{name} - Value: {value} - Fingerprint: {fingerprint}".replace("\n", ""))
                         embed.add_field(
                             name=name,
                             value=value,
