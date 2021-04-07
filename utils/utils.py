@@ -2,6 +2,7 @@ import re
 
 import discord
 import pyotp
+from discord.ext import commands
 from discord.ext.commands import Context
 
 from settings_files._global import ServerRoles, ServerIds

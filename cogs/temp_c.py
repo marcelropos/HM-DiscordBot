@@ -1,13 +1,18 @@
+import re
+
+import discord
 from discord.abc import GuildChannel
 from discord.channel import TextChannel, VoiceChannel
-from discord.ext.commands import Bot
+from discord.ext import commands
+from discord.ext.commands import Bot, Context
 from discord.member import Member
 from discord.message import Message
 
+from settings_files.all_errors import *
 from utils.database import DB
 from utils.embed_generator import EmbedGenerator
 from utils.logbot import LogBot
-from utils.utils import *
+from utils.utils import ServerIds, mk_token, accepted_channels
 
 
 class TempChannels(commands.Cog):

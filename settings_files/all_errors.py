@@ -1,3 +1,5 @@
+# noinspection PyUnresolvedReferences
+from discord import Forbidden, DiscordServerError, LoginFailure
 from discord.ext.commands.errors import *
 
 
