@@ -29,7 +29,7 @@ class Admin(commands.Cog):
         if cog == "cogs.admin":
             raise ModuleError("The 'Admin' module may not be disabled.")
         try:
-            self.bot.unload_extension(cog)
+            self.bot.unload_extension(f"cogs.{cog}")
         except Exception:
             raise ModuleError("Could not unload cog")
         await ctx.send("Cog unloaded")
@@ -38,7 +38,7 @@ class Admin(commands.Cog):
     @commands.is_owner()
     async def load(self, ctx: Context, cog: str):
         try:
-            self.bot.load_extension(cog)
+            self.bot.load_extension(f"cogs.{cog}")
         except Exception:
             raise ModuleError("Could not load cog")
         await ctx.send("Cog loaded")
@@ -47,8 +47,8 @@ class Admin(commands.Cog):
     @commands.is_owner()
     async def reload(self, ctx: Context, cog: str):
         try:
-            self.bot.unload_extension(cog)
-            self.bot.load_extension(cog)
+            self.bot.unload_extension(f"cogs.{cog}")
+            self.bot.load_extension(f"cogs.{cog}")
         except Exception:
             raise ModuleError("Could not reload cog")
         await ctx.send("Cog reloaded")
@@ -79,6 +79,8 @@ class Admin(commands.Cog):
         if isinstance(error, MissingRole):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"This command is reserved for the admin.")
+        elif isinstance(error, ModuleError):
+            await ctx.send(error.__context__)
         else:
             error = BugReport(self.bot, ctx, error)
             error.user_details()

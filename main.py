@@ -80,6 +80,8 @@ async def on_command_error(ctx: Context, error):
             await ctx.send_help(ctx.command)
         elif isinstance(error, MissingPermissions):
             await ctx.send("This bot hab not the needed permissions to fulfill your demand.")
+        elif isinstance(error, ModuleError):
+            pass
         else:
             raise error
     except Exception:
