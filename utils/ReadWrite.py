@@ -1,8 +1,9 @@
-import tempfile
 import json
 import os
-from settings_files._global import Directories
+import tempfile
 from threading import Lock
+
+from settings_files._global import Directories
 
 
 class ReadWrite:

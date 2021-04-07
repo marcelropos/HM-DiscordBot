@@ -1,9 +1,11 @@
 import re
+
 import discord
+from discord.message import Message
+
 from settings_files._global import EmojiIds, ServerIds
 from settings_files.all_errors import *
 from utils.logbot import LogBot
-from discord.message import Message
 
 
 # noinspection PyBroadException

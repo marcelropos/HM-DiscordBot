@@ -25,6 +25,7 @@ class Announcements(commands.Cog):
     def __event_sort(events):
         def get_key(item):
             return item.end
+
         return sorted(events, key=get_key)
 
     @staticmethod

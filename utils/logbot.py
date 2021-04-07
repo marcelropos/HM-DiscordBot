@@ -1,6 +1,7 @@
 import logging
-from logging.handlers import QueueHandler, QueueListener
 import queue
+from logging.handlers import QueueHandler
+
 from settings_files._global import DEBUG_STATUS
 
 
