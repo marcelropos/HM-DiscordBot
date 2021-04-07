@@ -85,8 +85,6 @@ class TempChannels(commands.Cog):
                             (ctx.author.id, text_c.id, voice_c.id, token))
         except Exception:
             self.logger.exception("Database Error:")
-        else:
-            pass
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     @staticmethod

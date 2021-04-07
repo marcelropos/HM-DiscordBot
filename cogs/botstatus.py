@@ -2,6 +2,7 @@ from enum import Enum
 from threading import Lock
 
 import discord
+from discord.ext import commands
 from discord.ext.commands import Context, Bot
 
 from settings_files._global import DefaultMessages

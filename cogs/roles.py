@@ -1,4 +1,5 @@
 import discord
+from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from discord.member import Member
 from discord.role import Role
