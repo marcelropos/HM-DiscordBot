@@ -1,7 +1,8 @@
-discord.py
-pyotp
-requests
-bs4
-discord-pretty-help
-aiohttp
-aiofile
+discord.py~=1.7.1
+pyotp~=2.6.0
+requests~=2.25.1
+bs4~=0.0.1
+discord-pretty-help~=1.2.3
+aiohttp~=3.7.4.post0
+aiofile~=3.5.0
+beautifulsoup4~=4.9.3
