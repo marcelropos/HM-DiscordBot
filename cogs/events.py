@@ -1,14 +1,24 @@
+import re
+from datetime import datetime
+from enum import Enum
+
 import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Context, Bot
 from discord.member import Member
-from settings_files._global import DefaultMessages, ServerIds, EmojiIds
 from discord.message import Message
-import re
-from cogs.temp_c import MaintainChannel
+
 from cogs.botstatus import BotStatusValues
+from cogs.temp_c import MaintainChannel
+from settings_files._global import DefaultMessages, ServerIds, EmojiIds
 from utils.database import DB
 from utils.logbot import LogBot
+
+
+class ConnectionStatus(Enum):
+    NO_CONNECTION = "no_connection"
+    CONNECTION_LOST = "connection_lost"
+    CONNECTION_ESTABLISHED = "connection_established"
 
 
 # noinspection PyUnusedLocal,PyPep8Naming,SqlResolve
@@ -18,19 +28,42 @@ class Activities(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
         self.fetch_emojis.start()
+        self.connection_status = ConnectionStatus.NO_CONNECTION
+        self.connection_updated_at = datetime.utcnow()
 
     @commands.Cog.listener()
     async def on_ready(self):
 
-        activity = BotStatusValues.get_activity()
-        status = BotStatusValues.get_status()
-        await self.bot.change_presence(status=status, activity=activity)
+        if self.connection_status == ConnectionStatus.NO_CONNECTION:
+            self.connection_status = ConnectionStatus.CONNECTION_ESTABLISHED
+            self.connection_updated_at = datetime.utcnow()
 
-        channel = discord.Client.get_channel(self=self.bot,
-                                             id=ServerIds.DEBUG_CHAT)
+            activity = BotStatusValues.get_activity()
+            status = BotStatusValues.get_status()
+            await self.bot.change_presence(status=status, activity=activity)
 
-        await channel.send(DefaultMessages.GREETINGS)
-        print(DefaultMessages.GREETINGS)
+            channel = discord.Client.get_channel(self=self.bot,
+                                                 id=ServerIds.DEBUG_CHAT)
+
+            await channel.send(DefaultMessages.GREETINGS)
+            LogBot.logger.info("Start session")
+
+    @commands.Cog.listener()
+    async def on_resumed(self):
+        if self.connection_status == ConnectionStatus.CONNECTION_LOST:
+            channel = discord.Client.get_channel(self=self.bot,
+                                                 id=ServerIds.DEBUG_CHAT)
+
+            await channel.send(f"Connection lost at {self.connection_updated_at}.\n"
+                               f"Connection successfully restored")
+            LogBot.logger.info("Resumed session")
+            self.connection_status = None
+
+    @commands.Cog.listener()
+    async def on_disconnect(self):
+        if self.connection_status == ConnectionStatus.CONNECTION_ESTABLISHED:
+            self.connection_status = datetime.utcnow()
+            LogBot.logger.info("Disconnected from session")
 
     @tasks.loop(minutes=15)
     async def fetch_emojis(self):
