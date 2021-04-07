@@ -1,8 +1,10 @@
 # noinspection PyUnresolvedReferences
-from discord.ext import commands, tasks
-import discord
-from settings_files._global import ServerIds, DEBUG_STATUS
 import datetime
+
+import discord
+from discord.ext import commands, tasks
+
+from settings_files._global import ServerIds, DEBUG_STATUS
 from utils.logbot import LogBot
 
 
@@ -24,8 +26,7 @@ class Moderator(commands.Cog):
                         try:
                             await member.send(content="You will be kicked from the server because you have not been "
                                                       "verified for too long. You can rejoin the server and "
-                                                      "submit a request for verification."
-                                              , delete_after=86400)
+                                                      "submit a request for verification.", delete_after=86400)
                         except Exception:
                             pass
                         # noinspection PyBroadException
