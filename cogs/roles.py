@@ -1,12 +1,13 @@
 import discord
 from discord.ext.commands import Context, Bot
-from discord.role import Role
 from discord.member import Member
-from utils.embed_generator import BugReport
+from discord.role import Role
+
 from settings_files._global import ServerIds, ServerRoles, Messages
+from settings_files.all_errors import *
+from utils.embed_generator import BugReport
 from utils.embed_generator import EmbedGenerator
 from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_role
-from settings_files.all_errors import *
 
 
 class Roles(commands.Cog):

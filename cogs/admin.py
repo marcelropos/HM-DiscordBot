@@ -1,7 +1,9 @@
 import sys
+
+from discord.ext.commands import Bot
+
 from utils.embed_generator import BugReport
 from utils.utils import *
-from discord.ext.commands import Context, Bot
 
 
 # noinspection PyUnusedLocal

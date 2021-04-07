@@ -1,12 +1,14 @@
+import asyncio
 import os
+
 import discord
 from discord.ext.commands import *
 from pretty_help import PrettyHelp
-from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, ServerIds, COMMAND_PREFIX
+
+from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, COMMAND_PREFIX
 from settings_files.all_errors import *
 from utils.logbot import LogBot
 from utils.message_process import reactions, restricted_messages
-import asyncio
 
 logger = LogBot.logger
 

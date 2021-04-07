@@ -1,11 +1,13 @@
+import asyncio
+from enum import Enum
+
+import aiohttp
 from discord.ext.commands import Context, Bot
+
 from settings_files._global import ServerIds
 from settings_files.all_errors import *
-import asyncio
-import aiohttp
 from utils.logbot import LogBot
 from utils.utils import strtobool
-from enum import Enum
 
 
 class SortType(Enum):
