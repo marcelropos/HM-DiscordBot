@@ -2,6 +2,7 @@
 import discord
 from discord.abc import GuildChannel
 from discord.channel import TextChannel, VoiceChannel
+from discord.ext import commands
 from discord.ext.commands import Bot
 from discord.member import Member
 from discord.message import Message

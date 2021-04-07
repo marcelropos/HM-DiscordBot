@@ -2,6 +2,7 @@ import asyncio
 from enum import Enum
 
 import aiohttp
+from discord.ext import commands
 from discord.ext.commands import Context, Bot
 
 from settings_files._global import ServerIds

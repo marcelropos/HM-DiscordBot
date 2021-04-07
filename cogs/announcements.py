@@ -6,6 +6,7 @@ from collections import namedtuple
 import discord
 import requests
 from bs4 import BeautifulSoup
+from discord.ext import commands
 
 from settings_files._global import Links
 from settings_files.all_errors import *
