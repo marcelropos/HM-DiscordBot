@@ -1,5 +1,5 @@
 # noinspection PyUnresolvedReferences
-from discord import Forbidden
+from discord import Forbidden, NotFound, DiscordServerError, NoMoreItems, GatewayNotFound
 from discord.ext.commands.errors import *
 
 
