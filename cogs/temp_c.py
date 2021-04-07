@@ -137,15 +137,7 @@ class TempChannels(commands.Cog):
 
         if mode.startswith("gen"):
             self.logger.debug("Generate new token")
-            invites = DB.conn.execute(f"""SELECT * FROM Invites where token=?""",
-                                      (str(token),)).fetchall()
-            self.logger.debug(f"Deleting {len(invites)} invites")
-            for message_id, _, member_id, channel_id in invites:
-                await MaintainChannel.delete_invite(member_id, channel_id, message_id, ctx, self.bot)
-
-            token = mk_token()
-            DB.conn.execute(f"""UPDATE TempChannels SET token = {token} WHERE discordUser=?""",
-                            (str(ctx.author.id),))
+            await MaintainChannel.update(ctx, mk_token(), self.bot)
             return
 
         if mode.startswith("place"):
@@ -281,12 +273,15 @@ def setup(bot: Bot):
 class MaintainChannel:
 
     @staticmethod
-    async def update(ctx: Context, new_token):
+    async def update(ctx: Context, new_token, bot):
         token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser=?""",
                                 (str(ctx.author.id),)).fetchone()
-        invites = DB.conn.execute(f"""SELECT message_id FROM Invites where token=?""", (token,)).fetchall()
-        for invite in invites:
-            await MaintainChannel.delete_invite(invite, ctx)
+
+        invites = DB.conn.execute(f"""SELECT message_id, channel_id, member_id FROM Invites where token=?""",
+                                  (token[0],)).fetchall()
+        for message_id, channel_id, user_id in invites:
+            await MaintainChannel.delete_invite(user_id, channel_id, message_id, ctx, bot)
+
         DB.conn.execute(f"""UPDATE TempChannels SET token=? where discordUser=?""",
                         (new_token, ctx.author.id))
 
