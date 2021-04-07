@@ -1,15 +1,11 @@
-from discord.ext import commands
-# noinspection PyUnresolvedReferences
 from discord.ext.commands.errors import *
-# noinspection PyUnresolvedReferences
-from discord.errors import *
 
 
-class NoCommandError(commands.CommandNotFound):
+class NoCommandError(CommandNotFound):
     pass
 
 
-class UserError(commands.CommandError):
+class UserError(CommandError):
     pass
 
 
@@ -17,7 +13,7 @@ class WrongChatError(UserError):
     pass
 
 
-class ModuleError(commands.CommandError):
+class ModuleError(CommandError):
     pass
 
 
