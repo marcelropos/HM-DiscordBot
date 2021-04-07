@@ -21,7 +21,6 @@ class Admin(commands.Cog):
         await discord.Client.change_presence(self=self.bot,
                                              status=status)
 
-        await discord.Client.logout(self.bot)
         await discord.Client.close(self.bot)
         sys.exit(0)
 
