@@ -1,10 +1,11 @@
-from discord.ext.commands import Context, Bot
-from settings_files.all_errors import *
-from discord.ext import commands
-from settings_files._global import DefaultMessages
-from threading import Lock
 from enum import Enum
+from threading import Lock
+
 import discord
+from discord.ext.commands import Context, Bot
+
+from settings_files._global import DefaultMessages
+from settings_files.all_errors import *
 from utils.logbot import LogBot
 
 
@@ -45,7 +46,8 @@ def status_converter(status: str) -> Status:
 
 
 class BotStatusValues:
-    """Saves the current status and type_of_activity and their modes and prevents simultaneous access to the attributes."""
+    """Saves the current status and type_of_activity and their modes and prevents simultaneous access to the
+    attributes. """
 
     _lock = Lock()
     _activity = discord.Activity(type=discord.ActivityType.listening,
