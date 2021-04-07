@@ -156,8 +156,10 @@ class Roles(commands.Cog):
     @news_add.error
     @news_rem.error
     @hm.error
-    async def roles_error_handler(self, ctx: Context, error: CommandInvokeError):
-        error = error.original
+    async def roles_error_handler(self, ctx: Context, error):
+        if isinstance(error, CommandInvokeError):
+            error = error.original
+
         if isinstance(error, RoleNotFoundError):
             embed = EmbedGenerator("roles")
             await ctx.send(content=f"<@!{ctx.author.id}>\n"
@@ -191,9 +193,6 @@ class Roles(commands.Cog):
 
         elif isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
             await ctx.send(f"Dieser Befehl kann nur im Chat <#{ServerIds.BOT_COMMANDS_CHANNEL}> gestellt werden.")
-
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(error)
 
         elif isinstance(error, commands.BadArgument):
             await ctx.send(str(error))

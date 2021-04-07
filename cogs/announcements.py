@@ -91,8 +91,9 @@ class Announcements(commands.Cog):
         await ctx.author.send(embed=self.__events(ctx))
 
     @events.error
-    async def events_errorhandler(self, ctx, error: CommandInvokeError):
-        error = error.original
+    async def events_errorhandler(self, ctx, error):
+        if isinstance(error, CommandInvokeError):
+            error = error.original
         if isinstance(error, RequestError):
             await ctx.send()
 

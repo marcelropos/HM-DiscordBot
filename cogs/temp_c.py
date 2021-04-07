@@ -227,8 +227,9 @@ class TempChannels(commands.Cog):
     @token.error
     @nomod.error
     @rem.error
-    async def temp_errorhandler(self, ctx: Context, error: CommandInvokeError):
-        error = error.original
+    async def temp_errorhandler(self, ctx: Context, error):
+        if isinstance(error, CommandInvokeError):
+            error = error.original
         if isinstance(error, TempChannels):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"No channel was found that belongs to you.", delete_after=60)

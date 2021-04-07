@@ -111,8 +111,11 @@ class Tools(commands.Cog):
                 raise ManPageNotFound(arg)
 
     @man.error
-    async def man_error(self, ctx, error: CommandInvokeError):
-        if isinstance(error.original, ManPageNotFound):
+    async def man_error(self, ctx, error):
+        if isinstance(error, CommandInvokeError):
+            error = error.original
+
+        if isinstance(error, ManPageNotFound):
             await ctx.send(f"No manpage for `{error.__context__}` could be found.")
         else:
             LogBot.logger.exception("Issue while fetching Page")
