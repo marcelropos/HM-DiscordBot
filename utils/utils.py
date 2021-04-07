@@ -1,9 +1,12 @@
-import discord
-from settings_files._global import ServerRoles, ServerIds
-from discord.ext.commands import Context
-import pyotp
-from settings_files.all_errors import *
 import re
+
+import discord
+import pyotp
+from discord.ext import commands
+from discord.ext.commands import Context
+
+from settings_files._global import ServerRoles, ServerIds
+from settings_files.all_errors import *
 
 
 def mods_or_owner():
