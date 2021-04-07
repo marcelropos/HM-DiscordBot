@@ -55,8 +55,9 @@ async def reply_with_read(ctx: Context):
 
 # noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
 @bot.event
-async def on_command_error(ctx: Context, error: CommandInvokeError):
-    error = error.original
+async def on_command_error(ctx: Context, error):
+    if isinstance(error, CommandInvokeError):
+        error = error.original
     try:
         if isinstance(error, CommandNotFound):
             await ctx.send(f"<@{ctx.author.id}>\n"
