@@ -1,5 +1,3 @@
-# noinspection PyUnresolvedReferences
-import discord
 from discord.abc import GuildChannel
 from discord.channel import TextChannel, VoiceChannel
 from discord.ext.commands import Bot
@@ -12,7 +10,6 @@ from utils.logbot import LogBot
 from utils.utils import *
 
 
-# noinspection SqlResolve,SqlDialectInspection,SqlNoDataSourceInspection
 class TempChannels(commands.Cog):
     """Create, edit or delete your temporary channel."""
 
