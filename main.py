@@ -77,6 +77,8 @@ async def on_command_error(ctx: Context, error):
             await ctx.send("Your argument could not be processed.\n"
                            "Please read the help below and try again.")
             await ctx.send_help(ctx.command)
+        elif isinstance(error, MissingPermissions):
+            await ctx.send("This bot hab not the needed permissions to fulfill your demand.")
         else:
             raise error
     except Exception:
