@@ -3,7 +3,7 @@ import re
 import discord
 import pyotp
 from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Bot
 
 from settings_files._global import ServerRoles, ServerIds
 from settings_files.all_errors import *
@@ -56,13 +56,15 @@ def mk_token():
     return str(otp)
 
 
-def strtobool(val):
+def strtobool(val: str):
     """Convert a string representation of truth to true (1) or false (0).
 
     True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
     are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
     'val' is anything else.
     """
+    if not isinstance(val, str):
+        raise ValueError(f"Expect {type(str)} but got {type(val)}")
     val = val.lower()
     if val in ('y', 'yes', 't', 'true', 'on', '1', 'j', 'ja'):
         return True
@@ -72,7 +74,12 @@ def strtobool(val):
         raise ValueError("invalid truth value %r" % (val,))
 
 
-async def accepted_channels(bot, ctx):
+async def accepted_channels(bot: Bot, ctx: Context):
+    if not isinstance(bot, Bot):
+        raise ValueError(f"Expect {type(Bot)} but got {type(bot)}")
+    if not isinstance(ctx, Context):
+        raise ValueError(f"Expect {type(ctx)} but got {type(ctx)}")
+
     channels = {ServerIds.BOT_COMMANDS_CHANNEL,
                 ServerIds.DEBUG_CHAT}
     try:
@@ -90,18 +97,17 @@ async def accepted_channels(bot, ctx):
     if ctx.channel.id not in channels:
         channel = discord.Client.get_channel(self=bot,
                                              id=ServerIds.BOT_COMMANDS_CHANNEL)
-        await channel.send(f"<@!{ctx.author.id}>\n Schreibe mir doch bitte hier nochmal oder ggf. Privat.")
-        raise WrongChatError("Falscher Chat")
+        await channel.send(f"<@!{ctx.author.id}>\n Please write me here again or if necessary privately.")
+        raise WrongChatError("Wrong Chat")
 
 
-def extract_id(content):
+def extract_id(content: str) -> str:
+    if not isinstance(content, str):
+        raise ValueError(f"Expect {type(str)} but got {type(content)}")
+
     matches = re.finditer(r"[0-9]+", content)
     user_id = None
     for match in matches:
         start, end = match.span()
         user_id = content[start:end]
     return user_id
-
-
-def print_help(x):
-    print(help(x))
