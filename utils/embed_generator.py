@@ -1,11 +1,15 @@
 import json
 import os
 import time
+from typing import Union
 
 import discord
+from discord import Message, User, Member
+from discord.ext.commands import Context
 
 from settings_files._global import Directories, ServerIds
-from settings_files.all_errors import UserError
+from settings_files.all_errors import *
+from utils.logbot import LogBot
 
 
 class HelpError(UserError):
@@ -61,6 +65,33 @@ class EmbedGenerator:
                                   colour=discord.Colour(0x12d4ca),
                                   description="Diese Hilfe scheint es noch nicht zu geben.")
             return embed
+
+
+async def error_report(ctx: Context, reason: str, solution: str):
+    message: Message = ctx.message
+    author: Union[Member, User] = message.author
+
+    if isinstance(author, User):
+        author: User
+        name = author.name
+    elif isinstance(author, Member):
+        name = author.nick if author.nick else author.display_name
+    else:
+        raise ValueError()
+    avatar_url = author.avatar_url
+
+    embed = discord.Embed(colour=discord.Colour(0x12d4ca),
+                          title="Command not executed")
+    embed.set_author(name=name, icon_url=avatar_url)
+    embed.add_field(name="Your Command", value=message.content, inline=False)
+    embed.add_field(name="Reason", value=reason, inline=False)
+    embed.add_field(name="Solution", value=solution, inline=False)
+    try:
+        respond = await ctx.reply(embed=embed, delete_after=60)
+    except Forbidden as error:
+        LogBot.logger.warning(f"Cannot sent a reply. No Permissions {repr(error)}")
+    except HTTPException as error:
+        LogBot.logger.warning(f"Cannot sent a reply. The message may have been deleted. {repr(error)}")
 
 
 class BugReport:
