@@ -12,7 +12,6 @@ from settings_files._global import Links
 from settings_files.all_errors import *
 from utils.ReadWrite import ReadWrite
 from utils.utils import MissingRole
-# noinspection PyUnresolvedReferences
 from utils.utils import ServerIds
 
 

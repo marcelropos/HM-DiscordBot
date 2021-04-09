@@ -5,7 +5,7 @@ from typing import Union
 
 import discord
 from discord import Message, User, Member
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Bot
 
 from settings_files._global import Directories, ServerIds
 from settings_files.all_errors import *
@@ -97,7 +97,7 @@ async def error_report(ctx: Context, reason: str, solution: str):
 class BugReport:
 
     # noinspection PyShadowingNames
-    def __init__(self, bot, ctx, e):
+    def __init__(self, bot: Bot, ctx: Context, e):
         self.bot = bot
         self.ctx = ctx
         self.channel = bot.get_channel(id=ServerIds.DEBUG_CHAT)
@@ -111,7 +111,6 @@ class BugReport:
                              value=e,
                              inline=False)
 
-    def user_details(self):
         self.embed.add_field(name="Author",
                              value=f"Name: `{self.ctx.author.name}`\n"
                                    f"ID: `{self.ctx.author.id}`",
@@ -139,11 +138,18 @@ class BugReport:
             value = f"https://discordapp.com/channels/{guild_id}/{channel_id}/{message_id}"
 
         else:
-            value = "Privatnachricht"
+            value = "Private message"
         self.embed.add_field(name="Link to message",
                              value=value,
                              inline=False)
 
-    async def reply(self):
-        await self.ctx.send("Nicht klassifizierter Fehler. Ein Report wurde erstellt.")
-        await self.channel.send(embed=self.embed)
+    async def reply(self, message: str = None):
+        if not message:
+            message = "Unclassified error.\nA report has been created."
+        try:
+            user_report = await self.ctx.reply(message)
+        except Forbidden as error:
+            LogBot.logger.warning(f"Cannot sent a reply. No Permissions {repr(error)}")
+        except HTTPException as error:
+            LogBot.logger.warning(f"Cannot sent a reply. The message may have been deleted. {repr(error)}")
+        bug_report = await self.channel.send(embed=self.embed)

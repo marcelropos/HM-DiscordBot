@@ -1,8 +1,5 @@
 import sys
 
-from discord.ext import commands
-from discord.ext.commands import Bot
-
 from utils.embed_generator import BugReport
 from utils.utils import *
 
@@ -83,7 +80,6 @@ class Admin(commands.Cog):
             await ctx.send(error.__context__)
         else:
             error = BugReport(self.bot, ctx, error)
-            error.user_details()
             await error.reply()
 
 
