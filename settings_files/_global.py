@@ -43,14 +43,6 @@ class Links:
     EVENTS = "https://www.cs.hm.edu/aktuelles/termine/index.de.html"
 
 
-class Messages:
-    ROLE_NOT_FOUND = \
-        """Gruppe nicht gefunden:
-        Es stehen derzeit folgende Gruppen zur Auswahl:
-        `{}`
-        Falls du eine andere Rolle benötigst, wende dich an die Moderatoren"""
-
-
 class ServerIds:
     DEBUG_CHAT = 762736695116169217
     GUILD_ID = 760453010752143372
@@ -68,6 +60,19 @@ class ServerIds:
     CODEING = 769870767759818772
     HELP = 765141613881720862
     NEWS = 781453512793128990
+
+
+class Messages:
+    ROLE_NOT_FOUND = \
+        """Group not found:
+        The following groups are currently available for selection:
+        `{}`
+        If you need a different role, contact the moderators."""
+    ROLE_NOT_ASSIGNED_ON_SERVER = "The Role: {} was set as an assignable Role but not on the Server"
+    WRONG_CHAT = f"This command can be put only in the chat <#{ServerIds.BOT_COMMANDS_CHANNEL}>."
+    INCORRECT_CONFIGURATION = "An error has occurred in the bot or server configuration, which prevents the command " \
+                              "from being executed at the moment."
+    Expected_BUT_GOT = "Expected {} but got {}"
 
 
 class ServerRoles:
