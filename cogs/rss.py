@@ -110,10 +110,10 @@ class Rss(commands.Cog):
 
         await ctx.send(
             f"```ini\n"
-            f"[{self.config[msg.clean_content].name}]\n"
-            f"enabled = {self.config[msg.clean_content]['enabled']}\n"
-            f"rss = {self.config[msg.clean_content]['rss']}\n"
-            f"channel = {self.config[msg.clean_content]['channel']}\n"
+            f"[{self.config[msg.content].name}]\n"
+            f"enabled = {self.config[msg.content]['enabled']}\n"
+            f"rss = {self.config[msg.content]['rss']}\n"
+            f"channel = {self.config[msg.content]['channel']}\n"
             f"```"
         )
 
