@@ -190,6 +190,8 @@ class Rss(commands.Cog):
 
         character_limit = int(self.config["DEFAULT"]["character_limit"])
         field_limit = int(self.config["DEFAULT"]["field_limit"])
+        field_name_limit = int(self.config["DEFAULT"]["field_name_limit"])
+        field_value_limit = int(self.config["DEFAULT"]["field_value_limit"])
 
         items_left = items.copy()
         for item in items:
@@ -200,11 +202,12 @@ class Rss(commands.Cog):
                 if not item_link:
                     item_link = ""
 
-                if len(name) >= 256:
-                    name = name[:253] + "..."
-                if len(value) + len(item_link) >= 1024:
-                    value_limit = 1020 - len(item_link)
-                    value = value[:value_limit] + "..."
+                to_be_continued = "`...`"
+                if len(name) >= field_name_limit:
+                    name = name[:field_name_limit - len(to_be_continued)] + to_be_continued
+                if len(value) + len(item_link) >= field_value_limit:
+                    value_limit = field_value_limit - len(item_link) - len(to_be_continued)
+                    value = value[:value_limit] + to_be_continued
                 value += f"\n{item_link}"
                 to_hash = name + value
 
