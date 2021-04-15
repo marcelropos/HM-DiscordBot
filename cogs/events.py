@@ -9,9 +9,7 @@ from discord.member import Member
 from discord.message import Message
 
 from cogs.botstatus import BotStatusValues
-from cogs.temp_c import MaintainChannel
 from settings_files._global import DefaultMessages, ServerIds, EmojiIds
-from utils.database import DB
 from utils.logbot import LogBot
 
 
@@ -30,6 +28,7 @@ class Activities(commands.Cog):
         self.fetch_emojis.start()
         self.connection_status = ConnectionStatus.NO_CONNECTION
         self.connection_updated_at = datetime.utcnow()
+        self.temp_channels = None
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -81,7 +80,6 @@ class Activities(commands.Cog):
         if after.channel == await self.bot.fetch_channel(ServerIds.AFK_CHANNEL):
             await member.move_to(None, reason="AFK")
 
-        await MaintainChannel.rem_channels(member, self.bot)
         await ChannelFunctions.auto_bot_kick(before)
         await ChannelFunctions.nerd_ecke(self.bot, member)
 
@@ -114,21 +112,6 @@ class Activities(commands.Cog):
             member = payload.member  # For Guild
         else:
             member = await discord.Client.fetch_user(self.bot, payload.user_id)  # For private Messages
-
-        # noinspection PyBroadException
-        try:
-            message_id = payload.message_id
-            token = DB.conn.execute(f"""SELECT token FROM Invites where message_id=?""",
-                                    (message_id,)).fetchone()
-            if token:
-                text_c, voice_c = DB.conn.execute(
-                    f"""SELECT textChannel, voiceChannel FROM TempChannels where token=?""",
-                    (token[0],)).fetchone()
-                text_c = await self.bot.fetch_channel(text_c)
-                voice_c = await self.bot.fetch_channel(voice_c)
-                await MaintainChannel.join(member, voice_c, text_c)
-        except Exception:
-            LogBot.logger.exception("Activity error")
 
 
 def setup(bot: Bot):

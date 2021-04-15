@@ -1,18 +1,92 @@
-import re
+from asyncio import Lock
 
 import discord
-from discord.abc import GuildChannel
+from aiosqlite import Cursor, Connection
+from discord import Guild, Role
 from discord.channel import TextChannel, VoiceChannel
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
 from discord.member import Member
-from discord.message import Message
 
 from settings_files.all_errors import *
-from utils.database import DB
 from utils.embed_generator import EmbedGenerator
 from utils.logbot import LogBot
+from utils.tempchannels.database import TempChannelDB
+from utils.tempchannels.maintainchannels import MaintainChannel
+from utils.tempchannels.token import Token
 from utils.utils import ServerIds, mk_token, accepted_channels
+
+
+class Database:
+    _lock = Lock()
+    _database = None
+
+    @classmethod
+    async def make(cls):
+        if not isinstance(cls._database, TempChannelDB):
+            cls._database = await TempChannelDB().make()
+
+    @classmethod
+    def db(cls) -> Connection:
+        if isinstance(cls._database.db, Connection):
+            return cls._database.db
+        else:
+            raise TypeError("Database is probably not initialized.")
+
+    @classmethod
+    async def __aenter__(cls):
+        await cls._lock.acquire()
+        return cls.db()
+
+    @classmethod
+    async def __aexit__(cls, exc_type, exc_val, exc_tb):
+        cls._lock.release()
+
+
+class Activities(commands.Cog):
+
+    def __init__(self, bot: Bot):
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: Member, *_):
+        if member.bot:
+            return
+        async with Database() as db:
+            db: Connection
+            await MaintainChannel.rem_channels(member, self.bot, db)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        try:
+            if payload.member.bot:
+                return
+        except AttributeError:
+            pass
+
+        await Database().make()
+        # noinspection PyBroadException
+        try:
+            message_id = payload.message_id
+            member_id = payload.user_id
+            async with Database() as db:
+                cursor: Cursor = await db.execute(
+                    f"""SELECT token FROM Invites where message_id=?""",
+                    (message_id,))
+                token = await cursor.fetchone()
+            if token:
+                async with Database() as db:
+                    cursor: Cursor = await db.execute(
+                        f"""SELECT textChannel, voiceChannel FROM TempChannels where token=?""",
+                        (token[0],))
+                    text_channel_id, voice_channel_id = await cursor.fetchone()
+                text_channel: TextChannel = await self.bot.fetch_channel(text_channel_id)
+                voice_channel: VoiceChannel = await self.bot.fetch_channel(voice_channel_id)
+                guild: Guild = text_channel.guild
+                member = await guild.fetch_member(member_id)
+                await MaintainChannel.join(member, voice_channel, text_channel)
+        except Exception:
+            LogBot.logger.exception("Activity error")
 
 
 class TempChannels(commands.Cog):
@@ -28,6 +102,7 @@ class TempChannels(commands.Cog):
                     help="Command group")
     @commands.has_role(ServerIds.HM)
     async def tmpc(self, ctx: Context):
+        await Database.make()
         if ctx.invoked_subcommand is None:
             raise ModuleError()
 
@@ -37,35 +112,76 @@ class TempChannels(commands.Cog):
                   help="This channel will be deleted after you leave it.",
                   aliases=["make"])
     async def mk(self, ctx: Context, *, name: str):
+
         await accepted_channels(self.bot, ctx)
-        member: Member = await ctx.guild.fetch_member(ctx.author.id)
-        if DB.conn.execute(f"""SELECT * FROM TempChannels WHERE discordUser=?""",
-                           (str(ctx.author.id),)).fetchone():
-            raise PrivateChannelsAlreadyExistsError()
+        member: Member = ctx.author
+        async with Database() as db:
+            cursor: Cursor = await db.execute(
+                f"""SELECT * FROM TempChannels WHERE discordUser=?""",
+                (str(ctx.author.id),))
+            if await cursor.fetchone():
+                raise PrivateChannelsAlreadyExistsError()
 
         category = ctx.guild.get_channel(ServerIds.CUSTOM_CHANNELS)
 
         voice_c: VoiceChannel = await ctx.guild.create_voice_channel(name,
                                                                      category=category,
-                                                                     reason=f"request by {str(ctx.author)}")
+                                                                     reason=f"request by {member.display_name}")
 
         text_c: TextChannel = await ctx.guild.create_text_channel(name,
                                                                   category=category,
-                                                                  reason=f"request by {str(ctx.author)}",
-                                                                  topic=f"Created by: {str(ctx.author)}")
+                                                                  reason=f"request by {member.display_name}",
+                                                                  topic=f"Created by: {member.display_name}")
         token = mk_token()
 
         overwrite = TempChannels.get_permissions()
 
         await voice_c.set_permissions(member, overwrite=overwrite, reason="owner")
         await text_c.set_permissions(member, overwrite=overwrite, reason="owner")
-        self.logger.debug(f"Created temporary channels: "
-                          f"{ctx.author}-{ctx.author.id} owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
+
+        for role in member.roles:
+            role: Role
+            if role.id == ServerIds.MODERATOR:
+                await voice_c.set_permissions(role,
+                                              overwrite=None,
+                                              reason="No mod active")
+                await text_c.set_permissions(role,
+                                             overwrite=None,
+                                             reason="No mod active")
+                break
+
         # noinspection PyBroadException
         try:
             await member.move_to(voice_c, reason="created this channel.")
-        except Exception:
+        except Forbidden as error:
+            raise error
+        except HTTPException:
             pass
+
+        # noinspection PyBroadException
+        try:
+            async with Database() as db:
+                await db.execute(f"INSERT INTO TempChannels("
+                                 f"discordUser, textChannel, voiceChannel, token) VALUES"
+                                 f"(?,?,?,?)",
+                                 (ctx.author.id, text_c.id, voice_c.id, token))
+
+        except Exception:
+            # noinspection PyBroadException
+            try:
+                async with Database() as db:
+                    await db.execute(f"INSERT INTO TempChannels("
+                                     f"discordUser, textChannel, voiceChannel, token) VALUES"
+                                     f"(?,?,?,?)",
+                                     (ctx.author.id, text_c.id, voice_c.id, token))
+            except Exception:
+                await voice_c.delete()
+                await text_c.delete()
+                self.logger.exception("Database Error:")
+        else:
+            self.logger.debug(f"Created temporary channels: "
+                              f"{ctx.author}-{ctx.author.id} "
+                              f"owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
 
         # noinspection PyBroadException
         try:
@@ -77,16 +193,10 @@ class TempChannels(commands.Cog):
 
             await text_c.send(content=f"<@!{ctx.author.id}>",
                               embed=embed)
+        except Forbidden as error:
+            raise error
         except Exception:
             self.logger.exception("Can't send Message: ")
-        # noinspection PyBroadException
-        try:
-            DB.conn.execute(f"INSERT INTO TempChannels("
-                            f"discordUser, textChannel, voiceChannel, token) VALUES"
-                            f"(?,?,?,?)",
-                            (ctx.author.id, text_c.id, voice_c.id, token))
-        except Exception:
-            self.logger.exception("Database Error:")
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     @staticmethod
@@ -111,8 +221,11 @@ class TempChannels(commands.Cog):
         await accepted_channels(self.bot, ctx)
 
         try:
-            text_c, voice_c = DB.conn.execute("""SELECT textChannel, voiceChannel FROM TempChannels WHERE token=?""",
-                                              (token,)).fetchone()
+            async with Database() as db:
+                cursor: Cursor = await db.execute(
+                    """SELECT textChannel, voiceChannel FROM TempChannels WHERE token=?""",
+                    (token,))
+                text_c, voice_c = await cursor.fetchone()
         except TypeError:
             raise TempChannelNotFound()
         else:
@@ -124,54 +237,27 @@ class TempChannels(commands.Cog):
     @tmpc.command(pass_context=True,
                   brief="Manage invitations",
                   help="""
-                        modes:
-                        - gen: generates new invitation token.
-                        - place: places an invitation.
-                        - send <@user>: sends an invitation to a user.""")
+                            modes:
+                            - gen: generates new invitation token.
+                            - place: places an invitation.
+                            - send <@user>: sends an invitation to a user.""")
     async def token(self, ctx: Context, mode: str, *, user=None):
         try:
-            member, text_c, voice_c, token = DB.conn.execute(f"""SELECT * FROM TempChannels WHERE discordUser=?""",
-                                                             (str(ctx.author.id),)).fetchone()
+            async with Database() as db:
+                cursor: Cursor = await db.execute(
+                    f"""SELECT * FROM TempChannels WHERE discordUser=?""",
+                    (str(ctx.author.id),))
+                member, text_channel_id, voice_channel_id, token = await cursor.fetchone()
         except TypeError:
             raise TempChannelNotFound()
 
-        if mode.startswith("gen"):
-            self.logger.debug("Generate new token")
-            await MaintainChannel.update(ctx, mk_token(), self.bot)
-            return
-
-        if mode.startswith("place"):
-            self.logger.debug(f"Place Token for {str(ctx.author)}")
-            embed = MaintainChannel.invite_embed(ctx.author, f"```!tmpc join {token}```")
-            message = await ctx.send(embed=embed)
-            MaintainChannel.save_invite(ctx.author, message)
-            await message.add_reaction(emoji="🔓")
-            return
-
-        if mode.startswith("send") and user:
-            await accepted_channels(self.bot, ctx)
-            embed = MaintainChannel.invite_embed(ctx.author, f"```!tmpc join {token}```")
-
-            matches = re.finditer(r"[0-9]+", user)
-            for match in matches:
-                start, end = match.span()
-                user_id = user[start:end]
-                user = await discord.Client.fetch_user(self.bot, user_id)
-                send_error = False
-                error_user = set()
-
-                # noinspection PyBroadException
-                try:
-                    message = await user.send(embed=embed)
-                    MaintainChannel.save_invite(ctx.author, message)
-                    await message.add_reaction(emoji="🔓")
-                except Exception:
-                    error_user.add(str(user))
-                    send_error = True
-
-                if send_error:
-                    raise CouldNotSendMessage(f"Invitation could not be sent to: {error_user}.\n"
-                                              f"Possibly this is caused by the settings of the users.")
+        async with Database() as db:
+            if mode.startswith("gen"):
+                await MaintainChannel.update(ctx, mk_token(), self.bot, db)
+            elif mode.startswith("place"):
+                await Token.token_place(ctx, token, db)
+            elif mode.startswith("send") and user:
+                await Token.token_send(self.bot, ctx, token, user, db)
 
     @tmpc.command(pass_context=True,
                   brief="Disable moderation",
@@ -180,22 +266,23 @@ class TempChannels(commands.Cog):
     async def nomod(self, ctx):
         await accepted_channels(self.bot, ctx)
         try:
-            text_c, voice_c = DB.conn.execute(
-                """SELECT textChannel, voiceChannel FROM TempChannels WHERE discordUser=?""",
-                str(ctx.author.id))
-
+            async with Database() as db:
+                cursor: Cursor = await db.execute(
+                    """SELECT textChannel, voiceChannel FROM TempChannels WHERE discordUser=?""",
+                    (str(ctx.author.id),))
+                text_channel_id, voice_channel_id = await cursor.fetchone()
             role = discord.utils.get(ctx.guild.roles, id=ServerIds.MODERATOR)
-            await voice_c.set_permissions(role,
-                                          overwrite=None,
-                                          reason="No mod active")
+            voice_channel = await self.bot.fetch_channel(voice_channel_id)
+            text_channel = await self.bot.fetch_channel(text_channel_id)
+            await voice_channel.set_permissions(role,
+                                                overwrite=None,
+                                                reason="No mod active")
 
-            await text_c.set_permissions(role,
-                                         overwrite=None,
-                                         reason="No mod active")
+            await text_channel.set_permissions(role,
+                                               overwrite=None,
+                                               reason="No mod active")
         except AttributeError:
             raise TempChannelNotFound()
-        except Exception as e:
-            self.logger.error("Unexpected issue: ", e)
 
     # noinspection SqlResolve
     @tmpc.command(pass_context=True,
@@ -204,10 +291,14 @@ class TempChannels(commands.Cog):
     async def rem(self, ctx: Context):
         # noinspection PyBroadException
         try:
-            member, text_c, voice_c, token = DB.conn.execute("""SELECT * FROM TempChannels WHERE discordUser=?""",
-                                                             (str(ctx.author.id),)).fetchone()
+            async with Database() as db:
+                db: Connection
+                cursor: Cursor = await db.execute(
+                    """SELECT * FROM TempChannels WHERE discordUser=?""",
+                    (str(ctx.author.id),))
+                member, text_c, voice_c, token = await cursor.fetchone()
             if ctx.author.id == member:
-                await MaintainChannel.rem_channel(member, text_c, voice_c, token, ctx, self.bot)
+                await MaintainChannel.rem_channel(member, text_c, voice_c, token, self.bot, db)
         except TypeError:
             raise TempChannelNotFound()
         except Exception:
@@ -267,116 +358,4 @@ class TempChannels(commands.Cog):
 
 def setup(bot: Bot):
     bot.add_cog(TempChannels(bot))
-
-
-# noinspection SqlResolve,SqlNoDataSourceInspection,PyBroadException,SqlDialectInspection
-class MaintainChannel:
-
-    @staticmethod
-    async def update(ctx: Context, new_token, bot):
-        token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser=?""",
-                                (str(ctx.author.id),)).fetchone()
-
-        invites = DB.conn.execute(f"""SELECT message_id, channel_id, member_id FROM Invites where token=?""",
-                                  (token[0],)).fetchall()
-        for message_id, channel_id, user_id in invites:
-            await MaintainChannel.delete_invite(user_id, channel_id, message_id, ctx, bot)
-
-        DB.conn.execute(f"""UPDATE TempChannels SET token=? where discordUser=?""",
-                        (new_token, ctx.author.id))
-
-    @staticmethod
-    def save_invite(member: Member, message: Message):
-        try:
-
-            token = DB.conn.execute(f"""SELECT token FROM TempChannels where discordUser=?""",
-                                    (member.id,)).fetchone()[0]
-            LogBot.logger.debug(f"Save invite with token {token}")
-            DB.conn.execute(f"""INSERT into Invites(message_id,token,member_id,channel_id)
-            VALUES(?,?,?,?)""", (message.id, token, member.id, message.channel.id))
-        except Exception:
-            LogBot.logger.exception("Failed to insert Data")
-
-    @classmethod
-    async def delete_invite(cls, member_id: int, channel_id: int, message_id: int, ctx: Context, bot: Bot):
-        # noinspection PyBroadException
-        try:
-            member = await ctx.guild.fetch_member(member_id)
-            embed = MaintainChannel.invite_embed(member, "Expired")
-            channel = await discord.Client.fetch_channel(bot, channel_id)
-            message = await channel.fetch_message(message_id)
-            await message.edit(embed=embed)
-        except Exception:
-            LogBot.logger.exception("Can't edit message: ")
-        finally:
-            DB.conn.execute(f"""delete from Invites where message_id=?""", (message_id,))
-
-    @classmethod
-    async def rem_channels(cls, member, bot: Bot):
-
-        channels = DB.conn.execute(f"""SELECT * FROM TempChannels""").fetchall()
-
-        for user_id, text, voice_id, token in channels:
-            # noinspection PyBroadException
-            try:
-                if len(member.guild.get_channel(voice_id).members) == 0:
-                    await MaintainChannel.rem_channel(user_id, text, voice_id, token, member, bot)
-            except Exception:
-                LogBot.logger.exception("Could not get member")
-
-    # noinspection PyBroadException
-    @classmethod
-    async def rem_channel(cls, user_id: int, text: int, voice: int, token: int, ctx: Context, bot: Bot):
-        LogBot.logger.debug("Delete Channel")
-        invites = DB.conn.execute(f"""SELECT message_id, channel_id FROM Invites where token=?""", (token,)).fetchall()
-        for message_id, channel_id in invites:
-            await MaintainChannel.delete_invite(user_id, channel_id, message_id, ctx, bot)
-        DB.conn.execute(f"""delete from TempChannels where discordUser=?""", (user_id,))
-        try:
-            text = ctx.guild.get_channel(text)
-            await text.delete(reason="No longer used")
-        except Exception:
-            LogBot.logger.exception("Can't delete text channel")
-        try:
-            voice = ctx.guild.get_channel(voice)
-            await voice.delete(reason="No longer used")
-        except Exception:
-            LogBot.logger.exception("Can't delete voice channel")
-
-    # noinspection PyDunderSlots,PyUnresolvedReferences,PyBroadException
-    @staticmethod
-    async def join(member: Member, voice_c: GuildChannel, text_c: GuildChannel):
-        overwrite = discord.PermissionOverwrite()
-        overwrite.connect = True
-        overwrite.read_messages = True
-        await voice_c.set_permissions(member,
-                                      overwrite=overwrite,
-                                      reason="access by token")
-
-        await text_c.set_permissions(member,
-                                     overwrite=overwrite,
-                                     reason="access by token")
-
-        try:
-            await member.move_to(voice_c, reason="want to join this Channel.")
-        except Exception:
-            LogBot.logger.exception("Could not move User")
-
-    @staticmethod
-    def invite_embed(member: Member, token):
-        embed = discord.Embed(title="Temporary channel invite",
-                              colour=discord.Colour(0x12d4ca),
-                              description="")
-
-        embed.add_field(name="Creator",
-                        value=f"{member.nick if member.nick else member.display_name}",
-                        inline=False)
-
-        embed.add_field(name="Token",
-                        value="The reaction with 🔓 is equivalent to token input.",
-                        inline=False)
-
-        embed.add_field(name="Token",
-                        value=token,
-                        inline=False)
-        return embed
+    bot.add_cog(Activities(bot))
