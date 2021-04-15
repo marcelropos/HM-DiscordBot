@@ -24,7 +24,7 @@ for filename in os.listdir("./cogs"):
     if filename.endswith(".py") and \
             filename != "main.py":
         bot.load_extension(f"cogs.{filename[:-3]}")
-        logger.debug(f"Loaded: cogs.{filename[:-3]}")
+        logger.info(f"Loaded: cogs.{filename[:-3]}")
 
 
 # noinspection PyBroadException,SqlNoDataSourceInspection,SqlResolve
