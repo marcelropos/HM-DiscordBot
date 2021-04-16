@@ -94,7 +94,6 @@ class TempChannels(commands.Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.logger = LogBot.logger
 
     @commands.group(pass_context=True,
                     aliases=["temp", "tempc"],
@@ -177,11 +176,11 @@ class TempChannels(commands.Cog):
             except Exception:
                 await voice_c.delete()
                 await text_c.delete()
-                self.logger.exception("Database Error:")
+                LogBot.logger.exception("Database Error:")
         else:
-            self.logger.debug(f"Created temporary channels: "
-                              f"{ctx.author}-{ctx.author.id} "
-                              f"owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
+            LogBot.logger.debug(f"Created temporary channels: "
+                                f"{ctx.author}-{ctx.author.id} "
+                                f"owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
 
         # noinspection PyBroadException
         try:
@@ -196,7 +195,7 @@ class TempChannels(commands.Cog):
         except Forbidden as error:
             raise error
         except Exception:
-            self.logger.exception("Can't send Message: ")
+            LogBot.logger.exception("Can't send Message: ")
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     @staticmethod
@@ -302,7 +301,7 @@ class TempChannels(commands.Cog):
         except TypeError:
             raise TempChannelNotFound()
         except Exception:
-            self.logger.exception("Unexpected exception while remove temporary channels")
+            LogBot.logger.exception("Unexpected exception while remove temporary channels")
 
     @tmpc.error
     @mk.error
@@ -353,7 +352,7 @@ class TempChannels(commands.Cog):
             try:
                 raise error
             except Exception:
-                self.logger.exception("Unexpected error")
+                LogBot.logger.exception("Unexpected error")
 
 
 def setup(bot: Bot):
