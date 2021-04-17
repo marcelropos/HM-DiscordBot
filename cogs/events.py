@@ -1,8 +1,10 @@
 import re
 from datetime import datetime
 from enum import Enum
+from typing import Union
 
 import discord
+from discord import User
 from discord.ext import commands, tasks
 from discord.ext.commands import Context, Bot
 from discord.member import Member
@@ -11,6 +13,8 @@ from discord.message import Message
 from cogs.botstatus import BotStatusValues
 from settings_files._global import DefaultMessages, ServerIds, EmojiIds
 from utils.logbot import LogBot
+
+UMember = Union[Member, User]
 
 
 class ConnectionStatus(Enum):
@@ -73,7 +77,7 @@ class Activities(commands.Cog):
         EmojiIds.name_set = emojis
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_update(self, member: UMember, before: discord.VoiceState, after: discord.VoiceState):
         if member.bot:
             return
 
@@ -138,7 +142,7 @@ class ChannelFunctions:
             pass
 
     @staticmethod
-    async def nerd_ecke(bot: Bot, member: Member):
+    async def nerd_ecke(bot: Bot, member: UMember):
         all_roles = member.guild.roles
         role = None
         for x in all_roles:

@@ -1,4 +1,7 @@
+from typing import Union
+
 import discord
+from discord import User
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from discord.member import Member
@@ -9,6 +12,8 @@ from settings_files.all_errors import *
 from utils.embed_generator import EmbedGenerator
 from utils.logbot import LogBot
 from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_role
+
+UMember = Union[Member, User]
 
 
 class Roles(commands.Cog):
@@ -168,7 +173,7 @@ class Roles(commands.Cog):
         await ctx.author.remove_roles(role, reason="request by user")
 
     @staticmethod
-    async def member_converter(ctx: Context, member_id: str) -> Member:
+    async def member_converter(ctx: Context, member_id: str) -> UMember:
         if not isinstance(ctx, Context):
             raise ValueError(Messages.Expected_BUT_GOT.format(type(Context), type(ctx)))
         if member_id is not None and not isinstance(member_id, str):

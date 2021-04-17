@@ -1,8 +1,9 @@
 from asyncio import Lock
+from typing import Union
 
 import discord
 from aiosqlite import Cursor, Connection
-from discord import Guild, Role
+from discord import Guild, Role, User
 from discord.channel import TextChannel, VoiceChannel
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
@@ -15,6 +16,8 @@ from utils.tempchannels.database import TempChannelDB
 from utils.tempchannels.maintainchannels import MaintainChannel
 from utils.tempchannels.token import Token
 from utils.utils import ServerIds, mk_token, accepted_channels
+
+UMember = Union[Member, User]
 
 
 class Database:
@@ -49,7 +52,7 @@ class Activities(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: Member, *_):
+    async def on_voice_state_update(self, member: UMember, *_):
         if member.bot:
             return
         async with Database() as db:
@@ -100,6 +103,7 @@ class TempChannels(commands.Cog):
                     brief="Create, edit or delete your temporary channel.",
                     help="Command group")
     @commands.has_role(ServerIds.HM)
+    @commands.guild_only()
     async def tmpc(self, ctx: Context):
         await Database.make()
         if ctx.invoked_subcommand is None:
@@ -113,7 +117,7 @@ class TempChannels(commands.Cog):
     async def mk(self, ctx: Context, *, name: str):
 
         await accepted_channels(self.bot, ctx)
-        member: Member = ctx.author
+        member: UMember = ctx.author
         async with Database() as db:
             cursor: Cursor = await db.execute(
                 f"""SELECT * FROM TempChannels WHERE discordUser=?""",
@@ -224,13 +228,13 @@ class TempChannels(commands.Cog):
                 cursor: Cursor = await db.execute(
                     """SELECT textChannel, voiceChannel FROM TempChannels WHERE token=?""",
                     (token,))
-                text_c, voice_c = await cursor.fetchone()
+                text_channel_id, voice_channel_id = await cursor.fetchone()
         except TypeError:
             raise TempChannelNotFound()
         else:
-            text_c = await self.bot.fetch_channel(text_c)
-            voice_c = await self.bot.fetch_channel(voice_c)
-            await MaintainChannel.join(ctx.author, voice_c, text_c)
+            text_channel = await self.bot.fetch_channel(text_channel_id)
+            voice_channel = await self.bot.fetch_channel(voice_channel_id)
+            await MaintainChannel.join(ctx.author, voice_channel, text_channel)
 
     # noinspection SqlNoDataSourceInspection
     @tmpc.command(pass_context=True,
@@ -295,9 +299,9 @@ class TempChannels(commands.Cog):
                 cursor: Cursor = await db.execute(
                     """SELECT * FROM TempChannels WHERE discordUser=?""",
                     (str(ctx.author.id),))
-                member, text_c, voice_c, token = await cursor.fetchone()
-            if ctx.author.id == member:
-                await MaintainChannel.rem_channel(member, text_c, voice_c, token, self.bot, db)
+                member_id, text_channel_id, voice_channel_id, token = await cursor.fetchone()
+            if ctx.author.id == member_id:
+                await MaintainChannel.rem_channel(member_id, text_channel_id, voice_channel_id, token, self.bot, db)
         except TypeError:
             raise TempChannelNotFound()
         except Exception:

@@ -3,12 +3,12 @@ from typing import Union
 import discord
 from aiosqlite import Cursor, Connection
 from discord import Member, Message, PermissionOverwrite, User
-from discord.abc import GuildChannel
+from discord import VoiceChannel, TextChannel
 from discord.ext.commands import Context, Bot
 
 from utils.logbot import LogBot
-# noinspection PyUnresolvedReferences
-from utils.tempchannels.database import TempChannelDB
+
+Member = Union[Member, User]
 
 
 class MaintainChannel:
@@ -93,22 +93,22 @@ class MaintainChannel:
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     @staticmethod
-    async def join(member: Member, voice_c: GuildChannel, text_c: GuildChannel):
+    async def join(member: UMember, voice_channel: VoiceChannel, text_channel: TextChannel):
         overwrite: PermissionOverwrite = discord.PermissionOverwrite()
         overwrite.connect = True
         overwrite.read_messages = True
 
-        await voice_c.set_permissions(member,
-                                      overwrite=overwrite,
-                                      reason="access by token")
+        await voice_channel.set_permissions(member,
+                                            overwrite=overwrite,
+                                            reason="access by token")
 
-        await text_c.set_permissions(member,
-                                     overwrite=overwrite,
-                                     reason="access by token")
+        await text_channel.set_permissions(member,
+                                           overwrite=overwrite,
+                                           reason="access by token")
 
         # noinspection PyBroadException
         try:
-            await member.move_to(voice_c, reason="want to join this Channel.")
+            await member.move_to(voice_channel, reason="want to join this Channel.")
         except Exception:
             pass
 
