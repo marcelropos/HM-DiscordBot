@@ -53,6 +53,7 @@ class Activities(commands.Cog):
     async def on_voice_state_update(self, member: Union[Member, User], *_):
         if member.bot:
             return
+        await Database().make()
         async with Database() as db:
             db: Connection
             await MaintainChannel.rem_channels(member, self.bot, db)
