@@ -13,8 +13,6 @@ from utils.embed_generator import EmbedGenerator
 from utils.logbot import LogBot
 from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_role
 
-UMember = Union[Member, User]
-
 
 class Roles(commands.Cog):
     """Manage your roles"""
@@ -173,7 +171,7 @@ class Roles(commands.Cog):
         await ctx.author.remove_roles(role, reason="request by user")
 
     @staticmethod
-    async def member_converter(ctx: Context, member_id: str) -> UMember:
+    async def member_converter(ctx: Context, member_id: str) -> Union[Member, User]:
         if not isinstance(ctx, Context):
             raise ValueError(Messages.Expected_BUT_GOT.format(type(Context), type(ctx)))
         if member_id is not None and not isinstance(member_id, str):

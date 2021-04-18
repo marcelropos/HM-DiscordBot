@@ -8,8 +8,6 @@ from discord.ext.commands import Context, Bot
 
 from utils.logbot import LogBot
 
-Member = Union[Member, User]
-
 
 class MaintainChannel:
 
@@ -93,7 +91,7 @@ class MaintainChannel:
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     @staticmethod
-    async def join(member: UMember, voice_channel: VoiceChannel, text_channel: TextChannel):
+    async def join(member: Union[Member, User], voice_channel: VoiceChannel, text_channel: TextChannel):
         overwrite: PermissionOverwrite = discord.PermissionOverwrite()
         overwrite.connect = True
         overwrite.read_messages = True

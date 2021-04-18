@@ -17,8 +17,6 @@ from utils.tempchannels.maintainchannels import MaintainChannel
 from utils.tempchannels.token import Token
 from utils.utils import ServerIds, mk_token, accepted_channels
 
-UMember = Union[Member, User]
-
 
 class Database:
     _lock = Lock()
@@ -52,7 +50,7 @@ class Activities(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: UMember, *_):
+    async def on_voice_state_update(self, member: Union[Member, User], *_):
         if member.bot:
             return
         async with Database() as db:
@@ -117,7 +115,7 @@ class TempChannels(commands.Cog):
     async def mk(self, ctx: Context, *, name: str):
 
         await accepted_channels(self.bot, ctx)
-        member: UMember = ctx.author
+        member: Union[Member, User] = ctx.author
         async with Database() as db:
             cursor: Cursor = await db.execute(
                 f"""SELECT * FROM TempChannels WHERE discordUser=?""",
