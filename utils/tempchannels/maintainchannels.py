@@ -77,7 +77,7 @@ class MaintainChannel:
 
         for message_id, channel_id in invites:
             await MaintainChannel.delete_invite(user_id, channel_id, message_id, bot, db)
-            await db.execute(f"""delete from TempChannels where discordUser=?""", (user_id,))
+        await db.execute(f"""delete from TempChannels where discordUser=?""", (user_id,))
         try:
             text = bot.get_channel(text)
             await text.delete(reason="No longer used")
