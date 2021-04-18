@@ -338,17 +338,13 @@ class TempChannels(commands.Cog):
             await ctx.send(embed=embed.generate(),
                            delete_after=60)
 
-        elif isinstance(error, WrongChatError):
-            await ctx.message.delete()
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"This command must not be used in this chat.\n"
-                           f"Please use the designated chat<#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
-                           delete_after=60)
-
         elif isinstance(error, TempChannelNotFound):
             await ctx.send(f"<@!{ctx.author.id}>\n"
                            f"You do not have a temporary channel.",
                            delete_after=60)
+
+        elif isinstance(error, global_only_handled_errors()):
+            pass
 
         else:
             # noinspection PyBroadException
