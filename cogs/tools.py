@@ -2,6 +2,7 @@ import asyncio
 from enum import Enum
 
 import aiohttp
+from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 
@@ -30,6 +31,14 @@ class Tools(commands.Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
+
+    @commands.command(brief="current ping",
+                      help="evaluates the bot ping")
+    async def ping(self, ctx: Context):
+        reply: Message = await ctx.reply("Pong")
+        msg: Message = ctx.message
+        await reply.edit(content=f"{reply.created_at.timestamp() - msg.created_at.timestamp()}")
+        print(reply.created_at.timestamp())
 
     @commands.command(name="member-count",
                       brief="Lists the roles and their member count.",
