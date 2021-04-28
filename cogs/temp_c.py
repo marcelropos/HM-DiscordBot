@@ -124,6 +124,8 @@ class TempChannels(commands.Cog):
             raise UserError(
                 f"The name may only contain alphanumeric characters, as well as the characters '-' and '_'. "
             )
+        if len(name) > 100:
+            raise UserError("The length of the channel name may only between 1 and 100 characters")
 
         await accepted_channels(self.bot, ctx)
         member: Union[Member, User] = ctx.author
