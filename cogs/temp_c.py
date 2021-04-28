@@ -1,3 +1,4 @@
+import string
 from asyncio import Lock
 from typing import Union
 
@@ -115,6 +116,15 @@ class TempChannels(commands.Cog):
                   aliases=["make"])
     async def mk(self, ctx: Context, *, name: str):
 
+        illegal_symbols = {x for x in name} \
+            .difference({x for x in
+                         string.ascii_uppercase + string.ascii_lowercase + string.digits + "-_"})
+
+        if len(illegal_symbols) > 0:
+            raise UserError(
+                f"The name may only contain alphanumeric characters, as well as the characters '-' and '_'. "
+            )
+
         await accepted_channels(self.bot, ctx)
         member: Union[Member, User] = ctx.author
         async with Database() as db:
@@ -124,81 +134,80 @@ class TempChannels(commands.Cog):
             if await cursor.fetchone():
                 raise PrivateChannelsAlreadyExistsError()
 
-        category = ctx.guild.get_channel(ServerIds.CUSTOM_CHANNELS)
+            category = ctx.guild.get_channel(ServerIds.CUSTOM_CHANNELS)
 
-        voice_c: VoiceChannel = await ctx.guild.create_voice_channel(name,
-                                                                     category=category,
-                                                                     reason=f"request by {member.display_name}")
+            voice_c: VoiceChannel = await ctx.guild.create_voice_channel(name,
+                                                                         category=category,
+                                                                         reason=f"request by {member.display_name}")
 
-        text_c: TextChannel = await ctx.guild.create_text_channel(name,
-                                                                  category=category,
-                                                                  reason=f"request by {member.display_name}",
-                                                                  topic=f"Created by: {member.display_name}")
-        token = mk_token()
+            text_c: TextChannel = await ctx.guild.create_text_channel(name,
+                                                                      category=category,
+                                                                      reason=f"request by {member.display_name}",
+                                                                      topic=f"Created by: {member.display_name}")
+            token = mk_token()
 
-        overwrite = TempChannels.get_permissions()
+            overwrite = TempChannels.get_permissions()
 
-        await voice_c.set_permissions(member, overwrite=overwrite, reason="owner")
-        await text_c.set_permissions(member, overwrite=overwrite, reason="owner")
+            await voice_c.set_permissions(member, overwrite=overwrite, reason="owner")
+            await text_c.set_permissions(member, overwrite=overwrite, reason="owner")
 
-        for role in member.roles:
-            role: Role
-            if role.id == ServerIds.MODERATOR:
-                await voice_c.set_permissions(role,
-                                              overwrite=None,
-                                              reason="No mod active")
-                await text_c.set_permissions(role,
-                                             overwrite=None,
-                                             reason="No mod active")
-                break
+            for role in member.roles:
+                role: Role
+                if role.id == ServerIds.MODERATOR:
+                    await voice_c.set_permissions(role,
+                                                  overwrite=None,
+                                                  reason="No mod active")
+                    await text_c.set_permissions(role,
+                                                 overwrite=None,
+                                                 reason="No mod active")
+                    break
 
-        # noinspection PyBroadException
-        try:
-            await member.move_to(voice_c, reason="created this channel.")
-        except Forbidden as error:
-            raise error
-        except HTTPException:
-            pass
+            # noinspection PyBroadException
+            try:
+                await member.move_to(voice_c, reason="created this channel.")
+            except Forbidden as error:
+                raise error
+            except HTTPException:
+                pass
 
-        # noinspection PyBroadException
-        try:
-            async with Database() as db:
+            # noinspection PyBroadException
+            try:
                 await db.execute(f"INSERT INTO TempChannels("
                                  f"discordUser, textChannel, voiceChannel, token) VALUES"
                                  f"(?,?,?,?)",
                                  (ctx.author.id, text_c.id, voice_c.id, token))
 
-        except Exception:
-            # noinspection PyBroadException
-            try:
-                async with Database() as db:
+            except Exception:
+                # noinspection PyBroadException
+                try:
                     await db.execute(f"INSERT INTO TempChannels("
                                      f"discordUser, textChannel, voiceChannel, token) VALUES"
                                      f"(?,?,?,?)",
                                      (ctx.author.id, text_c.id, voice_c.id, token))
+                except Exception:
+                    await voice_c.delete()
+                    await text_c.delete()
+                    LogBot.logger.exception("Database Error:")
+            else:
+                LogBot.logger.debug(f"Created temporary channels: "
+                                    f"{ctx.author}-{ctx.author.id} "
+                                    f"owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
+
+            # noinspection PyBroadException
+            try:
+                gen = EmbedGenerator("tmpc-func")
+                embed = gen.generate()
+                embed.add_field(name="Invite fellow students",
+                                value=f"With ``!tmpc join {token}`` "
+                                      f"your fellow students can also join the (voice) chat.",
+                                inline=False)
+
+                await text_c.send(content=f"<@!{ctx.author.id}>",
+                                  embed=embed)
+            except Forbidden as error:
+                raise error
             except Exception:
-                await voice_c.delete()
-                await text_c.delete()
-                LogBot.logger.exception("Database Error:")
-        else:
-            LogBot.logger.debug(f"Created temporary channels: "
-                                f"{ctx.author}-{ctx.author.id} "
-                                f"owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
-
-        # noinspection PyBroadException
-        try:
-            gen = EmbedGenerator("tmpc-func")
-            embed = gen.generate()
-            embed.add_field(name="Invite fellow students",
-                            value=f"With ``!tmpc join {token}`` your fellow students can also join the (voice) chat.",
-                            inline=False)
-
-            await text_c.send(content=f"<@!{ctx.author.id}>",
-                              embed=embed)
-        except Forbidden as error:
-            raise error
-        except Exception:
-            LogBot.logger.exception("Can't send Message: ")
+                LogBot.logger.exception("Can't send Message: ")
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     @staticmethod
@@ -315,33 +324,37 @@ class TempChannels(commands.Cog):
     async def temp_errorhandler(self, ctx: Context, error):
         if isinstance(error, CommandInvokeError):
             error = error.original
+
+        if isinstance(error, UserError):
+            await ctx.reply(content=str(error))
+
         if isinstance(error, TempChannels):
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"No channel was found that belongs to you.", delete_after=60)
+            await ctx.reply(f"<@!{ctx.author.id}>\n"
+                            f"No channel was found that belongs to you.", delete_after=60)
 
         elif isinstance(error, CouldNotSendMessage):
-            await ctx.send(str(error), delete_after=60)
+            await ctx.reply(str(error), delete_after=60)
 
         elif isinstance(error, PrivateChannelsAlreadyExistsError):
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"You have already created a private channel.\n"
-                           f"With `!tmpc rem` you can delete this channel.",
-                           delete_after=60)
+            await ctx.reply(f"<@!{ctx.author.id}>\n"
+                            f"You have already created a private channel.\n"
+                            f"With `!tmpc rem` you can delete this channel.",
+                            delete_after=60)
 
         elif isinstance(error, ModuleError):
             embed = EmbedGenerator("tmpc")
-            await ctx.send(content=f"<@!{ctx.author.id}>\n"
-                                   f"This command was not found.",
-                           embed=embed.generate(),
-                           delete_after=60)
+            await ctx.reply(content=f"<@!{ctx.author.id}>\n"
+                                    f"This command was not found.",
+                            embed=embed.generate(),
+                            delete_after=60)
             embed = EmbedGenerator("tmpc-func")
-            await ctx.send(embed=embed.generate(),
-                           delete_after=60)
+            await ctx.reply(embed=embed.generate(),
+                            delete_after=60)
 
         elif isinstance(error, TempChannelNotFound):
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"You do not have a temporary channel.",
-                           delete_after=60)
+            await ctx.reply(f"<@!{ctx.author.id}>\n"
+                            f"You do not have a temporary channel.",
+                            delete_after=60)
 
         elif isinstance(error, global_only_handled_errors()):
             pass
