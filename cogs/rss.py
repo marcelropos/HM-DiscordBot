@@ -117,8 +117,23 @@ class Rss(commands.Cog):
             f"```"
         )
 
-    @tasks.loop(minutes=30)
+    @staticmethod
+    async def wait_until() -> None:
+        """
+        Waits for the next full or half hour.
+        """
+        now = datetime.datetime.now()
+        wait_clean = datetime.datetime.now().replace(minute=0, second=0, microsecond=0)
+        wait = [
+            (wait_clean + datetime.timedelta(minutes=30) - now).total_seconds(),
+            (wait_clean + datetime.timedelta(hours=1) - now).total_seconds()
+        ]
+        wait_until = min([x for x in wait if x > 0])
+        await asyncio.sleep(wait_until)
+
+    @tasks.loop()
     async def get_rss_feeds(self):
+        await self.wait_until()
         LogBot.logger.info("Start fetching rss feed")
         self.config.read(self.config_path)
         self.void = self.db.get_feed
