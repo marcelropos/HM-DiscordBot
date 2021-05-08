@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 
 import discord
@@ -20,8 +21,9 @@ class Moderator(commands.Cog):
         self.kick_not_verified.start()
 
     # noinspection PyUnusedLocal
-    @tasks.loop(hours=24)
+    @tasks.loop()
     async def kick_not_verified(self, *_):
+        await self.wait_until()
         if self.kick_mode:
             guild = await discord.Client.fetch_guild(self.bot, ServerIds.GUILD_ID)
             async for member in guild.fetch_members(limit=None):
@@ -53,6 +55,18 @@ class Moderator(commands.Cog):
                                            f"{self.__class__.kick_after_days - days_on_server} days "
                                            f"because you do not have a role.\n"
                                            f"To avoid this, you need to get verified by a moderator.")
+                    if days_on_server >= self.__class__.kick_after_days - self.__class__.warn_before_day_x:
+                        await asyncio.sleep(1)
+
+    @staticmethod
+    async def wait_until() -> None:
+        """
+        Wait until 6 am.
+        """
+        now = datetime.datetime.now()
+        until_time = now.replace(hour=6, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
+        until_time = (until_time.year, until_time.month, until_time.day, until_time.hour)
+        await asyncio.sleep((datetime.datetime(*until_time) - now).total_seconds())
 
     @commands.command(
         name="kick-mode",
