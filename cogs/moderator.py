@@ -54,7 +54,8 @@ class Moderator(commands.Cog):
                                            f"You will be removed from this server in "
                                            f"{self.__class__.kick_after_days - days_on_server} days "
                                            f"because you do not have a role.\n"
-                                           f"To avoid this, you need to get verified by a moderator.")
+                                           f"To avoid this, you need to get verified by a moderator.",
+                                           delete_after=86400)
                     if days_on_server >= self.__class__.kick_after_days - self.__class__.warn_before_day_x:
                         await asyncio.sleep(1)
 
