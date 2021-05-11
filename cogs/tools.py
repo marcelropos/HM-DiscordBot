@@ -32,12 +32,6 @@ class Tools(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_socket_raw_receive(self, *_):
-        loop = asyncio.get_event_loop()
-        with open("data/queue.log", "a") as f_out:
-            f_out.write(f"{len(loop._ready)}\n")
-
     @commands.command(brief="current ping",
                       help="evaluates the bot ping")
     async def ping(self, ctx: Context):
