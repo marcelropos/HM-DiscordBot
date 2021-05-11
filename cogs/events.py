@@ -1,9 +1,10 @@
 import re
 from datetime import datetime
 from enum import Enum
+from typing import Union
 
 import discord
-from discord import Member
+from discord import Member, User
 from discord.ext import commands, tasks
 from discord.ext.commands import Context, Bot
 from discord.message import Message
@@ -80,7 +81,7 @@ class Activities(commands.Cog):
         if after.channel == await self.bot.fetch_channel(ServerIds.AFK_CHANNEL):
             await member.move_to(None, reason="AFK")
 
-        await ChannelFunctions.auto_bot_kick(before)
+        await ChannelFunctions.auto_bot_kick(before, self.bot.user.id)
         await ChannelFunctions.nerd_ecke(self.bot, member)
 
     @commands.Cog.listener()
@@ -122,7 +123,7 @@ class ChannelFunctions:
 
     # noinspection PyBroadException
     @staticmethod
-    async def auto_bot_kick(before: discord.VoiceState):
+    async def auto_bot_kick(before: discord.VoiceState, my_id: int):
         bot = []
         user = []
         try:
@@ -133,7 +134,9 @@ class ChannelFunctions:
                     user.append(x)
             if len(user) == 0:
                 for x in bot:
-                    await x.move_to(None, reason="No longer used")
+                    x: Union[Member, User]
+                    if x.id != my_id:
+                        await x.move_to(None, reason="No longer used")
         except Exception:
             pass
 
