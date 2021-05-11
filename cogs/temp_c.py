@@ -148,7 +148,11 @@ class TempChannels(commands.Cog):
                                                                       topic=f"Created by: {member.display_name}")
             token = mk_token()
 
-            overwrite = TempChannels.get_permissions()
+            overwrite = discord.PermissionOverwrite(mute_members=True,
+                                                    deafen_members=True,
+                                                    move_members=True,
+                                                    connect=True,
+                                                    read_messages=True)
 
             await voice_c.set_permissions(member, overwrite=overwrite, reason="owner")
             await text_c.set_permissions(member, overwrite=overwrite, reason="owner")
@@ -210,17 +214,6 @@ class TempChannels(commands.Cog):
                 raise error
             except Exception:
                 LogBot.logger.exception("Can't send Message: ")
-
-    # noinspection PyDunderSlots,PyUnresolvedReferences
-    @staticmethod
-    def get_permissions():
-        overwrite = discord.PermissionOverwrite()
-        overwrite.mute_members = True
-        overwrite.deafen_members = True
-        overwrite.move_members = True
-        overwrite.connect = True
-        overwrite.read_messages = True
-        return overwrite
 
     # noinspection SqlNoDataSourceInspection
     @tmpc.command(pass_context=True,
