@@ -1,7 +1,7 @@
 from typing import Union
 
 import discord
-from discord import User
+from discord import User, Message
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
 from discord.member import Member
@@ -27,12 +27,21 @@ class Roles(commands.Cog):
     @commands.guild_only()
     @commands.has_role(ServerIds.HM)
     @has_not_roles(ServerRoles.ALL_GROUPS)
-    async def group(self, ctx: Context, group: str, member_id: str = None):
-        if not isinstance(ctx, Context):
-            raise ValueError(f"Expected {type(Context)} but got {type(ctx)}")
-        if not isinstance(group, str):
-            raise ValueError(f"Expected {type(str)} but got {type(group)}")
-        member = await self.member_converter(ctx, member_id)
+    async def group(self, ctx: Context, group: str, member: str):
+        # member is only defined for pretty-help module. And it will be replaced later.
+        await accepted_channels(self.bot, ctx)
+
+        message: Message = ctx.message
+        assert isinstance(ctx, Context), f"Expected {type(Context)} but got {type(ctx)}"
+        assert isinstance(group, str), f"Expected {type(str)} but got {type(group)}"
+        assert isinstance(member, str), f"Expected {type(str)} but got {type(member)}"
+        assert isinstance(message, Message), f"Expected {type(Message)} but got {type(message)}"
+
+        try:
+            member: Member = message.mentions.pop()
+            assert isinstance(member, Member), f"Expected {type(Member)} but got {type(member)}"
+        except Exception:
+            raise MissingRequiredArgument
 
         got_roles = {role.name for role in member.roles}
         group = group.upper()
