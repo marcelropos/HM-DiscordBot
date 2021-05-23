@@ -207,23 +207,28 @@ class Roles(commands.Cog):
 
         if isinstance(error, RoleNotFoundError):
             embed = EmbedGenerator("roles")
-            await ctx.send(content=f"<@!{ctx.author.id}>\n"
-                                   f"{error}",
-                           embed=embed.generate(),
-                           delete_after=60)
+            await ctx.reply(content=f"<@!{ctx.author.id}>\n"
+                                    f"{error}",
+                            embed=embed.generate(),
+                            delete_after=60)
 
         elif isinstance(error, MultipleGroupsError):
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"{error}")
+            await ctx.message.delete(delay=60)
+            await ctx.reply(f"<@!{ctx.author.id}>\n"
+                            f"{error}",
+                            delete_after=60)
 
         elif isinstance(error, MissingRequiredArgument):
-            await ctx.send(f"<@!{ctx.author.id}>\n"
-                           f"Apparently, the command was not complete.\n")
+            await ctx.reply(f"<@!{ctx.author.id}>\n"
+                            f"Apparently, the command was not complete.\n",
+                            delete_after=60)
         # must be last check
-        elif isinstance(error, CheckFailure) and not issubclass(type(error), CheckFailure):
-            await ctx.send(f"You have a role that causes that you can't actually execute this command.\n"
-                           f"Make a request for this in <#{ServerIds.HELP}>.\n"
-                           f"Below you will find a list of commands that are currently available to you.")
+        elif isinstance(error, CheckFailure):
+            await ctx.message.delete(delay=60)
+            await ctx.reply(f"You have a role that causes that you can't actually execute this command.\n"
+                            f"Make a request for this in <#{ServerIds.HELP}>.\n"
+                            f"Below you will find a list of commands that are currently available to you.",
+                            delete_after=60)
             await ctx.send_help("Roles")
 
         elif isinstance(error, global_only_handled_errors()):
