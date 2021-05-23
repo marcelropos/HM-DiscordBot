@@ -1,15 +1,19 @@
 import asyncio
+import datetime
 from enum import Enum
+from io import BytesIO
+from typing import Union
 
 import aiohttp
-from discord import Message
+import discord
+from discord import Message, User, Member
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
+from prettytable import PrettyTable
 
 from settings_files._global import ServerIds
 from settings_files.all_errors import *
 from utils.logbot import LogBot
-from utils.utils import strtobool
 
 
 class SortType(Enum):
@@ -40,38 +44,39 @@ class Tools(commands.Cog):
         await reply.edit(content=f"{reply.created_at.timestamp() - msg.created_at.timestamp()}")
         print(reply.created_at.timestamp())
 
-    @commands.command(name="member-count",
-                      brief="Lists the roles and their member count.",
-                      help="""sort_type:
-                      - ByName
-                      - ByCount (default)
-                      Invert:
-                      - True (default)
-                      - False""")
+    @commands.command(name="list-guild-member",
+                      brief="Show a list of all guild member, their roles and join date",
+                      help="Show a list of all guild member, their roles and join date")
     @commands.has_role(ServerIds.HM)
-    async def member_count(self, ctx: Context, rev: strtobool = True,
-                           sort_type: sort_type_converter = SortType.BY_COUNT):
-        # Because of the framework, the implementation violates the PEP484 standard.
-        role_count = dict()
-        reply = "List of all roles und their member count:\n"
-        async for member in ctx.guild.fetch_members(limit=None):
-            for x in member.roles:
-                name = x.name.replace("@", "")
-                if name not in role_count:
-                    role_count[name] = 1
-                else:
-                    role_count[name] += 1
+    async def list_guild_member(self, ctx: Context):
+        column = ["name", "roles", "joined_at", "pending"]
+        table = PrettyTable(column)
+        members = await ctx.guild.fetch_members(limit=None).flatten()
+        for member in members:
+            member: Union[Member, User]
 
-        if sort_type == sort_type.BY_NAME:
-            counted_roles = sorted(role_count.items(), key=lambda t: t[0], reverse=rev)
-        elif sort_type == sort_type.BY_COUNT:
-            counted_roles = sorted(role_count.items(), key=lambda t: t[1], reverse=rev)
-        else:
-            raise BadArgument("Sort type not supported.")
+            roles = reversed(member.roles)
+            role_list = ""
+            for role in roles:
+                if role.name != "@everyone":
+                    role_list += role.name + "\n"
 
-        for key, value in counted_roles:
-            reply += f"{key}: {value}\n"
-        await ctx.send(reply)
+            joined = member.joined_at.strftime("%d.%m.%Y")
+
+            nick = f"Nick: {str(member.nick)}\n" if member.nick else ""
+            names = nick + f"Name: {str(member.name)}#{str(member.discriminator)}"
+
+            table.add_row((names, role_list, joined, member.pending))
+
+        table.title = f"List status from {datetime.datetime.now().strftime('%d.%m.%Y, %H:%M:%S')}" \
+                      f" - there are {len(members)} members"
+
+        await ctx.reply(
+            file=discord.File(
+                BytesIO(bytes(str(table), encoding='utf-8')),
+                filename="List_of_all_members.text"),
+            content="Here is a list of all members that are currently on this server.",
+            delete_after=600)
 
     @staticmethod
     async def get_page(url, priority=0):
