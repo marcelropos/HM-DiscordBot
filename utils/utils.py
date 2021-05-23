@@ -1,6 +1,5 @@
 import re
 
-import discord
 import pyotp
 from discord.ext import commands
 from discord.ext.commands import Context, Bot
@@ -75,10 +74,8 @@ def strtobool(val: str):
 
 
 async def accepted_channels(bot: Bot, ctx: Context):
-    if not isinstance(bot, Bot):
-        raise ValueError(f"Expect {type(Bot)} but got {type(bot)}")
-    if not isinstance(ctx, Context):
-        raise ValueError(f"Expect {type(ctx)} but got {type(ctx)}")
+    assert isinstance(bot, Bot), f"Expect {type(Bot)} but got {type(bot)}"
+    assert isinstance(ctx, Context), f"Expect {type(ctx)} but got {type(ctx)}"
 
     channels = {ServerIds.BOT_COMMANDS_CHANNEL,
                 ServerIds.DEBUG_CHAT}
@@ -95,9 +92,6 @@ async def accepted_channels(bot: Bot, ctx: Context):
             pass
 
     if ctx.channel.id not in channels:
-        channel = discord.Client.get_channel(self=bot,
-                                             id=ServerIds.BOT_COMMANDS_CHANNEL)
-        await channel.send(f"<@!{ctx.author.id}>\n Please write me here again or if necessary privately.")
         raise WrongChatError("Wrong Chat")
 
 

@@ -2,7 +2,7 @@ import asyncio
 import os
 
 import discord
-from discord import Role
+from discord import Role, TextChannel
 from discord.ext import commands
 from discord.ext.commands import *
 from pretty_help import PrettyHelp
@@ -80,16 +80,35 @@ async def on_command_error(ctx: Context, error):
         elif isinstance(error, MissingPermissions):
             await ctx.send("This bot hab not the needed permissions to fulfill your demand.")
 
-        elif isinstance(error, (WrongChatError, NoPrivateMessage)):
+        elif isinstance(error, NoPrivateMessage):
             try:
-                await ctx.message.delete()
+                await ctx.reply(f"This command cannot used in private chats.",
+                                delete_after=60)
             except Forbidden:
                 pass
+
+        elif isinstance(error, WrongChatError):
             try:
-                await ctx.send(f"<@!{ctx.author.id}>\n"
-                               f"This command may not be used in this chat.\n"
-                               f"Please use the chat provided for this purpose. <#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
-                               delete_after=60)
+                await ctx.message.delete(delay=60)
+            except Forbidden:
+                pass
+
+            try:
+                await ctx.reply(f"This command may not be used in this chat.\n"
+                                f"Please use the chat provided for this purpose. <#{ServerIds.BOT_COMMANDS_CHANNEL}>.",
+                                delete_after=60)
+
+                channel: TextChannel = await bot.fetch_channel(ServerIds.BOT_COMMANDS_CHANNEL)
+                if channel.permissions_for(ctx.author).send_messages:
+                    await channel.send(content=f"<@{ctx.author.id}>\n"
+                                               f"Please use this chat for commands in future.",
+                                       delete_after=600)
+                else:
+                    await ctx.reply(content=f"It looks like you can't use the chat provided for this purpose."
+                                            f"Perhaps you are not verified. "
+                                            f"Please make a request in <#{ServerIds.HELP}>",
+                                    delete_after=60)
+
             except Forbidden:
                 pass
 
