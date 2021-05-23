@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Union
 
 import discord
-from discord import Member, User
+from discord import Member, User, Role
 from discord.ext import commands, tasks
 from discord.ext.commands import Context, Bot
 from discord.message import Message
@@ -142,16 +142,12 @@ class ChannelFunctions:
 
     @staticmethod
     async def nerd_ecke(bot: Bot, member: Member):
-        all_roles = member.guild.roles
-        role = None
-        for x in all_roles:
-            if x.name == "@everyone":
-                role = x
+        role: Role = member.guild.roles[0]
 
         channel = await bot.fetch_channel(ServerIds.NERD_ECKE)
-        members = len(channel.members)
+        members: set[Union[Member, User]] = {member for member in channel.members if not member.bot}
 
-        if members > 0:
+        if members:
             await channel.set_permissions(role, connect=True, reason="Nerd is here.")
         else:
             await channel.set_permissions(role, connect=False, reason="No nerds are here.")
