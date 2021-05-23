@@ -1,9 +1,11 @@
-discord.py~=1.7.1
-pyotp~=2.6.0
+#PyCharm may remove discord.py~=1.7.2
+discord.py~=1.7.2
+aiohttp~=3.7.4.post0
+prettytable~=2.1.0
+aiosqlite~=0.17.0
 requests~=2.25.1
 bs4~=0.0.1
-discord-pretty-help~=1.2.3
-aiohttp~=3.7.4.post0
-aiofile~=3.5.0
-aiosqlite~=0.17.0
 beautifulsoup4~=4.9.3
+pyotp~=2.6.0
+aiofile~=3.5.0
+youtube_dl~=2021.5.6
