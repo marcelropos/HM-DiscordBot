@@ -1,62 +1,102 @@
 import asyncio
 import datetime
+import xml.etree.ElementTree as ElementTree
 
-import discord
+from discord import Guild, Role
 from discord.ext import commands, tasks
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Bot
 
-from settings_files._global import ServerIds
 from settings_files.all_errors import *
 from utils.logbot import LogBot
 from utils.utils import strtobool
 
 
 class Moderator(commands.Cog):
-    kick_after_days = 60
-    warn_before_day_x = 7
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
         self.kick_mode = False
+
+        self.config = ElementTree.parse("./data/config.xml").getroot()
         self.kick_not_verified.start()
 
     # noinspection PyUnusedLocal
     @tasks.loop()
     async def kick_not_verified(self, *_):
-        await self.wait_until()
-        if self.kick_mode:
-            guild = await discord.Client.fetch_guild(self.bot, ServerIds.GUILD_ID)
+        # await self.wait_until()
+        self.config.find("Guilds")
+        for guild_conf in self.config.find("Guilds"):
+            guild_conf: ElementTree.Element
+            guild: Guild = await self.bot.fetch_guild(int(guild_conf.tag.strip("Guild-")))
+
+            kick_mode = strtobool(self.config
+                                  .find("Guilds")
+                                  .find(f"Guild-{guild.id}")
+                                  .find("Cogs")
+                                  .find("Moderator")
+                                  .find("kick_mode")
+                                  .text)
+            if not kick_mode:
+                continue
+
+            moderator_conf = self.config \
+                .find("Guilds") \
+                .find(f"Guild-{guild.id}") \
+                .find("Cogs") \
+                .find("Moderator")
+
+            roles_conf = self.config \
+                .find("Guilds") \
+                .find(f"Guild-{guild.id}") \
+                .find("RoleIDs")
+
+            support_channel = int(self.config
+                                  .find("Guilds")
+                                  .find(f"Guild-{guild.id}")
+                                  .find("Channels")
+                                  .find("HELP")
+                                  .text)
+
+            kick_after_days = int(moderator_conf.find("kick_after_days").text)
+            warn_before_day_x = int(moderator_conf.find("warn_before_day_x").text)
+
             async for member in guild.fetch_members(limit=None):
-                got_roles = {role.name for role in member.roles}
-                if len(got_roles) == 1:
+                verified: set[Role] = {role.id for role in member.roles
+                                       if role.id == int(roles_conf.find("VERIFIED").text)
+                                       or role.id == int(roles_conf.find("BOT").text)
+                                       or role.id == int(roles_conf.find("FRIENDS").text)}
+
+                if not verified:
                     days_on_server = (datetime.datetime.now() - member.joined_at).days
-                    if days_on_server >= self.__class__.kick_after_days:
+                    if days_on_server >= kick_after_days:
                         # noinspection PyBroadException
                         try:
-                            await member.send(content="You will be kicked from the server because you have not been "
-                                                      "verified for too long. You can rejoin the server and "
-                                                      "submit a request for verification.", delete_after=86400)
+                            await member.send(
+                                content=f"You will be kicked from {guild.name} because you have not been "
+                                        "verified for too long. You can rejoin the server and "
+                                        "submit a request for verification.",
+                                delete_after=86400)
                         except Exception:
                             pass
                         # noinspection PyBroadException
                         try:
                             await member.kick(reason="Too long without verification")
                         except Exception:
-                            channel = await self.bot.fetch_channel(ServerIds.DEBUG_CHAT)
+                            channel = await self.bot.fetch_channel(support_channel)
                             await channel.send(f"Failed to kick <@{member.id}>.")
                         else:
                             LogBot.logger.info(f"Kicked: {member} for being not verified")
-                    elif days_on_server >= self.__class__.kick_after_days - self.__class__.warn_before_day_x:
+                    elif days_on_server > kick_after_days - warn_before_day_x - 1:
 
-                        channel = await self.bot.fetch_channel(ServerIds.HELP)
+                        channel = await self.bot.fetch_channel(support_channel)
 
                         await channel.send(f"<@{member.id}>\n"
                                            f"You will be removed from this server in "
-                                           f"{self.__class__.kick_after_days - days_on_server} days "
+                                           f"{kick_after_days - days_on_server} days "
                                            f"because you do not have a role.\n"
                                            f"To avoid this, you need to get verified by a moderator.",
                                            delete_after=86400)
-                    if days_on_server >= self.__class__.kick_after_days - self.__class__.warn_before_day_x:
+                    if days_on_server > kick_after_days - warn_before_day_x - 1:
                         await asyncio.sleep(1)
 
     @staticmethod
