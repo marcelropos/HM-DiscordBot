@@ -1,5 +1,7 @@
 import sys
 
+import discord
+
 from utils.embed_generator import BugReport
 from utils.utils import *
 
