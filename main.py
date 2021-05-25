@@ -166,7 +166,7 @@ async def on_message(message):
             return_exceptions=True
         )
     except Exception:
-        LogBot.logger.exception("An unhandled exception is occurred")
+        logger.exception("An unhandled exception is occurred")
 
 
 bot.run(DISCORD_BOT_TOKEN())
