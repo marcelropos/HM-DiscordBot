@@ -140,7 +140,7 @@ class AudioBot(Cog):
 
         self.bot = bot
 
-        self.swallow_counter: int = 100
+        self.swallow_counter: int = 0
 
         self.swallow.start()
 
