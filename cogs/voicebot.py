@@ -51,9 +51,10 @@ class Player:
             await asyncio.sleep(0.1)
 
     @staticmethod
-    async def disconnect(vc):
-        assert isinstance(vc, VoiceClient), "want an instance of VoiceChannel not something else."
-        await vc.disconnect()
+    async def disconnect(bot: Bot):
+        if bot.voice_clients:
+            vc: VoiceClient = bot.voice_clients[0]
+            await vc.disconnect()
 
     @staticmethod
     async def connect(bot: Bot, voice_channel: VoiceChannel) -> VoiceClient:
@@ -114,12 +115,22 @@ class Event(Cog):
         if member.bot and self.bot.user.id != member.id:
             return
         event_type = EventType.status(before, after)
-        channel: VoiceChannel = after.channel
 
         if event_type == EventType.JOINED and not member.bot:
+            channel: VoiceChannel = after.channel
 
             if channel.id == self.nerd_ecke_id:
                 await self.greet.greet(member, channel)
+
+        elif event_type == EventType.LEFT and self.bot.voice_clients:
+            channel: VoiceChannel = before.channel
+            vc: VoiceClient = self.bot.voice_clients[0]
+
+            if not member.bot \
+                    and channel.id == vc.channel.id \
+                    and not {member for member in channel.members if not member.bot}:
+                async with Player() as player:
+                    await player.disconnect(self.bot)
 
 
 # noinspection PyTypeChecker
@@ -132,7 +143,6 @@ class AudioBot(Cog):
         self.swallow_counter: int = 100
 
         self.swallow.start()
-        self.dc_voice.start()
 
         self.config = ET.parse("./data/config.xml").getroot()
         guild_id = self.config.find("global").find("main-guild").text
@@ -142,18 +152,11 @@ class AudioBot(Cog):
             .find("Cogs") \
             .find("VoiceBot")
 
-    @tasks.loop(minutes=1)
-    async def dc_voice(self):
-        delta_time = datetime.datetime.now().timestamp() - Player.not_played_since
+    @commands.command(name="disconnect",
+                      aliases=["dc"])
+    async def disconnect(self, *_):
         async with Player() as player:
-            minutes, _ = divmod(delta_time, 1)
-            if minutes > 1:
-                # noinspection PyBroadException
-                try:
-                    vc: VoiceClient = self.bot.voice_clients[0]
-                    await player.disconnect(vc)
-                except Exception:
-                    pass
+            await player.disconnect(self.bot)
 
     @tasks.loop(minutes=1)
     async def swallow(self):
