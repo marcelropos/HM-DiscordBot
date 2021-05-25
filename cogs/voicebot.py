@@ -13,7 +13,7 @@ from typing import Union
 from discord import Member, VoiceChannel, FFmpegPCMAudio, VoiceClient, VoiceState
 from discord.abc import User
 from discord.ext import commands, tasks
-from discord.ext.commands import Cog, Bot
+from discord.ext.commands import Cog, Bot, Context
 
 logger = logging.getLogger("discord")
 
@@ -153,10 +153,18 @@ class AudioBot(Cog):
             .find("VoiceBot")
 
     @commands.command(name="disconnect",
-                      aliases=["dc"])
-    async def disconnect(self, *_):
-        async with Player() as player:
-            await player.disconnect(self.bot)
+                      aliases=["dc"],
+                      help="dc from the channel you are.",
+                      brief="Disconnect from voicechannel")
+    async def disconnect(self, ctx: Context):
+        if self.bot.voice_clients \
+                and ctx.channel \
+                and ctx.channel.id == self.bot.voice_clients[0].id:
+            async with Player() as player:
+                await player.disconnect(self.bot)
+        else:
+            await ctx.reply(content="I cannot leave a channel in that I am not in.",
+                            delete_after=60)
 
     @tasks.loop(minutes=1)
     async def swallow(self):
