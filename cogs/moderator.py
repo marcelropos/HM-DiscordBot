@@ -1,17 +1,48 @@
 import asyncio
 import datetime
+import re
 import xml.etree.ElementTree as ElementTree
 
-from discord import Guild, Role
+from discord import Guild, Role, Message
 from discord.ext import commands, tasks
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Context, Bot, Cog
 
 from settings_files.all_errors import *
 from utils.logbot import LogBot
 from utils.utils import strtobool
 
 
-class Moderator(commands.Cog):
+class Events(Cog):
+
+    def __init__(self, bot: Bot):
+        self.bot = bot
+        self.link = re.compile(r"https?://")
+        self.config = ElementTree.parse("./data/config.xml").getroot()
+
+    @Cog.listener(name="on_message")
+    async def restricted_messages(self, message: Message):
+        channels_conf = self.config \
+            .find("Guilds") \
+            .find(f"Guild-{message.guild.id}") \
+            .find("Channels")
+        try:
+            restricted_channels = {channels_conf.find("BOT_COMMANDS_CHANNEL").text, channels_conf.find("HELP").text}
+            if message.guild and len(message.author.roles) == 1 and message.channel.id in restricted_channels:
+                match = re.match(self.link, message.content)
+                if match:
+                    await message.delete()
+                    await message.channel.send(f"<@{message.author.id}>\n"
+                                               f"Non-verified members are not allowed to post links to this channel.")
+                    LogBot.logger.info(f"Message >>{message.clean_content}<< in channel {message.channel}"
+                                       f"from {message.author.display_name}({message.author.id}) "
+                                       f"deleted according due restrictions.")
+        except Forbidden:
+            LogBot.logger.warning("Failed to fulfill restriction.")
+        except HTTPException:
+            pass
+
+
+class Moderator(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot

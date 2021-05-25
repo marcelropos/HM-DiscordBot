@@ -143,7 +143,6 @@ async def on_message(message):
     try:
         await asyncio.gather(
             reactions(message, bot),
-            restricted_messages(message),
             bot.process_commands(message),
             return_exceptions=True
         )
