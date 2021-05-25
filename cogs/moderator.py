@@ -162,4 +162,5 @@ class Moderator(Cog):
 
 
 def setup(bot):
+    bot.add_cog(Events(bot))
     bot.add_cog(Moderator(bot))
