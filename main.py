@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 import discord
@@ -10,10 +11,28 @@ from pretty_help import PrettyHelp
 from settings_files._global import DISCORD_BOT_TOKEN, EmojiIds, COMMAND_PREFIX, ServerIds, Messages
 from settings_files.all_errors import *
 from utils.embed_generator import BugReport, error_report
-from utils.logbot import LogBot
-from utils.message_process import reactions, restricted_messages
+from utils.message_process import reactions
 
-logger = LogBot.logger
+logger = logging.getLogger("discord")
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(module)s/%(funcName)s %(lineno)d: %(message)s")
+# noinspection PyArgumentEqualDefault
+file_handler = logging.FileHandler(
+    filename=f'./data/logs/discord.log',
+    encoding='utf-8',
+    mode="a")
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.INFO)
+
+log_stream = logging.StreamHandler()
+log_stream.setFormatter(formatter)
+log_stream.setLevel(logging.INFO)
+
+logger.addHandler(file_handler)
+logger.addHandler(log_stream)
+
+logger.info("Logger Active")
 
 intents = discord.Intents.all()
 

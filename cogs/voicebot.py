@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 import os
 import random
 import xml.etree.ElementTree as ET
@@ -13,6 +14,8 @@ from discord import Member, VoiceChannel, FFmpegPCMAudio, VoiceClient, VoiceStat
 from discord.abc import User
 from discord.ext import commands, tasks
 from discord.ext.commands import Cog, Bot
+
+logger = logging.getLogger("discord")
 
 
 class EventType(IntEnum):

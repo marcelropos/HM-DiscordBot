@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from threading import Lock
 
@@ -7,8 +8,8 @@ from discord.ext.commands import Context, Bot
 
 from settings_files._global import DefaultMessages
 from settings_files.all_errors import *
-from utils.logbot import LogBot
 
+logger = logging.getLogger("discord")
 
 class Modes(Enum):
     AUTO = "auto"
@@ -172,12 +173,12 @@ class BotStatus(commands.Cog):
         await discord.Client.change_presence(self=self.bot,
                                              status=BotStatusValues.get_status())
 
-        LogBot.logger.debug(f"Status: {BotStatusValues.get_status()} Mode: {BotStatusValues.get_status_mode()}")
+        logger.debug(f"Status: {BotStatusValues.get_status()} Mode: {BotStatusValues.get_status_mode()}")
 
     @status.error
     @activity.error
     async def errors(self, ctx: Context, error):
-        LogBot.logger.exception("")
+        logger.exception("")
 
 
 def setup(bot: Bot):

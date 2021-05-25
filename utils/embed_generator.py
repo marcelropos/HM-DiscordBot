@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 from typing import Union
@@ -9,7 +10,8 @@ from discord.ext.commands import Context, Bot
 
 from settings_files._global import Directories, ServerIds
 from settings_files.all_errors import *
-from utils.logbot import LogBot
+
+logger = logging.getLogger("discord")
 
 
 class HelpError(UserError):
@@ -89,9 +91,9 @@ async def error_report(ctx: Context, reason: str, solution: str):
     try:
         respond = await ctx.reply(embed=embed, delete_after=60)
     except Forbidden as error:
-        LogBot.logger.warning(f"Cannot sent a reply. No Permissions {repr(error)}")
+        logger.warning(f"Cannot sent a reply. No Permissions {repr(error)}")
     except HTTPException as error:
-        LogBot.logger.warning(f"Cannot sent a reply. The message may have been deleted. {repr(error)}")
+        logger.warning(f"Cannot sent a reply. The message may have been deleted. {repr(error)}")
 
 
 class BugReport:
@@ -149,7 +151,7 @@ class BugReport:
         try:
             user_report = await self.ctx.reply(message)
         except Forbidden as error:
-            LogBot.logger.warning(f"Cannot sent a reply. No Permissions {repr(error)}")
+            logger.warning(f"Cannot sent a reply. No Permissions {repr(error)}")
         except HTTPException as error:
-            LogBot.logger.warning(f"Cannot sent a reply. The message may have been deleted. {repr(error)}")
+            logger.warning(f"Cannot sent a reply. The message may have been deleted. {repr(error)}")
         bug_report = await self.channel.send(embed=self.embed)

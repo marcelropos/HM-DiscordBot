@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 
 import discord
@@ -10,8 +11,9 @@ from discord.role import Role
 from settings_files._global import ServerIds, ServerRoles, Messages
 from settings_files.all_errors import *
 from utils.embed_generator import EmbedGenerator
-from utils.logbot import LogBot
 from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_role
+
+logger = logging.getLogger("discord")
 
 
 class Roles(commands.Cog):
@@ -235,7 +237,7 @@ class Roles(commands.Cog):
             pass
 
         else:
-            LogBot.logger.warning("There are some unhandled exceptions.")
+            logger.warning("There are some unhandled exceptions.")
 
 
 def setup(bot: Bot):

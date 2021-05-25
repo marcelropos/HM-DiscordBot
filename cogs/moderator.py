@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 import re
 import xml.etree.ElementTree as ElementTree
 
@@ -8,8 +9,9 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Context, Bot, Cog
 
 from settings_files.all_errors import *
-from utils.logbot import LogBot
 from utils.utils import strtobool
+
+logger = logging.getLogger("discord")
 
 
 class Events(Cog):
@@ -33,11 +35,11 @@ class Events(Cog):
                     await message.delete()
                     await message.channel.send(f"<@{message.author.id}>\n"
                                                f"Non-verified members are not allowed to post links to this channel.")
-                    LogBot.logger.info(f"Message >>{message.clean_content}<< in channel {message.channel}"
-                                       f"from {message.author.display_name}({message.author.id}) "
-                                       f"deleted according due restrictions.")
+                    logger.info(f"Message >>{message.clean_content}<< in channel {message.channel}"
+                                f"from {message.author.display_name}({message.author.id}) "
+                                f"deleted according due restrictions.")
         except Forbidden:
-            LogBot.logger.warning("Failed to fulfill restriction.")
+            logger.warning("Failed to fulfill restriction.")
         except HTTPException:
             pass
 
@@ -116,7 +118,7 @@ class Moderator(Cog):
                             channel = await self.bot.fetch_channel(support_channel)
                             await channel.send(f"Failed to kick <@{member.id}>.")
                         else:
-                            LogBot.logger.info(f"Kicked: {member} for being not verified")
+                            logger.info(f"Kicked: {member} for being not verified")
                     elif days_on_server > kick_after_days - warn_before_day_x - 1:
 
                         channel = await self.bot.fetch_channel(support_channel)

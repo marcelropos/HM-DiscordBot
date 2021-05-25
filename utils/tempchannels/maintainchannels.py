@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 
 import discord
@@ -6,14 +7,14 @@ from discord import Member, Message, PermissionOverwrite, User
 from discord import VoiceChannel, TextChannel
 from discord.ext.commands import Context, Bot
 
-from utils.logbot import LogBot
+logger = logging.getLogger("discord")
 
 
 class MaintainChannel:
 
     @staticmethod
     async def update(ctx: Context, new_token, bot, db: Connection):
-        LogBot.logger.debug("Generate new token")
+        logger.debug("Generate new token")
 
         cursor: Cursor = await db.execute(f"""SELECT token FROM TempChannels where discordUser=?""",
                                           (str(ctx.author.id),))
@@ -33,7 +34,7 @@ class MaintainChannel:
     @staticmethod
     async def save_invite(member: Member, message: Message, token: int, db):
 
-        LogBot.logger.debug(f"Save invite with token {token}")
+        logger.debug(f"Save invite with token {token}")
         await db.execute(f"""INSERT into Invites(message_id,token,member_id,channel_id)
                     VALUES(?,?,?,?)""", (message.id, token, member.id, message.channel.id))
 
@@ -48,7 +49,7 @@ class MaintainChannel:
             message = await channel.fetch_message(message_id)
             await message.edit(embed=embed)
         except Exception:
-            LogBot.logger.exception("Can't edit message: ")
+            logger.exception("Can't edit message: ")
         finally:
             await db.execute(f"""delete from Invites where message_id=?""", (message_id,))
 
@@ -63,13 +64,13 @@ class MaintainChannel:
                 if len(member.guild.get_channel(voice_channel_id).members) == 0:
                     await MaintainChannel.rem_channel(user_id, text_channel_id, voice_channel_id, token, bot, db)
             except Exception:
-                LogBot.logger.exception("Could not get user")
+                logger.exception("Could not get user")
 
     # noinspection PyBroadException
     @staticmethod
     async def rem_channel(user_id: int, text: int, voice: int, token: int, bot: Bot,
                           db: Connection):
-        LogBot.logger.debug("Delete Channel")
+        logger.debug("Delete Channel")
 
         cursor: Cursor = await db.execute(f"""SELECT message_id, channel_id FROM Invites where token=?""",
                                           (token,))
@@ -82,12 +83,12 @@ class MaintainChannel:
             text = bot.get_channel(text)
             await text.delete(reason="No longer used")
         except Exception:
-            LogBot.logger.exception("Can't delete text channel")
+            logger.exception("Can't delete text channel")
         try:
             voice = bot.get_channel(voice)
             await voice.delete(reason="No longer used")
         except Exception:
-            LogBot.logger.exception("Can't delete voice channel")
+            logger.exception("Can't delete voice channel")
 
     # noinspection PyDunderSlots,PyUnresolvedReferences
     @staticmethod

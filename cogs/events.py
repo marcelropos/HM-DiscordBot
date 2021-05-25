@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import datetime
 from enum import Enum
@@ -11,7 +12,8 @@ from discord.message import Message
 
 from cogs.botstatus import BotStatusValues
 from settings_files._global import DefaultMessages, ServerIds, EmojiIds
-from utils.logbot import LogBot
+
+logger = logging.getLogger("discord")
 
 
 class ConnectionStatus(Enum):
@@ -46,7 +48,7 @@ class Activities(commands.Cog):
                                                  id=ServerIds.DEBUG_CHAT)
 
             await channel.send(DefaultMessages.GREETINGS)
-            LogBot.logger.info("Start session")
+            logger.info("Start session")
 
     @commands.Cog.listener()
     async def on_resumed(self):
@@ -56,14 +58,14 @@ class Activities(commands.Cog):
 
             await channel.send(f"Connection lost at {self.connection_updated_at}.\n"
                                f"Connection successfully restored")
-            LogBot.logger.info("Resumed session")
+            logger.info("Resumed session")
             self.connection_status = None
 
     @commands.Cog.listener()
     async def on_disconnect(self):
         if self.connection_status == ConnectionStatus.CONNECTION_ESTABLISHED:
             self.connection_status = datetime.utcnow()
-            LogBot.logger.info("Disconnected from session")
+            logger.info("Disconnected from session")
 
     @tasks.loop(minutes=15)
     async def fetch_emojis(self):

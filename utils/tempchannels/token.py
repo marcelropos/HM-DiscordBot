@@ -1,3 +1,4 @@
+import logging
 import re
 
 import discord
@@ -6,9 +7,10 @@ from discord import Message
 from discord.ext.commands import Bot, Context
 
 from settings_files.all_errors import CouldNotSendMessage
-from utils.logbot import LogBot
 from utils.tempchannels.maintainchannels import MaintainChannel
 from utils.utils import accepted_channels
+
+logger = logging.getLogger("discord")
 
 
 class Token:
@@ -40,7 +42,7 @@ class Token:
 
     @staticmethod
     async def token_place(ctx: Context, token: int, db: Connection):
-        LogBot.logger.debug(f"Place Token for {str(ctx.author)}")
+        logger.debug(f"Place Token for {str(ctx.author)}")
         embed = MaintainChannel.invite_embed(ctx.author, f"```!tmpc join {token}```")
         message: Message = await ctx.send(embed=embed)
         # noinspection PyBroadException

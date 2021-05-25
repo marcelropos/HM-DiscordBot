@@ -1,3 +1,4 @@
+import logging
 import string
 from asyncio import Lock
 from typing import Union
@@ -12,11 +13,12 @@ from discord.member import Member
 
 from settings_files.all_errors import *
 from utils.embed_generator import EmbedGenerator
-from utils.logbot import LogBot
 from utils.tempchannels.database import TempChannelDB
 from utils.tempchannels.maintainchannels import MaintainChannel
 from utils.tempchannels.token import Token
 from utils.utils import ServerIds, mk_token, accepted_channels
+
+logger = logging.getLogger("discord")
 
 
 class Database:
@@ -89,7 +91,7 @@ class Activities(commands.Cog):
                 member = await guild.fetch_member(member_id)
                 await MaintainChannel.join(member, voice_channel, text_channel)
         except Exception:
-            LogBot.logger.exception("Activity error")
+            logger.exception("Activity error")
 
 
 class TempChannels(commands.Cog):
@@ -193,11 +195,11 @@ class TempChannels(commands.Cog):
                 except Exception:
                     await voice_c.delete()
                     await text_c.delete()
-                    LogBot.logger.exception("Database Error:")
+                    logger.exception("Database Error:")
             else:
-                LogBot.logger.debug(f"Created temporary channels: "
-                                    f"{ctx.author}-{ctx.author.id} "
-                                    f"owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
+                logger.debug(f"Created temporary channels: "
+                             f"{ctx.author}-{ctx.author.id} "
+                             f"owns text-{text_c.id},voice-{voice_c.id} with token-{token}")
 
             # noinspection PyBroadException
             try:
@@ -213,7 +215,7 @@ class TempChannels(commands.Cog):
             except Forbidden as error:
                 raise error
             except Exception:
-                LogBot.logger.exception("Can't send Message: ")
+                logger.exception("Can't send Message: ")
 
     # noinspection SqlNoDataSourceInspection
     @tmpc.command(pass_context=True,
@@ -308,7 +310,7 @@ class TempChannels(commands.Cog):
         except TypeError:
             raise TempChannelNotFound()
         except Exception:
-            LogBot.logger.exception("Unexpected exception while remove temporary channels")
+            logger.exception("Unexpected exception while remove temporary channels")
 
     @tmpc.error
     @mk.error
@@ -359,7 +361,7 @@ class TempChannels(commands.Cog):
             try:
                 raise error
             except Exception:
-                LogBot.logger.exception("Unexpected error")
+                logger.exception("Unexpected error")
 
 
 def setup(bot: Bot):

@@ -2,6 +2,7 @@ import asyncio
 import configparser
 import datetime
 import hashlib
+import logging
 import re
 import sqlite3
 from dataclasses import dataclass
@@ -17,8 +18,9 @@ from discord.ext.commands import Bot, Context
 from discord.message import Message
 
 from settings_files._global import DEBUG_STATUS
-from utils.logbot import LogBot
 from utils.utils import strtobool
+
+logger = logging.getLogger("discord")
 
 
 class Options(Enum):
@@ -134,19 +136,19 @@ class Rss(commands.Cog):
     @tasks.loop()
     async def get_rss_feeds(self):
         await self.wait_until()
-        LogBot.logger.info("Start fetching rss feed")
+        logger.info("Start fetching rss feed")
         self.config.read(self.config_path)
         self.void = self.db.get_feed
         task_list = [self.process_feed(section) for section in self.config.sections()]
         await asyncio.gather(*task_list)
         self.db.add_feed(self.read)
         self.read.clear()
-        LogBot.logger.info("Finished fetching rss feed")
+        logger.info("Finished fetching rss feed")
 
     async def process_feed(self, section):
         if section == "DEFAULT":
             return
-        LogBot.logger.info(f"Start processing feed: {section}")
+        logger.info(f"Start processing feed: {section}")
         link = self.config[section]["rss"]
         rss_feed = await Rss.get_page(link)
         if rss_feed:
@@ -166,14 +168,14 @@ class Rss(commands.Cog):
         except aiohttp.ClientError:
             return ""
         except UnicodeDecodeError:
-            LogBot.logger.exception("Could not decode website")
+            logger.exception("Could not decode website")
             return ""
         except Exception:
-            LogBot.logger.exception("Unexpected error")
+            logger.exception("Unexpected error")
             return ""
 
     async def create_embed(self, items: list, section: str):
-        LogBot.logger.debug(f"Create embed for {section}")
+        logger.debug(f"Create embed for {section}")
         link = self.config[section]["rss"]
         enabled = strtobool(self.config[section]["enabled"])
         color_config = empty_embed(self.config[section]["color"])
@@ -188,7 +190,7 @@ class Rss(commands.Cog):
             else:
                 color = color_config
         except ValueError:
-            LogBot.logger.warning("The color must be hexadecimal.")
+            logger.warning("The color must be hexadecimal.")
             color = Embed.Empty
 
         embed = Embed(
@@ -233,7 +235,7 @@ class Rss(commands.Cog):
                     fingerprint = hashlib.sha1(to_hash.encode("UTF-8")).hexdigest()
                     self.read.add(fingerprint)
                     if fingerprint not in self.void or fingerprint not in self.read:
-                        LogBot.logger.info(
+                        logger.info(
                             f"New feed: Name:{name} - Value: {value} - Fingerprint: {fingerprint}".replace("\n", ""))
                         embed.add_field(
                             name=name,
@@ -256,9 +258,9 @@ class Rss(commands.Cog):
                     try:
                         await message.publish()
                     except Exception:
-                        LogBot.logger.warning(f"Could not publish message. Channel: {channel.name}({channel.id})")
+                        logger.warning(f"Could not publish message. Channel: {channel.name}({channel.id})")
             except Exception:
-                LogBot.logger.exception("Unhandled exception")
+                logger.exception("Unhandled exception")
 
         if repeat:
             await self.create_embed(items_left, section)

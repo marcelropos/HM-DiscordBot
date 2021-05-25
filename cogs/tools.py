@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 from enum import Enum
 from io import BytesIO
 from typing import Union
@@ -13,7 +14,8 @@ from prettytable import PrettyTable
 
 from settings_files._global import ServerIds
 from settings_files.all_errors import *
-from utils.logbot import LogBot
+
+logger = logging.getLogger("discord")
 
 
 class SortType(Enum):
@@ -137,7 +139,7 @@ class Tools(commands.Cog):
             await ctx.reply(f"No manpage for `{error.__context__}` could be found.",
                             delete_after=60)
         else:
-            LogBot.logger.exception("Issue while fetching Page")
+            logger.exception("Issue while fetching Page")
 
 
 def setup(bot):
