@@ -9,7 +9,7 @@ import aiohttp
 import discord
 from discord import Message, User, Member
 from discord.ext import commands
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Context, Bot, Cog
 from prettytable import PrettyTable
 
 from settings_files._global import ServerIds
@@ -32,7 +32,7 @@ def sort_type_converter(arg: str):
     return sort_type
 
 
-class Tools(commands.Cog):
+class Tools(Cog):
     """Various commands"""
 
     def __init__(self, bot: Bot):

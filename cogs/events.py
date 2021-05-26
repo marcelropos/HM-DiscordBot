@@ -7,7 +7,7 @@ from typing import Union
 import discord
 from discord import Member, User, Role
 from discord.ext import commands, tasks
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Context, Bot, Cog
 from discord.message import Message
 
 from cogs.botstatus import BotStatusValues
@@ -23,7 +23,7 @@ class ConnectionStatus(Enum):
 
 
 # noinspection PyUnusedLocal,PyPep8Naming,SqlResolve
-class Activities(commands.Cog):
+class Activities(Cog):
     """Handle activities related to the users and perform actions depending on them."""
 
     def __init__(self, bot: Bot):

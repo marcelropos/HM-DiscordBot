@@ -4,7 +4,7 @@ from threading import Lock
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Context, Bot, Cog
 
 from settings_files._global import DefaultMessages
 from settings_files.all_errors import *
@@ -99,7 +99,7 @@ class BotStatusValues:
             cls._status_mode = arg
 
 
-class BotStatus(commands.Cog):
+class BotStatus(Cog):
     """Manage status and type_of_activity"""
 
     def __init__(self, bot: Bot):
@@ -175,9 +175,7 @@ class BotStatus(commands.Cog):
 
         logger.debug(f"Status: {BotStatusValues.get_status()} Mode: {BotStatusValues.get_status_mode()}")
 
-    @status.error
-    @activity.error
-    async def errors(self, ctx: Context, error):
+    async def cog_command_error(self, ctx: Context, error):
         logger.exception("")
 
 

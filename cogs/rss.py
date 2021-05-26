@@ -14,7 +14,7 @@ from discord.channel import TextChannel
 from discord.client import Client
 from discord.embeds import Embed
 from discord.ext import commands, tasks
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Bot, Context, Cog
 from discord.message import Message
 
 from settings_files._global import DEBUG_STATUS
@@ -59,7 +59,7 @@ def check(author, sections):
     return inner_check
 
 
-class Rss(commands.Cog):
+class Rss(Cog):
     """Add and manage RSS feeds"""
 
     def __init__(self, bot: Bot):

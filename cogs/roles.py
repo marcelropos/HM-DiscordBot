@@ -4,7 +4,7 @@ from typing import Union
 import discord
 from discord import User, Message
 from discord.ext import commands
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Context, Bot, Cog
 from discord.member import Member
 from discord.role import Role
 
@@ -16,7 +16,7 @@ from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_ro
 logger = logging.getLogger("discord")
 
 
-class Roles(commands.Cog):
+class Roles(Cog):
     """Manage your roles"""
 
     def __init__(self, bot: Bot):
@@ -195,15 +195,7 @@ class Roles(commands.Cog):
         assert isinstance(member, Member)
         return member
 
-    @group.error
-    @coding_add.error
-    @coding_rem.error
-    @nsfw_add.error
-    @nsfw_rem.error
-    @news_add.error
-    @news_rem.error
-    @hm.error
-    async def roles_error_handler(self, ctx: Context, error):
+    async def cog_command_error(self, ctx: Context, error):
         if isinstance(error, CommandInvokeError):
             error = error.original
 

@@ -7,6 +7,7 @@ import discord
 import requests
 from bs4 import BeautifulSoup
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from settings_files._global import Links
 from settings_files.all_errors import *
@@ -15,7 +16,7 @@ from utils.utils import MissingRole
 from utils.utils import ServerIds
 
 
-class Announcements(commands.Cog):
+class Announcements(Cog):
     def __init__(self, bot):
         self.bot = bot
         #  self.event_scedule.start()

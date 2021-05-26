@@ -1,12 +1,13 @@
 import sys
 
 import discord
+from discord.ext.commands import Cog
 
 from utils.embed_generator import BugReport
 from utils.utils import *
 
 
-class Admin(commands.Cog):
+class Admin(Cog):
     """Bot und Server administrations commands"""
 
     def __init__(self, bot: Bot):
@@ -66,13 +67,7 @@ class Admin(commands.Cog):
         channel = await self.bot.fetch_channel(channel_id)
         await channel.send(args)
 
-    @shutdown.error
-    @unload.error
-    @reload.error
-    @load.error
-    @msg.error
-    @purge.error
-    async def admin_errorhandler(self, ctx, error):
+    async def cog_command_error(self, ctx, error):
         if isinstance(error, CommandInvokeError):
             error = error.original
         if isinstance(error, MissingRole):

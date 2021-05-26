@@ -8,7 +8,7 @@ from aiosqlite import Cursor, Connection
 from discord import Guild, Role, User
 from discord.channel import TextChannel, VoiceChannel
 from discord.ext import commands
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Bot, Context, Cog
 from discord.member import Member
 
 from settings_files.all_errors import *
@@ -47,7 +47,7 @@ class Database:
         cls._lock.release()
 
 
-class Activities(commands.Cog):
+class Activities(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -94,7 +94,7 @@ class Activities(commands.Cog):
             logger.exception("Activity error")
 
 
-class TempChannels(commands.Cog):
+class TempChannels(Cog):
     """Create, edit or delete your temporary channel."""
 
     def __init__(self, bot: Bot):
@@ -312,13 +312,7 @@ class TempChannels(commands.Cog):
         except Exception:
             logger.exception("Unexpected exception while remove temporary channels")
 
-    @tmpc.error
-    @mk.error
-    @join.error
-    @token.error
-    @nomod.error
-    @rem.error
-    async def temp_errorhandler(self, ctx: Context, error):
+    async def cog_command_error(self, ctx: Context, error):
         if isinstance(error, CommandInvokeError):
             error = error.original
 
