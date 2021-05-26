@@ -166,6 +166,9 @@ class AudioBot(Cog):
             await ctx.reply(content="I cannot leave a channel in that I am not in.",
                             delete_after=60)
 
+    def cog_unload(self):
+        self.swallow.cancel()
+
     @tasks.loop(minutes=1)
     async def swallow(self):
         guild_id = self.config.find("global").find("main-guild").text

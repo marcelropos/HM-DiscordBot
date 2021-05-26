@@ -53,6 +53,9 @@ class Moderator(Cog):
         self.config = ElementTree.parse("./data/config.xml").getroot()
         self.kick_not_verified.start()
 
+    def cog_unload(self):
+        self.kick_not_verified.cancel()
+
     # noinspection PyUnusedLocal
     @tasks.loop()
     async def kick_not_verified(self, *_):

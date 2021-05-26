@@ -75,6 +75,9 @@ class Rss(commands.Cog):
         if not DEBUG_STATUS():
             self.get_rss_feeds.start()
 
+    def cog_unload(self):
+        self.get_rss_feeds.cancel()
+
     def write_config(self):
         with open(self.config_path, "w") as f_out:
             self.config.write(f_out)
