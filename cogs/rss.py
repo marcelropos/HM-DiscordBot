@@ -148,7 +148,7 @@ class Rss(commands.Cog):
     async def process_feed(self, section):
         if section == "DEFAULT":
             return
-        logger.info(f"Start processing feed: {section}")
+        logger.debug(f"Start processing feed: {section}")
         link = self.config[section]["rss"]
         rss_feed = await Rss.get_page(link)
         if rss_feed:
@@ -168,10 +168,10 @@ class Rss(commands.Cog):
         except aiohttp.ClientError:
             return ""
         except UnicodeDecodeError:
-            logger.exception("Could not decode website")
+            logger.warning("Could not decode website")
             return ""
         except Exception:
-            logger.exception("Unexpected error")
+            logger.error("Unexpected error")
             return ""
 
     async def create_embed(self, items: list, section: str):
@@ -235,7 +235,7 @@ class Rss(commands.Cog):
                     fingerprint = hashlib.sha1(to_hash.encode("UTF-8")).hexdigest()
                     self.read.add(fingerprint)
                     if fingerprint not in self.void or fingerprint not in self.read:
-                        logger.info(
+                        logger.debug(
                             f"New feed: Name:{name} - Value: {value} - Fingerprint: {fingerprint}".replace("\n", ""))
                         embed.add_field(
                             name=name,
@@ -260,7 +260,7 @@ class Rss(commands.Cog):
                     except Exception:
                         logger.warning(f"Could not publish message. Channel: {channel.name}({channel.id})")
             except Exception:
-                logger.exception("Unhandled exception")
+                logger.error("Unhandled exception")
 
         if repeat:
             await self.create_embed(items_left, section)
