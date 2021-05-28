@@ -46,6 +46,7 @@ class Player:
 
     @staticmethod
     async def play(vc, audio_source):
+        await asyncio.sleep(0.6)
         vc.play(audio_source)
         while vc.is_playing():
             await asyncio.sleep(0.1)
@@ -68,7 +69,6 @@ class Player:
             await voice_channel.connect()
         vc: VoiceClient = bot.voice_clients[0]
         assert isinstance(vc, VoiceClient)
-        await asyncio.sleep(0.3)
         return vc
 
 
