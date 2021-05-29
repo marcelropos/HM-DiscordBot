@@ -118,16 +118,18 @@ class TempChannels(Cog):
                   aliases=["make"])
     async def mk(self, ctx: Context, *, name: str):
 
-        illegal_symbols = {x for x in name} \
-            .difference({x for x in
-                         string.ascii_uppercase + string.ascii_lowercase + string.digits + "-_"})
+        # Damit es richtig ballert!
+        if name is not "抹茶":
+            illegal_symbols = {x for x in name} \
+                .difference({x for x in
+                             string.ascii_uppercase + string.ascii_lowercase + string.digits + "-_"})
 
-        if len(illegal_symbols) > 0:
-            raise UserError(
-                f"The name may only contain alphanumeric characters, as well as the characters '-' and '_'. "
-            )
-        if len(name) > 100:
-            raise UserError("The length of the channel name may only between 1 and 100 characters")
+            if len(illegal_symbols) > 0:
+                raise UserError(
+                    f"The name may only contain alphanumeric characters, as well as the characters '-' and '_'. "
+                )
+            if len(name) > 100:
+                raise UserError("The length of the channel name may only between 1 and 100 characters")
 
         await accepted_channels(self.bot, ctx)
         member: Union[Member, User] = ctx.author
