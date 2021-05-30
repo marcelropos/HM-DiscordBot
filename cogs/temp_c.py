@@ -1,5 +1,6 @@
 import logging
 import string
+import xml.etree.ElementTree as ElementTree
 from asyncio import Lock
 from typing import Union
 
@@ -99,6 +100,8 @@ class TempChannels(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
+        self.config = ElementTree.parse("./data/config.xml").getroot()
+        self.allowed_chars = self.config.find("global").find("allowedChars").text
 
     @commands.group(pass_context=True,
                     aliases=["temp", "tempc"],
@@ -120,9 +123,9 @@ class TempChannels(Cog):
 
         illegal_symbols = {x for x in name} \
             .difference({x for x in
-                         string.ascii_uppercase + string.ascii_lowercase + string.digits + "-_"})
+                         string.ascii_uppercase + string.ascii_lowercase + string.digits + "-_" + self.allowed_chars})
 
-        if len(illegal_symbols) > 0:
+        if len(illegal_symbols):
             raise UserError(
                 f"The name may only contain alphanumeric characters, as well as the characters '-' and '_'. "
             )
