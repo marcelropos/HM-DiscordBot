@@ -39,6 +39,7 @@ class EventType(IntEnum):
 class Player:
     lock = Lock()
     not_played_since = datetime.datetime.now().timestamp()
+    audio_source = FFmpegPCMAudio(ET.parse("./data/config.xml").getroot().find("global").find("dc").text)
 
     async def __aenter__(self):
         await self.__class__.lock.acquire()
@@ -57,9 +58,11 @@ class Player:
 
     @staticmethod
     async def disconnect(bot: Bot):
-        if bot.voice_clients:
-            vc: VoiceClient = bot.voice_clients[0]
-            await vc.disconnect()
+        async with Player() as player:
+            if bot.voice_clients:
+                vc: VoiceClient = bot.voice_clients[0]
+                await player.play(vc, player.audio_source)
+                await vc.disconnect()
 
     @staticmethod
     async def connect(bot: Bot, voice_channel: VoiceChannel) -> VoiceClient:
