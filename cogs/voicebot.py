@@ -22,14 +22,18 @@ class EventType(IntEnum):
     NOTHING = 0
     JOINED = 1
     LEFT = 2
+    SWITCHED = 3
 
     @classmethod
     def status(cls, before: VoiceState, after: VoiceState):
-        if after.channel == before.channel:
-            return cls.NOTHING
-        if after.channel is None:
+        if before.channel is None:
+            return cls.JOINED
+        elif after.channel is None:
             return cls.LEFT
-        return cls.JOINED
+        elif after.channel == before.channel:
+            return cls.NOTHING
+        else:
+            return cls.SWITCHED
 
 
 class Player:
@@ -122,7 +126,7 @@ class Event(Cog):
             if channel.id == self.nerd_ecke_id:
                 await self.greet.greet(member, channel)
 
-        elif event_type == EventType.LEFT and self.bot.voice_clients:
+        elif (event_type == EventType.LEFT or event_type == EventType.SWITCHED) and self.bot.voice_clients:
             channel: VoiceChannel = before.channel
             vc: VoiceClient = self.bot.voice_clients[0]
 
