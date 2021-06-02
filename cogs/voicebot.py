@@ -144,7 +144,6 @@ class Event(Cog):
 class AudioBot(Cog):
 
     def __init__(self, bot: Bot):
-
         self.bot = bot
 
         self.swallow_counter: int = 0
@@ -165,10 +164,9 @@ class AudioBot(Cog):
                       brief="Disconnect from voicechannel")
     async def disconnect(self, ctx: Context):
         if self.bot.voice_clients \
-                and ctx.channel \
-                and ctx.channel.id == self.bot.voice_clients[0].id:
-            async with Player() as player:
-                await player.disconnect(self.bot)
+                and ctx.voice_client \
+                and {x for x in ctx.voice_client.channel.members if self.bot.user.id}:
+            await Player().disconnect(self.bot)
         else:
             await ctx.reply(content="I cannot leave a channel in that I am not in.",
                             delete_after=60)
