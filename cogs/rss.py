@@ -20,7 +20,7 @@ from discord.message import Message
 from settings_files._global import DEBUG_STATUS
 from utils.utils import strtobool
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("cogs").getChild("rss")
 
 
 class Options(Enum):

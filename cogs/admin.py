@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import discord
@@ -5,6 +6,8 @@ from discord.ext.commands import Cog
 
 from utils.embed_generator import BugReport
 from utils.utils import *
+
+logger = logging.getLogger("discord").getChild("cogs").getChild("admin")
 
 
 class Admin(Cog):
@@ -31,8 +34,13 @@ class Admin(Cog):
         try:
             self.bot.unload_extension(f"cogs.{cog}")
         except Exception:
-            raise ModuleError("Could not unload cog")
-        await ctx.send("Cog unloaded")
+            msg_log = "Could not unload cog"
+            logger.exception(msg_log)
+            await ctx.reply(msg_log)
+            return
+        msg_log = "Cog unloaded"
+        logger.info(msg_log)
+        await ctx.send(msg_log)
 
     @commands.command(help="Load and enable a module")
     @commands.is_owner()
@@ -40,18 +48,34 @@ class Admin(Cog):
         try:
             self.bot.load_extension(f"cogs.{cog}")
         except Exception:
-            raise ModuleError("Could not load cog")
-        await ctx.send("Cog loaded")
+            msg_log = "Could not load cog"
+            logger.exception(msg_log)
+            await ctx.reply(msg_log)
+            return
+        msg_log = "Cog loaded"
+        logger.info(msg_log)
+        await ctx.send(msg_log)
 
     @commands.command(help="reload and enable a module")
     @commands.is_owner()
     async def reload(self, ctx: Context, cog: str):
         try:
             self.bot.unload_extension(f"cogs.{cog}")
+        except Exception:
+            msg_log = "Could not unload cog"
+            logger.exception(msg_log)
+            await ctx.reply(msg_log)
+            return
+        try:
             self.bot.load_extension(f"cogs.{cog}")
         except Exception:
-            raise ModuleError("Could not reload cog")
-        await ctx.send("Cog reloaded")
+            msg_log = "Could not load cog"
+            logger.exception(msg_log)
+            await ctx.reply(msg_log)
+            return
+        msg_log = "Cog reloaded"
+        logger.info(msg_log)
+        await ctx.send(msg_log)
 
     @commands.command(brief="Delete chat history",
                       help="Put the command in the chat, which should be purged. "

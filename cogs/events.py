@@ -13,7 +13,7 @@ from discord.message import Message
 from cogs.botstatus import BotStatusValues
 from settings_files._global import DefaultMessages, ServerIds, EmojiIds
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("cogs").getChild("events")
 
 
 class ConnectionStatus(Enum):

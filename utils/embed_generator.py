@@ -11,7 +11,7 @@ from discord.ext.commands import Context, Bot
 from settings_files._global import Directories, ServerIds
 from settings_files.all_errors import *
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("utils").getChild("embed_generator")
 
 
 class HelpError(UserError):

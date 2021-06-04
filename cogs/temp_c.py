@@ -19,7 +19,7 @@ from utils.tempchannels.maintainchannels import MaintainChannel
 from utils.tempchannels.token import Token
 from utils.utils import ServerIds, mk_token, accepted_channels
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("cogs").getChild("tempchannels")
 
 
 class Database:

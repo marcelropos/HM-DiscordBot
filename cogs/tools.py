@@ -15,7 +15,7 @@ from prettytable import PrettyTable
 from settings_files._global import ServerIds
 from settings_files.all_errors import *
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("cogs").getChild("tools")
 
 
 class SortType(Enum):

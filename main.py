@@ -16,7 +16,7 @@ from utils.message_process import reactions
 logger = logging.getLogger("discord")
 logger.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter("%(asctime)s %(levelname)s %(module)s/%(funcName)s %(lineno)d: %(message)s")
+formatter = logging.Formatter("%(asctime)s %(name)s/%(levelname)s %(funcName)s %(lineno)d: %(message)s")
 # noinspection PyArgumentEqualDefault
 file_handler = logging.FileHandler(
     filename=f'./data/logs/discord.log',

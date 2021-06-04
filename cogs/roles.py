@@ -13,7 +13,7 @@ from settings_files.all_errors import *
 from utils.embed_generator import EmbedGenerator
 from utils.utils import accepted_channels, extract_id, has_not_roles, has_not_role
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("cogs").getChild("roles")
 
 
 class Roles(Cog):

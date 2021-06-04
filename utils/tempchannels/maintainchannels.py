@@ -7,7 +7,7 @@ from discord import Member, Message, PermissionOverwrite, User
 from discord import VoiceChannel, TextChannel
 from discord.ext.commands import Context, Bot
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("utils").getChild("tempchannels").getChild("maintainchannels")
 
 
 class MaintainChannel:

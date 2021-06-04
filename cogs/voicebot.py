@@ -15,7 +15,7 @@ from discord.abc import User
 from discord.ext import commands, tasks
 from discord.ext.commands import Cog, Bot, Context
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("cogs").getChild("voicebot")
 
 
 class EventType(IntEnum):

@@ -11,7 +11,7 @@ from discord.ext.commands import Context, Bot, Cog
 from settings_files.all_errors import *
 from utils.utils import strtobool
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("cogs").getChild("moderator")
 
 
 class Events(Cog):

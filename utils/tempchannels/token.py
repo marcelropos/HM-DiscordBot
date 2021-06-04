@@ -10,7 +10,7 @@ from settings_files.all_errors import CouldNotSendMessage
 from utils.tempchannels.maintainchannels import MaintainChannel
 from utils.utils import accepted_channels
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord").getChild("utils").getChild("tempchannels").getChild("token")
 
 
 class Token:
