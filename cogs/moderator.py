@@ -60,7 +60,7 @@ class Moderator(Cog):
     # noinspection PyUnusedLocal
     @tasks.loop()
     async def kick_not_verified(self, *_):
-        # await self.wait_until()
+        await self.wait_until()
         self.config.find("Guilds")
         for guild_conf in self.config.find("Guilds"):
             guild_conf: ElementTree.Element
