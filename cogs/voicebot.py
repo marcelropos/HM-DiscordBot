@@ -55,6 +55,7 @@ class Player:
         vc.play(audio_source)
         while vc.is_playing():
             await asyncio.sleep(0.1)
+        audio_source.cleanup()
 
     @staticmethod
     async def disconnect(bot: Bot):
