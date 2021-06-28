@@ -32,6 +32,7 @@ log_stream.setLevel(logging.INFO)
 logger.addHandler(file_handler)
 logger.addHandler(log_stream)
 
+logger = logging.getLogger("discord").getChild("main")
 logger.info("Logger Active")
 
 intents = discord.Intents.all()
