@@ -17,7 +17,6 @@ class MongoDocument(ABC):
 class MongoCollection(ABC):
     def __init__(self, database: str, collection: str):
         global client
-        print(id(client))
         self.collection: motor.motor_asyncio.AsyncIOMotorCollection = client[database][collection]
 
     @abstractmethod
