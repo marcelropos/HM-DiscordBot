@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 
 import discord.utils
@@ -37,8 +38,8 @@ class Subject(MongoDocument):
 
 
 class Subjects(MongoCollection):
-    def __init__(self, client: AsyncIOMotorClient, bot: Bot):
-        super().__init__(client, "db", self.__class__.__name__)
+    def __init__(self, bot: Bot):
+        super().__init__(os.environ["DB_NAME"], self.__class__.__name__)
         self.bot = bot
 
     def __contains__(self, item):

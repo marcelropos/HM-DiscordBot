@@ -1,8 +1,8 @@
+import os
 from dataclasses import dataclass
 from typing import Optional, Union
 
 from discord.ext.commands import Bot
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from Mongo.mongocollection import MongoCollection, MongoDocument
 from discord import Member, TextChannel, VoiceChannel, User, Guild
@@ -31,8 +31,8 @@ class StudyChannel(MongoDocument):
 
 
 class StudyChannels(MongoCollection):
-    def __init__(self, client: AsyncIOMotorClient, bot: Bot):
-        super().__init__(client, "db", self.__class__.__name__)
+    def __init__(self, bot: Bot):
+        super().__init__(os.environ["DB_NAME"], self.__class__.__name__)
         self.bot = bot
 
     async def _create_study_channel(self, result):
@@ -54,7 +54,7 @@ class StudyChannels(MongoCollection):
                              Union[Member, User],
                              TextChannel, VoiceChannel,
                              int,
-                             Optional[datetime]]) -> StudyChannel:
+                             Optional[datetime.datetime]]) -> StudyChannel:
         owner, chat, voice, token, delete_at = entry
 
         document = {

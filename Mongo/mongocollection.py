@@ -1,18 +1,23 @@
 import asyncio
+import os
+from typing import final
+
 import motor.motor_asyncio
 from abc import ABC, abstractmethod
+
+client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["DB_CONN"])
 
 
 class MongoDocument(ABC):
     @abstractmethod
-    @property
     def document(self):
         pass
 
 
-# noinspection PyTypeChecker,PyUnresolvedReferences
 class MongoCollection(ABC):
-    def __init__(self, client: motor.motor_asyncio.AsyncIOMotorClient, database: str, collection: str):
+    def __init__(self, database: str, collection: str):
+        global client
+        print(id(client))
         self.collection: motor.motor_asyncio.AsyncIOMotorCollection = client[database][collection]
 
     @abstractmethod
