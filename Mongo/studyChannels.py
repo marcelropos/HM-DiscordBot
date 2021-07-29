@@ -1,0 +1,86 @@
+from dataclasses import dataclass
+from typing import Optional, Union
+
+from discord.ext.commands import Bot
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from Mongo.mongocollection import MongoCollection, MongoDocument
+from discord import Member, TextChannel, VoiceChannel, User, Guild
+import datetime
+
+
+@dataclass
+class StudyChannel(MongoDocument):
+    _id: int
+    owner: Union[Member, User]
+    chat: TextChannel
+    voice: VoiceChannel
+    token: int
+    deleteAt: datetime
+
+    @property
+    def document(self):
+        return {
+            "_id": self._id,
+            "owner": self.owner.id,
+            "chat": self.chat.id,
+            "voice": self.voice.id,
+            "token": self.token,
+            "deleteAt": self.deleteAt
+        }
+
+
+class StudyChannels(MongoCollection):
+    def __init__(self, client: AsyncIOMotorClient, bot: Bot):
+        super().__init__(client, "db", self.__class__.__name__)
+        self.bot = bot
+
+    async def _create_study_channel(self, result):
+        _id, owner_id, chat_id, voice_id, token, delete_at = result
+
+        chat: TextChannel = {chat for chat in {await guild.fetch_channels() for guild in self.bot.guilds} if
+                             chat.id == chat_id}.pop()
+
+        voice: VoiceChannel = {voice for voice in {await guild.fetch_channels() for guild in self.bot.guilds} if
+                               voice.id == voice_id}.pop()
+
+        guild: Guild = chat.guild
+        owner: Union[Member, User] = await guild.fetch_member(owner_id)
+
+        return StudyChannel(_id, owner, chat, voice, token, delete_at)
+
+    async def insert_one(self,
+                         entry: tuple[
+                             Union[Member, User],
+                             TextChannel, VoiceChannel,
+                             int,
+                             Optional[datetime]]) -> StudyChannel:
+        owner, chat, voice, token, delete_at = entry
+
+        document = {
+            "owner": owner.id,
+            "chat": chat.id,
+            "voice": voice.id,
+            "token": token,
+            "deleteAt": delete_at if delete_at else datetime.datetime.now()
+        }
+
+        result = await self.collection.insert_one(document)
+        return await self._create_study_channel(result)
+
+    async def find_one(self, find_params: dict) -> StudyChannel:
+        result = await self.collection.find_one(find_params)
+        return await self._create_study_channel(result)
+
+    async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[StudyChannel]:
+
+        if sort:
+            cursor = self.collection.find(find_params).sort(self)
+        else:
+            cursor = self.collection.find(find_params)
+
+        return [await self._create_study_channel(entry) for entry in await cursor.to_list(limit)]
+
+    async def update_one(self, find_params: dict, replace: dict) -> StudyChannel:
+        result = await self.collection.update_one(find_params, {"$set": replace})
+        return await self._create_study_channel(result)
