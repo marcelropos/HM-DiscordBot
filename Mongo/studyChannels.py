@@ -60,8 +60,8 @@ class StudyChannels(MongoCollection):
             "deleteAt": delete_at if delete_at else datetime.datetime.now()
         }
 
-        result = await self.collection.insert_one(document)
-        return await self._create_study_channel(result)
+        await self.collection.insert_one(document)
+        return await self.find_one(document)
 
     async def find_one(self, find_params: dict) -> StudyChannel:
         result = await self.collection.find_one(find_params)
