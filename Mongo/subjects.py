@@ -70,7 +70,6 @@ class Subjects(MongoCollection):
         return await self._create_subject(result)
 
     async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[Subject]:
-
         if sort:
             cursor = self.collection.find(find_params).sort(self)
         else:

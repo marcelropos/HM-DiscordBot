@@ -73,7 +73,6 @@ class StudyChannels(MongoCollection):
         return await self._create_study_channel(result)
 
     async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[StudyChannel]:
-
         if sort:
             cursor = self.collection.find(find_params).sort(self)
         else:
