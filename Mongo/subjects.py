@@ -1,4 +1,5 @@
 import os
+import typing
 from dataclasses import dataclass
 
 import discord.utils
@@ -28,7 +29,7 @@ class Subject(MongoDocument):
         return self.chat.id
 
     @property
-    def document(self):
+    def document(self) -> dict[str: typing.Any]:
         return {
             "_id": self._id,
             "channelID": self.chat.id,

@@ -1,4 +1,5 @@
 import os
+import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
@@ -22,7 +23,7 @@ class StudyChannel(MongoDocument):
     deleteAt: datetime
 
     @property
-    def document(self):
+    def document(self) -> dict[str: typing.Any]:
         return {
             "_id": self._id,
             "owner": self.owner.id,

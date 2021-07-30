@@ -1,4 +1,5 @@
 import os
+import typing
 from typing import final
 
 import motor.motor_asyncio
@@ -9,7 +10,7 @@ client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["DB_CONN"])
 
 class MongoDocument(ABC):
     @abstractmethod
-    def document(self):
+    def document(self) -> dict[str: typing.Any]:
         pass
 
 
