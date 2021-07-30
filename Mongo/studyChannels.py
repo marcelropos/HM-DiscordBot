@@ -48,8 +48,7 @@ class StudyChannels(MongoCollection):
 
         return StudyChannel(_id, owner, chat, voice, token, delete_at)
 
-    async def insert_one(self,
-                         entry: tuple[
+    async def insert_one(self, entry: tuple[
                              Union[Member, User],
                              TextChannel, VoiceChannel,
                              int,

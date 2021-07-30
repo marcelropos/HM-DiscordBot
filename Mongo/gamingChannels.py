@@ -44,8 +44,7 @@ class GamingChannels(MongoCollection):
 
         return GamingChannel(_id, owner, chat, voice, token)
 
-    async def insert_one(self,
-                         entry: tuple[
+    async def insert_one(self, entry: tuple[
                              Union[Member, User],
                              TextChannel, VoiceChannel,
                              int,
