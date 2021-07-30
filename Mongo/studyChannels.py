@@ -56,8 +56,7 @@ class StudyChannels(MongoCollection):
                              Optional[datetime.datetime]]) -> StudyChannel:
         owner, chat, voice, token, delete_at = entry
 
-        hours = (await PrimitiveMongoData(CollectionEnum.ROLES_SETTINGS.value)
-                 .find_one({"deleteAfter": {'$exists': True}}))["HOURS"]
+        hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS, "deleteAfter", "HOURS")
 
         document = {
             "owner": owner.id,

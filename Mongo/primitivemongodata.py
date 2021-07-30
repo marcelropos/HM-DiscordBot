@@ -1,6 +1,8 @@
 import os
+import typing
 
 from Mongo.mongocollection import MongoCollection
+from core.globalenum import CollectionEnum
 
 
 class PrimitiveMongoData(MongoCollection):
@@ -32,3 +34,9 @@ class PrimitiveMongoData(MongoCollection):
     async def replace_one(self, old: dict, new: dict) -> dict:
         await self.collection.replace_one(old, new)
         return await self.find_one(new)
+
+    @staticmethod
+    async def find_configuration(collection: CollectionEnum, key: str, attribute: str) -> typing.Any:
+        result = await PrimitiveMongoData(collection.value).find_one({key: {'$exists': True}})
+        if result:
+            return result[attribute]
