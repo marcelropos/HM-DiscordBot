@@ -29,7 +29,6 @@ class GamingChannel(MongoDocument):
         }
 
 
-# noinspection DuplicatedCode
 class GamingChannels(MongoCollection):
     def __init__(self, bot: Bot):
         super().__init__(os.environ["DB_NAME"], self.__class__.__name__)
