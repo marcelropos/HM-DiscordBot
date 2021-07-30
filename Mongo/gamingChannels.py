@@ -9,6 +9,8 @@ from Mongo.mongocollection import MongoCollection, MongoDocument
 from discord import Member, TextChannel, VoiceChannel, User, Guild
 import datetime
 
+from core.globalenum import DBKeyWrapperEnum
+
 
 @dataclass
 class GamingChannel(MongoDocument):
