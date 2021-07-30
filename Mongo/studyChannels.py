@@ -37,14 +37,9 @@ class StudyChannels(MongoCollection):
 
     async def _create_study_channel(self, result):
         _id, owner_id, chat_id, voice_id, token, delete_at = result
-
-        chat: TextChannel = {chat for chat in {await guild.fetch_channels() for guild in self.bot.guilds} if
-                             chat.id == chat_id}.pop()
-
-        voice: VoiceChannel = {voice for voice in {await guild.fetch_channels() for guild in self.bot.guilds} if
-                               voice.id == voice_id}.pop()
-
-        guild: Guild = chat.guild
+        guild: Guild = self.bot.guilds[0]
+        chat: TextChannel = guild.get_channel(chat_id)
+        voice: VoiceChannel = guild.get_channel(voice_id)
         owner: Union[Member, User] = await guild.fetch_member(owner_id)
 
         return StudyChannel(_id, owner, chat, voice, token, delete_at)

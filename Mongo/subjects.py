@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 
 import discord.utils
-from discord import Role
+from discord import Role, Guild
 from discord import TextChannel
 from discord.ext.commands import Bot
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -49,11 +49,11 @@ class Subjects(MongoCollection):
         return True if await self.find_one(subject.document) else False
 
     async def _create_subject(self, result):
+        guild: Guild = self.bot.guilds[0]
         _id = result["_id"]
         chat = await self.bot.fetch_channel(int(result["channelID"]))
-        role = {await discord.utils.get(guild.roles, id=result["roleID"]) for guild in self.bot.guilds}
-        role.remove(None)
-        subject = Subject(_id, chat, role.pop())
+        role: Role = discord.utils.get(guild.roles, id=result["roleID"])
+        subject = Subject(_id, chat, role)
         return subject
 
     async def insert_one(self, entry: tuple[TextChannel, Role]) -> Subject:
