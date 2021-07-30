@@ -74,7 +74,7 @@ class StudyChannels(MongoCollection):
         else:
             cursor = self.collection.find(find_params)
 
-        return [await self._create_study_channel(entry) for entry in await cursor.to_list(limit)]
+        return [await self._create_study_channel(document) for document in await cursor.to_list(limit)]
 
     async def update_one(self, find_params: dict, replace: dict) -> StudyChannel:
         result = await self.collection.update_one(find_params, {"$set": replace})
