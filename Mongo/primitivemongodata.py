@@ -9,7 +9,7 @@ class PrimitiveMongoData(MongoCollection):
         super().__init__(os.environ["DB_NAME"], collection)
 
     async def insert_one(self, document: dict) -> dict:
-        return await self.collection.insert_one(document)
+        return await self.find_one(document)
 
     async def find_one(self, find_params: dict) -> dict:
         return await self.collection.find_one(find_params)
@@ -23,8 +23,12 @@ class PrimitiveMongoData(MongoCollection):
         result = [d for d in await cursor.to_list(limit)]
         return result
 
-    async def update_one(self, find_params: dict, replace: dict) -> dict:
-        return await self.collection.update_one(find_params, {"$set": replace})
+    async def update_one(self, find_params: dict, replace: dict):
+        await self.collection.update_one(find_params, {"$set": replace})
+        document = find_params.copy()
+        document.update(replace)
+        return await self.find_one(document)
 
-    async def replace_one(self, old: dict, new: dict):
-        return await self.collection.replace_one(old, new)
+    async def replace_one(self, old: dict, new: dict) -> dict:
+        await self.collection.replace_one(old, new)
+        return await self.find_one(new)

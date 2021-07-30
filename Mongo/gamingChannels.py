@@ -77,5 +77,7 @@ class GamingChannels(MongoCollection):
         return [await self._create_study_channel(entry) for entry in await cursor.to_list(limit)]
 
     async def update_one(self, find_params: dict, replace: dict) -> GamingChannel:
-        result = await self.collection.update_one(find_params, {"$set": replace})
-        return await self._create_study_channel(result)
+        await self.collection.update_one(find_params, {"$set": replace})
+        document = find_params.copy()
+        document.update(replace)
+        return await self.find_one(document)

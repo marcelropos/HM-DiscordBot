@@ -79,5 +79,7 @@ class Subjects(MongoCollection):
         return [await self._create_subject(entry) for entry in await cursor.to_list(limit)]
 
     async def update_one(self, find_params: dict, replace: dict) -> Subject:
-        result = await self.collection.update_one(find_params, {"$set": replace})
-        return await self._create_subject(result)
+        await self.collection.update_one(find_params, {"$set": replace})
+        document = find_params.copy()
+        document.update(replace)
+        return await self.find_one(document)
