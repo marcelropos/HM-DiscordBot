@@ -8,6 +8,9 @@ from Mongo.mongocollection import MongoCollection, MongoDocument
 from discord import Member, TextChannel, VoiceChannel, User, Guild
 import datetime
 
+from Mongo.primitivemongodata import PrimitiveMongoData
+from core.globalenum import CollectionEnum
+
 
 @dataclass
 class StudyChannel(MongoDocument):
@@ -52,12 +55,15 @@ class StudyChannels(MongoCollection):
                              Optional[datetime.datetime]]) -> StudyChannel:
         owner, chat, voice, token, delete_at = entry
 
+        hours = (await PrimitiveMongoData(CollectionEnum.ROLES_SETTINGS.value)
+                 .find_one({"deleteAfter": {'$exists': True}}))["HOURS"]
+
         document = {
             "owner": owner.id,
             "chat": chat.id,
             "voice": voice.id,
             "token": token,
-            "deleteAt": delete_at if delete_at else datetime.datetime.now()
+            "deleteAt": delete_at if delete_at else datetime.datetime.now() + datetime.timedelta(hours=hours)
         }
 
         await self.collection.insert_one(document)
