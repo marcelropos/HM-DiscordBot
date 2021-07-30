@@ -66,10 +66,9 @@ class GamingChannels(MongoCollection):
         return await self._create_study_channel(result)
 
     async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[GamingChannel]:
+        cursor = self.collection.find(find_params)
         if sort:
-            cursor = self.collection.find(find_params).sort(self)
-        else:
-            cursor = self.collection.find(find_params)
+            cursor = cursor.sort(self)
 
         return [await self._create_study_channel(entry) for entry in await cursor.to_list(limit)]
 
