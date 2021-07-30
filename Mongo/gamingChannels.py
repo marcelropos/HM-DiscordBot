@@ -21,6 +21,22 @@ class GamingChannel(MongoDocument):
     token: int
 
     @property
+    def owner_id(self) -> int:
+        return self.owner.id
+
+    @property
+    def voice_id(self) -> int:
+        return self.voice.id
+
+    @property
+    def channel_id(self) -> int:
+        return self.chat.id
+
+    @property
+    def voice_member(self) -> set[Union[Member, User]]:
+        return {member for member in self.voice.members if not member.bot}
+
+    @property
     def document(self) -> dict[str: typing.Any]:
         return {
             "_id": self._id,
