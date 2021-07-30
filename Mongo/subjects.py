@@ -62,8 +62,8 @@ class Subjects(MongoCollection):
             "channelID": chat.id,
             "roleID": role.id
         }
-        result = await self.collection.insert_one(document)
-        return await self._create_subject(result)
+        await self.collection.insert_one(document)
+        return await self.find_one(document)
 
     async def find_one(self, find_params: dict) -> Subject:
         result = await self.collection.find_one(find_params)
