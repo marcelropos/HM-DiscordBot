@@ -10,7 +10,7 @@ from discord import Member, TextChannel, VoiceChannel, User, Guild
 import datetime
 
 from Mongo.primitivemongodata import PrimitiveMongoData
-from core.globalenum import CollectionEnum
+from core.globalenum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum, DBKeyWrapperEnum
 
 
 @dataclass
@@ -25,12 +25,12 @@ class StudyChannel(MongoDocument):
     @property
     def document(self) -> dict[str: typing.Any]:
         return {
-            "_id": self._id,
-            "owner": self.owner.id,
-            "chat": self.chat.id,
-            "voice": self.voice.id,
-            "token": self.token,
-            "deleteAt": self.deleteAt
+            DBKeyWrapperEnum.ID.value: self._id,
+            DBKeyWrapperEnum.OWNER.value: self.owner.id,
+            DBKeyWrapperEnum.CHAT.value: self.chat.id,
+            DBKeyWrapperEnum.VOICE.value: self.voice.id,
+            DBKeyWrapperEnum.TOKEN.value: self.token,
+            DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt
         }
 
 
@@ -55,14 +55,17 @@ class StudyChannels(MongoCollection):
                              Optional[datetime.datetime]]) -> StudyChannel:
         owner, chat, voice, token, delete_at = entry
 
-        hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS, "deleteAfter", "HOURS")
+        hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS,
+                                                            ConfigurationNameEnum.DELETE_AFTER,
+                                                            ConfigurationAttributeEnum.HOURS)
 
         document = {
-            "owner": owner.id,
-            "chat": chat.id,
-            "voice": voice.id,
-            "token": token,
-            "deleteAt": delete_at if delete_at else datetime.datetime.now() + datetime.timedelta(hours=hours)
+            DBKeyWrapperEnum.OWNER.value: owner.id,
+            DBKeyWrapperEnum.CHAT.value: chat.id,
+            DBKeyWrapperEnum.VOICE.value: voice.id,
+            DBKeyWrapperEnum.TOKEN.value: token,
+            DBKeyWrapperEnum.DELETE_AT.value:
+                delete_at if delete_at else datetime.datetime.now() + datetime.timedelta(hours=hours)
         }
 
         await self.collection.insert_one(document)

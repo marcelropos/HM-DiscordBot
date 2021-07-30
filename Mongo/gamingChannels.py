@@ -52,10 +52,10 @@ class GamingChannels(MongoCollection):
         owner, chat, voice, token, delete_at = entry
 
         document = {
-            "owner": owner.id,
-            "chat": chat.id,
-            "voice": voice.id,
-            "token": token,
+            DBKeyWrapperEnum.OWNER.value: owner.id,
+            DBKeyWrapperEnum.CHAT.value: chat.id,
+            DBKeyWrapperEnum.VOICE.value: voice.id,
+            DBKeyWrapperEnum.TOKEN.value: token,
         }
 
         await self.collection.insert_one(document)

@@ -8,6 +8,7 @@ from discord import TextChannel
 from discord.ext.commands import Bot
 
 from Mongo.mongocollection import MongoCollection, MongoDocument
+from core.globalenum import DBKeyWrapperEnum
 
 
 @dataclass(frozen=True)
@@ -31,9 +32,9 @@ class Subject(MongoDocument):
     @property
     def document(self) -> dict[str: typing.Any]:
         return {
-            "_id": self._id,
-            "channelID": self.chat.id,
-            "roleID": self.role.id
+            DBKeyWrapperEnum.ID.value: self._id,
+            DBKeyWrapperEnum.CHAT.value: self.chat.id,
+            DBKeyWrapperEnum.ROLE.value: self.role.id
         }
 
 
@@ -51,16 +52,16 @@ class Subjects(MongoCollection):
     async def _create_subject(self, result):
         guild: Guild = self.bot.guilds[0]
         _id = result["_id"]
-        chat = await self.bot.fetch_channel(int(result["channelID"]))
-        role: Role = discord.utils.get(guild.roles, id=result["roleID"])
+        chat = await self.bot.fetch_channel(int(result[DBKeyWrapperEnum.CHAT.value]))
+        role: Role = discord.utils.get(guild.roles, id=result[DBKeyWrapperEnum.ROLE.value])
         subject = Subject(_id, chat, role)
         return subject
 
     async def insert_one(self, entry: tuple[TextChannel, Role]) -> Subject:
         chat, role = entry
         document = {
-            "channelID": chat.id,
-            "roleID": role.id
+            DBKeyWrapperEnum.CHAT.value: chat.id,
+            DBKeyWrapperEnum.ROLE.value: role.id
         }
         await self.collection.insert_one(document)
         return await self.find_one(document)

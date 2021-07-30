@@ -2,7 +2,7 @@ import os
 import typing
 
 from Mongo.mongocollection import MongoCollection
-from core.globalenum import CollectionEnum
+from core.globalenum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum
 
 
 class PrimitiveMongoData(MongoCollection):
@@ -36,7 +36,10 @@ class PrimitiveMongoData(MongoCollection):
         return await self.find_one(new)
 
     @staticmethod
-    async def find_configuration(collection: CollectionEnum, key: str, attribute: str) -> typing.Any:
-        result = await PrimitiveMongoData(collection.value).find_one({key: {'$exists': True}})
+    async def find_configuration(collection: CollectionEnum,
+                                 key: ConfigurationNameEnum,
+                                 attribute: ConfigurationAttributeEnum
+                                 ) -> typing.Any:
+        result = await PrimitiveMongoData(collection.value).find_one({key.value: {'$exists': True}})
         if result:
-            return result[attribute]
+            return result[attribute.value]
