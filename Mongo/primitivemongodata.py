@@ -1,4 +1,3 @@
-import os
 import typing
 
 from Mongo.mongocollection import MongoCollection
@@ -7,8 +6,8 @@ from core.globalenum import CollectionEnum, ConfigurationNameEnum, Configuration
 
 class PrimitiveMongoData(MongoCollection):
 
-    def __init__(self, collection):
-        super().__init__(os.environ["DB_NAME"], collection)
+    def __init__(self, collection, database: str = None):
+        super().__init__(collection, database)
 
     async def insert_one(self, document: dict) -> dict:
         return await self.find_one(document)

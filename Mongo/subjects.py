@@ -1,4 +1,3 @@
-import os
 import typing
 from dataclasses import dataclass
 
@@ -40,7 +39,7 @@ class Subject(MongoDocument):
 
 class Subjects(MongoCollection):
     def __init__(self, bot: Bot):
-        super().__init__(os.environ["DB_NAME"], self.__class__.__name__)
+        super().__init__(self.__class__.__name__)
         self.bot = bot
 
     def __contains__(self, item):

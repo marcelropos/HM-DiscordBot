@@ -1,5 +1,4 @@
 import datetime
-import os
 import typing
 from dataclasses import dataclass
 from typing import Optional, Union
@@ -48,7 +47,7 @@ class GamingChannel(MongoDocument):
 
 class GamingChannels(MongoCollection):
     def __init__(self, bot: Bot):
-        super().__init__(os.environ["DB_NAME"], self.__class__.__name__)
+        super().__init__(self.__class__.__name__)
         self.bot = bot
 
     async def _create_study_channel(self, result):

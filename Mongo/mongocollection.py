@@ -15,8 +15,10 @@ class MongoDocument(ABC):
 
 
 class MongoCollection(ABC):
-    def __init__(self, database: str, collection: str):
+    def __init__(self, collection: str, database: str = None):
         global client
+        if not database:
+            database = os.environ["DB_NAME"]
         self.collection: motor.motor_asyncio.AsyncIOMotorCollection = client[database][collection]
 
     @abstractmethod
