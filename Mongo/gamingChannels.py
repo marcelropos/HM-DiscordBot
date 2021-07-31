@@ -38,11 +38,11 @@ class GamingChannel(MongoDocument):
     @property
     def document(self) -> dict[str: typing.Any]:
         return {
-            "_id": self._id,
-            "owner": self.owner.id,
-            "chat": self.chat.id,
-            "voice": self.voice.id,
-            "token": self.token,
+            DBKeyWrapperEnum.ID.value: self._id,
+            DBKeyWrapperEnum.OWNER.value: self.owner.id,
+            DBKeyWrapperEnum.CHAT.value: self.chat.id,
+            DBKeyWrapperEnum.VOICE.value: self.voice.id,
+            DBKeyWrapperEnum.TOKEN.value: self.token,
         }
 
 
