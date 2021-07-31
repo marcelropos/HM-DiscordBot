@@ -1,14 +1,13 @@
+import datetime
 import os
 import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
+from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
 from Mongo.mongocollection import MongoCollection, MongoDocument
-from discord import Member, TextChannel, VoiceChannel, User, Guild
-import datetime
-
 from core.globalenum import DBKeyWrapperEnum
 
 
@@ -62,11 +61,10 @@ class GamingChannels(MongoCollection):
 
         return GamingChannel(_id, owner, chat, voice, token)
 
-    async def insert_one(self, entry: tuple[
-                             Union[Member, User],
-                             TextChannel, VoiceChannel,
-                             int,
-                             Optional[datetime.datetime]]) -> GamingChannel:
+    async def insert_one(self, entry: tuple[Union[Member, User],
+                                            TextChannel, VoiceChannel,
+                                            int,
+                                            Optional[datetime.datetime]]) -> GamingChannel:
         owner, chat, voice, token, delete_at = entry
 
         document = {

@@ -1,9 +1,9 @@
 import os
 import typing
+from abc import ABC, abstractmethod
 from typing import final
 
 import motor.motor_asyncio
-from abc import ABC, abstractmethod
 
 client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["DB_CONN"])
 

@@ -1,14 +1,13 @@
+import datetime
 import os
 import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
+from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
 from Mongo.mongocollection import MongoCollection, MongoDocument
-from discord import Member, TextChannel, VoiceChannel, User, Guild
-import datetime
-
 from Mongo.primitivemongodata import PrimitiveMongoData
 from core.globalenum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum, DBKeyWrapperEnum
 
@@ -64,11 +63,10 @@ class StudyChannels(MongoCollection):
 
         return StudyChannel(_id, owner, chat, voice, token, delete_at)
 
-    async def insert_one(self, entry: tuple[
-                             Union[Member, User],
-                             TextChannel, VoiceChannel,
-                             int,
-                             Optional[datetime.datetime]]) -> StudyChannel:
+    async def insert_one(self, entry: tuple[Union[Member, User],
+                                            TextChannel, VoiceChannel,
+                                            int,
+                                            Optional[datetime.datetime]]) -> StudyChannel:
         owner, chat, voice, token, delete_at = entry
 
         hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS,

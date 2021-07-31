@@ -38,8 +38,7 @@ class PrimitiveMongoData(MongoCollection):
     @staticmethod
     async def find_configuration(collection: CollectionEnum,
                                  key: ConfigurationNameEnum,
-                                 attribute: ConfigurationAttributeEnum
-                                 ) -> typing.Any:
+                                 attribute: ConfigurationAttributeEnum) -> typing.Any:
         result = await PrimitiveMongoData(collection.value).find_one({key.value: {'$exists': True}})
         if result:
             return result[attribute.value]
