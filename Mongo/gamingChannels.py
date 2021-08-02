@@ -7,18 +7,16 @@ from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
 from Mongo.mongocollection import MongoCollection, MongoDocument
-from Mongo.primitivemongodata import PrimitiveMongoData
-from core.globalenum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum, DBKeyWrapperEnum
+from core.globalenum import DBKeyWrapperEnum
 
 
 @dataclass
-class StudyChannel(MongoDocument):
+class GamingChannel(MongoDocument):
     _id: int
     owner: Union[Member, User]
     chat: TextChannel
     voice: VoiceChannel
     token: int
-    deleteAt: datetime
 
     @property
     def owner_id(self) -> int:
@@ -44,58 +42,52 @@ class StudyChannel(MongoDocument):
             DBKeyWrapperEnum.CHAT.value: self.chat.id,
             DBKeyWrapperEnum.VOICE.value: self.voice.id,
             DBKeyWrapperEnum.TOKEN.value: self.token,
-            DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt
         }
 
 
-class StudyChannels(MongoCollection):
+class GamingChannels(MongoCollection):
     def __init__(self, bot: Bot):
         super().__init__(self.__class__.__name__)
         self.bot = bot
 
     async def _create_study_channel(self, result):
-        _id, owner_id, chat_id, voice_id, token, delete_at = result
+        _id, owner_id, chat_id, voice_id, token = result
         guild: Guild = self.bot.guilds[0]
+
         chat: TextChannel = guild.get_channel(chat_id)
         voice: VoiceChannel = guild.get_channel(voice_id)
         owner: Union[Member, User] = await guild.fetch_member(owner_id)
 
-        return StudyChannel(_id, owner, chat, voice, token, delete_at)
+        return GamingChannel(_id, owner, chat, voice, token)
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
                                             int,
-                                            Optional[datetime.datetime]]) -> StudyChannel:
+                                            Optional[datetime.datetime]]) -> GamingChannel:
         owner, chat, voice, token, delete_at = entry
-
-        hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS,
-                                                            ConfigurationNameEnum.DELETE_AFTER,
-                                                            ConfigurationAttributeEnum.HOURS)
 
         document = {
             DBKeyWrapperEnum.OWNER.value: owner.id,
             DBKeyWrapperEnum.CHAT.value: chat.id,
             DBKeyWrapperEnum.VOICE.value: voice.id,
             DBKeyWrapperEnum.TOKEN.value: token,
-            DBKeyWrapperEnum.DELETE_AT.value:
-                delete_at if delete_at else datetime.datetime.now() + datetime.timedelta(hours=hours)
         }
 
         await self.collection.insert_one(document)
         return await self.find_one(document)
 
-    async def find_one(self, find_params: dict) -> StudyChannel:
+    async def find_one(self, find_params: dict) -> GamingChannel:
         result = await self.collection.find_one(find_params)
         return await self._create_study_channel(result)
 
-    async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[StudyChannel]:
+    async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[GamingChannel]:
         cursor = self.collection.find(find_params)
         if sort:
             cursor = cursor.sort(self)
 
-        return [await self._create_study_channel(document) for document in await cursor.to_list(limit)]
+        return [await self._create_study_channel(entry) for entry in await cursor.to_list(limit)]
 
-    async def update_one(self, find_params: dict, replace: dict) -> StudyChannel:
+    async def update_one(self, find_params: dict, replace: dict) -> GamingChannel:
         await self.collection.update_one(find_params, {"$set": replace})
         document = find_params.copy()
         document.update(replace)
