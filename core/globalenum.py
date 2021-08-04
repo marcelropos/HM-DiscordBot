@@ -1,5 +1,5 @@
 from enum import Enum
-
+import logging
 
 class CollectionEnum(Enum):
     ROLES = "roles"
@@ -27,3 +27,11 @@ class DBKeyWrapperEnum(Enum):
     TOKEN = "token"
     DELETE_AT = "deleteAt"
     ROLE = "role"
+
+
+class LoggingLevel(Enum):
+    CRITICAL = logging.CRITICAL
+    ERROR = logging.ERROR
+    WARNING = logging.WARNING
+    INFO = logging.INFO
+    DEBUG = logging.DEBUG
