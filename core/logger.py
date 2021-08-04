@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from core.globalenum import LoggingLevel
+from core.globalEnum import LoggingLevel
 
 
 class Logger:
@@ -30,7 +30,7 @@ class Logger:
 
         # The main logger for anything related to Discord
         self.discordLogger = logging.getLogger("discord")
-        self.discordLogger.setLevel(logging.DEBUG)
+        self.discordLogger.setLevel(logging.INFO)
         self.discordLogger.addHandler(file_handler)
         self.discordLogger.addHandler(terminal_stream)
 

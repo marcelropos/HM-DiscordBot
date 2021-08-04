@@ -1,7 +1,7 @@
 import typing
 
-from Mongo.mongocollection import MongoCollection
-from core.globalenum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum
+from Mongo.mongoCollection import MongoCollection
+from core.globalEnum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum
 
 
 class PrimitiveMongoData(MongoCollection):
