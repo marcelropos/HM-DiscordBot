@@ -1,13 +1,13 @@
 import typing
 
-from Mongo.mongoCollection import MongoCollection
 from core.globalEnum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum
+from mongo.mongoCollection import MongoCollection
 
 
 class PrimitiveMongoData(MongoCollection):
 
-    def __init__(self, collection, database: str = None):
-        super().__init__(collection, database)
+    def __init__(self, collection: CollectionEnum, database: str = None):
+        super().__init__(collection.value, database)
 
     async def insert_one(self, document: dict) -> dict:
         return await self.find_one(document)

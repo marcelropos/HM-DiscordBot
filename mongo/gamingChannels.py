@@ -6,8 +6,8 @@ from typing import Optional, Union
 from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
-from Mongo.mongoCollection import MongoCollection, MongoDocument
 from core.globalEnum import DBKeyWrapperEnum
+from mongo.mongoCollection import MongoCollection, MongoDocument
 
 
 @dataclass

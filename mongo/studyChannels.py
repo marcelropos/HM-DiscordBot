@@ -6,9 +6,9 @@ from typing import Optional, Union
 from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
-from Mongo.mongoCollection import MongoCollection, MongoDocument
-from Mongo.primitiveMongoData import PrimitiveMongoData
 from core.globalEnum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum, DBKeyWrapperEnum
+from mongo.mongoCollection import MongoCollection, MongoDocument
+from mongo.primitiveMongoData import PrimitiveMongoData
 
 
 @dataclass
