@@ -5,7 +5,7 @@ from typing import final
 
 import motor.motor_asyncio
 
-client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["DB_CONN"])
+client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["DB_CONN"], serverSelectionTimeoutMS=1000)
 
 
 class MongoDocument(ABC):
@@ -46,8 +46,8 @@ class MongoCollection(ABC):
     #     await self.collection.update_many(find_params, {"$set": replace})
 
     @final
-    async def delete_one(self, document: MongoDocument):
-        await self.collection.delete_one(document.document)
+    async def delete_one(self, document: dict):
+        await self.collection.delete_one(document)
 
     @final
     async def delete_many(self, find_params: dict):
