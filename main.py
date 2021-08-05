@@ -2,8 +2,11 @@ import os
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Context, CommandInvokeError
 from pretty_help import PrettyHelp
+
 import core.logger as logger
+from core.error.error_handlers import error_handler
 
 intents = discord.Intents.all()
 
@@ -15,5 +18,13 @@ for filename in os.listdir("./cogs"):
             filename != "main.py":
         bot.load_extension(f"cogs.{filename[:-3]}")
         logger.get_discord_child_logger("cogs").info(f"Loaded: cogs.{filename[:-3]}")
+
+
+@bot.event
+async def on_command_error(ctx: Context, error):
+    if isinstance(error, CommandInvokeError):
+        error = error.original
+    await error_handler(ctx, error)
+
 
 bot.run(os.environ["TOKEN"])

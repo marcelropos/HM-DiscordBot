@@ -1,0 +1,2 @@
+class ManPageNotFound(Exception):
+    pass
