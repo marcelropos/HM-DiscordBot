@@ -11,7 +11,7 @@ from core.error.error_reply import error_reply
 class BaseHandler(ABC):
     __handler = set()
 
-    def __init__(self, error, ctx: Context):
+    def __init__(self, error: Exception, ctx: Context):
         self.error = error
         self.ctx = ctx
 
