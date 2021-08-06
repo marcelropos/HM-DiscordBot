@@ -27,7 +27,7 @@ class BaseHandler(ABC):
 
     @property
     @abstractmethod
-    def solution(self) -> str:
+    async def solution(self) -> str:
         pass
 
     @property
@@ -50,7 +50,7 @@ class BaseHandler(ABC):
         await error_reply(ctx=self.ctx,
                           logger=self.logger("error"),
                           cause=self.cause,
-                          solution=self.solution,
+                          solution=await self.solution,
                           content=self.content,
                           delete_after=self.delete_after)
 

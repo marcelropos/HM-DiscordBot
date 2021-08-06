@@ -18,7 +18,7 @@ class MongoTimeoutHandler(BaseHandler):
         return "Could not connect to the database."
 
     @property
-    def solution(self) -> str:
+    async def solution(self) -> str:
         return "Report this error to the server admin immediately!"
 
     @property
