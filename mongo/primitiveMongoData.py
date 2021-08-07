@@ -1,6 +1,4 @@
-import typing
-
-from core.globalEnum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum
+from core.globalEnum import CollectionEnum
 from mongo.mongoCollection import MongoCollection
 
 
@@ -10,6 +8,7 @@ class PrimitiveMongoData(MongoCollection):
         super().__init__(collection.value, database)
 
     async def insert_one(self, document: dict) -> dict:
+        await self.collection.insert_one(document)
         return await self.find_one(document)
 
     async def find_one(self, find_params: dict) -> dict:
