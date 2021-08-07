@@ -147,22 +147,25 @@ class Mongo(Cog):
             The proper string.
         """
         converted_value = self.converter(value)
-        if isinstance(converted_value, bool):
+        if isinstance(converted_value, (bool, datetime, int)):
             value_str = str(converted_value)
-        elif isinstance(value, datetime):
-            value_str = converted_value
         else:
             value_str = f'"{value}"'
         return value_str
 
     @staticmethod
-    def converter(data: Union[str, bool, datetime]) -> Union[str, bool, datetime]:
+    def converter(data: Union[str, bool, int, datetime]) -> Union[str, bool, int, datetime]:
         """
         Converts text input data to storable objects and creates output text from objects.
 
-        Text that represents a boolean value is converted to a boolean.
-        Text representing a date & time is converted to a date object.
-        A date object is converted as a simple readable text.
+        Text to object:
+            1. Text that represents a integer value is converted to an integer.
+            2. Text that represents a boolean value is converted to a boolean. (0 & 1 won't be convert to bool)
+            3. Text representing a date & time is converted to a date object.
+
+        Object to text:
+            A date object is converted as a simple readable text.
+
         Everything else is equivalent to the input.
 
         Args:
@@ -173,13 +176,16 @@ class Mongo(Cog):
 
         """
         if isinstance(data, str):
-            try:
-                result = bool(strtobool(data))
-            except ValueError:
+            if data.isnumeric():
+                result = int(data)
+            else:
                 try:
-                    result = datetime.strptime(data, '%d.%m.%y %H:%M')
+                    result = bool(strtobool(data))
                 except ValueError:
-                    result = data
+                    try:
+                        result = datetime.strptime(data, '%d.%m.%y %H:%M')
+                    except ValueError:
+                        result = data
 
         elif isinstance(data, datetime):
             result = data.strftime('%d.%m.%y %H:%M')
