@@ -12,11 +12,18 @@ class CollectionEnum(Enum):
 
 
 class ConfigurationNameEnum(Enum):
-    DELETE_AFTER = "deleteAfter"
-
-
-class ConfigurationAttributeEnum(Enum):
-    HOURS = "HOURS"
+    ADMIN_ROLE = "admin"
+    MODERATOR_ROLE = "moderator"
+    STUDY_SEPARATOR_ROLE = "studySeparator"
+    SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
+    ENABLED = "enabled"
+    DEADLINE = "deadline"
+    WARNING = "warning"
+    SAFE_ROLES_LIST = "safeRoles"
+    DEBUG_CHAT = "debug"
+    BOT_COMMAND_CHAT = "botChat"
+    HELP_CHAT = "help"
+    ROLE_NOT_FOUND_MESSAGE = "roleNotFound"
 
 
 class DBKeyWrapperEnum(Enum):
