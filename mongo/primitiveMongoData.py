@@ -32,11 +32,3 @@ class PrimitiveMongoData(MongoCollection):
     async def replace_one(self, old: dict, new: dict) -> dict:
         await self.collection.replace_one(old, new)
         return await self.find_one(new)
-
-    @staticmethod
-    async def find_configuration(collection: CollectionEnum,
-                                 key: ConfigurationNameEnum,
-                                 attribute: ConfigurationAttributeEnum) -> typing.Any:
-        result = await PrimitiveMongoData(collection.value).find_one({key.value: {'$exists': True}})
-        if result:
-            return result[attribute.value]
