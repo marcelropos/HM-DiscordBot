@@ -105,8 +105,8 @@ class Mongo(Cog):
 
             embed = Embed(title=f"Database.{collection.value}",
                           description='```diff\n'
-                                      f'- "{key}" : "{self.display_value(found[key])}"\n'
-                                      f'+ "{key}" : "{self.display_value(value)}"\n'
+                                      f'- "{key}" : {self.display_value(found[key])}\n'
+                                      f'+ "{key}" : {self.display_value(value)}\n'
                                       f'```')
             await ctx.reply(embed=embed, delete_after=600)
 
