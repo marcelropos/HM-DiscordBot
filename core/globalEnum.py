@@ -8,8 +8,7 @@ class CollectionEnum(Enum):
     MESSAGES = "messages"
     AUDIO_FILES = "audioFiles"
     EMOJIS = "emojis"
-    MODERATOR_SETTINGS = "moderatorSetting"
-    ROLES_SETTINGS = "RolesSetting"
+    KICK_GHOSTS = "kickGhosts"
 
 
 class ConfigurationNameEnum(Enum):
