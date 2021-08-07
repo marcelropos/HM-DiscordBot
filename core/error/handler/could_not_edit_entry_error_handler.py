@@ -7,7 +7,7 @@ from core.globalEnum import CollectionEnum
 from core.logger import get_mongo_child_logger
 
 
-class EntryNotFoundErrorHandler(BaseHandler):
+class CouldNotEditEntryErrorHandler(BaseHandler):
     error: CouldNotEditEntryError
 
     @staticmethod
