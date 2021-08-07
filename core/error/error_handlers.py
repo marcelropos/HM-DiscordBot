@@ -20,4 +20,4 @@ for handler in handlers:
 
 
 async def error_handler(ctx: Context, error: Exception):
-    await BaseHandler.handlers(error).handle(ctx)
+    await BaseHandler.handlers(error, ctx).handle()
