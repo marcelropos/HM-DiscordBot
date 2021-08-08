@@ -12,10 +12,6 @@ from core.globalEnum import CollectionEnum
 from mongo.primitiveMongoData import PrimitiveMongoData
 
 
-class ModuleError(Exception):
-    pass
-
-
 class Mongo(Cog):
 
     def __init__(self, bot: Bot):
