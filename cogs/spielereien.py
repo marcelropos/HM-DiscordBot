@@ -4,10 +4,9 @@ from typing import Union
 import aiohttp
 from discord import Message, MessageReference, TextChannel, Member, User, Embed
 from discord.ext.commands import Bot, Cog
-from discord.ext.commands import command, Context, CommandInvokeError
+from discord.ext.commands import command, Context
 
 from core.error.error_collection import ManPageNotFound
-from core.error.error_reply import error_reply
 
 
 class Spielereien(Cog):
@@ -78,16 +77,6 @@ class Spielereien(Cog):
                 return priority, response
         except aiohttp.ClientError:
             return priority, None
-
-    async def cog_command_error(self, ctx: Context, error: Exception):
-
-        if isinstance(error, CommandInvokeError):
-            error: Exception = error.original
-
-        if isinstance(error, ManPageNotFound):
-            await error_reply(ctx=ctx,
-                              cause="The Manpage you requested could not found",
-                              solution="With limited options of mine, you should probably do your own searching.")
 
 
 def setup(bot: Bot):
