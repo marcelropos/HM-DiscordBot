@@ -2,7 +2,7 @@ from datetime import datetime
 from distutils.util import strtobool
 from typing import Union
 
-from discord import Embed
+from discord import Embed, Guild, Member, Role, TextChannel
 from discord.ext.commands import Cog, Bot, BadArgument
 from discord.ext.commands import group, Context
 
@@ -73,7 +73,7 @@ class Mongo(Cog):
         if found:
 
             embed = Embed(title=f"Database.{collection.value}",
-                          description=f'```\n"{key}" : {self.display_value(found[key])}\n```')
+                          description=f'```\n"{key}" : {self.display_value(ctx, found[key])}\n```')
         else:
             embed = Embed(title=f"Database.{collection.value}",
                           description=f"It seems that there is no such entry in this collection.\n"
@@ -105,8 +105,8 @@ class Mongo(Cog):
 
             embed = Embed(title=f"Database.{collection.value}",
                           description='```diff\n'
-                                      f'- "{key}" : {self.display_value(found[key])}\n'
-                                      f'+ "{key}" : {self.display_value(value)}\n'
+                                      f'- "{key}" : {self.display_value(ctx, found[key])}\n'
+                                      f'+ "{key}" : {self.display_value(ctx, value)}\n'
                                       f'```')
             await ctx.reply(embed=embed, delete_after=600)
 
@@ -121,7 +121,7 @@ class Mongo(Cog):
         Removes any records which has a specific key.
 
         Args:
-            ctx: he command context provided by the discord.py wrapper.
+            ctx: The command context provided by the discord.py wrapper.
 
             collection: The collection (you can say a database table) which shall not longer contain the key value pair.
 
@@ -136,19 +136,39 @@ class Mongo(Cog):
                       description="I do not know if such an entry was existing, if it was, it is now gone.")
         await ctx.reply(embed=embed, delete_after=600)
 
-    def display_value(self, value: Union[str, bool, datetime]) -> str:
+    def display_value(self, ctx: Context, value: Union[str, bool, datetime]) -> str:
         """
-        Decides whether the value should be returned in quotation marks or not.
+        Converts data into a simple understandable string form.
 
         Args:
+            ctx: The command context provided by the discord.py wrapper.
+
             value: The value to be printed properly.
 
         Returns:
             The proper string.
         """
         converted_value = self.converter(value)
-        if isinstance(converted_value, (bool, datetime, int)):
+        if isinstance(value, str) and value.isnumeric():
+            value = int(value)
+
+        if isinstance(value, (bool, datetime)):
             value_str = str(converted_value)
+        elif isinstance(value, int):
+            converted_value: int
+            guild: Guild = ctx.guild
+            member: Member = guild.get_member(converted_value)
+            role: Role = guild.get_role(converted_value)
+            channel: TextChannel = guild.get_channel(converted_value)
+
+            if member:
+                value_str = f"@{member.name}#{member.discriminator}({member.id})"
+            elif role:
+                value_str = f"@{role.name}({role.id})"
+            elif channel:
+                value_str = f"#{channel.name}({channel.id})"
+            else:
+                value_str = converted_value
         else:
             value_str = f'"{value}"'
         return value_str
