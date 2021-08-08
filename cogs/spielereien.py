@@ -1,9 +1,10 @@
 import asyncio
 from datetime import datetime
 from io import BytesIO
-from typing import Union
+from typing import Union, Optional
 
 import aiohttp
+from aiohttp import ClientResponse
 from discord import Message, MessageReference, TextChannel, Member, User, Embed, File
 from discord.ext.commands import Bot, Cog
 from discord.ext.commands import command, Context
@@ -19,13 +20,29 @@ class Spielereien(Cog):
 
     @command()
     async def ping(self, ctx: Context):
+        """
+        Replies the needed time to gather and answer the message.
+        """
         reply: Message = await ctx.reply("Pong")
         msg: Message = ctx.message
         await reply.edit(content=f"{reply.created_at.timestamp() - msg.created_at.timestamp()}")
 
     @command()
-    async def man(self, ctx: Context, arg: str):
+    async def man(self, ctx: Context, cmd: str):
+        """
+        Fetches a requested manpage.
 
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            cmd: The command to search for.
+
+        Replies:
+            The Manpage.
+
+        Raises:
+            ManPageNotFound
+        """
         msg: Message = ctx.message
         mentions: set = set(msg.mentions)
 
@@ -43,8 +60,8 @@ class Spielereien(Cog):
                 ping += f"<@{mention.id}> "
 
         result: list = list(await asyncio.gather(
-            self.get_page(f"https://man.openbsd.org/{arg}", 1),
-            self.get_page(f"https://wiki.archlinux.org/index.php/{arg}", 2)
+            self.get_page(f"https://man.openbsd.org/{cmd}", 1),
+            self.get_page(f"https://wiki.archlinux.org/index.php/{cmd}", 2)
         ))
 
         result.sort(key=lambda x: x[0])
@@ -58,7 +75,7 @@ class Spielereien(Cog):
                                          description=f"I was asked to show you this man page:\n"
                                                      f"It contains useful information that will hopefully help you.\n"
                                                      f"On your UNIX/UNIX-like system you can probably run "
-                                                     f"`$ man {arg}` to receive this manpage.\n"
+                                                     f"`$ man {cmd}` to receive this manpage.\n"
                                                      f"For now you can also click on this link to gather the "
                                                      f"information.\n"
                                                      f"{page.url}")
@@ -66,16 +83,25 @@ class Spielereien(Cog):
                 else:
                     embed: Embed = Embed(title="Manpage",
                                          description=f"On your UNIX/UNIX-like system you can probably run:\n"
-                                                     f"`$ man {arg}`\n"
+                                                     f"`$ man {cmd}`\n"
                                                      f"You can also use this site: {page.url}")
                     await ctx.reply(embed=embed)
                 return
         else:
-            raise ManPageNotFound(arg)
+            raise ManPageNotFound(cmd)
 
     @command(name="list-guild-member",
              aliases=["lgm"])
     async def list_guild_member(self, ctx: Context):
+        """
+        Replies a list of all member in the guild with additional information.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+        Replies:
+            The list.
+        """
         column = ["name", "roles", "joined_at", "pending"]
         table = PrettyTable(column)
         members = await ctx.guild.fetch_members(limit=None).flatten()
@@ -106,7 +132,18 @@ class Spielereien(Cog):
             delete_after=600)
 
     @staticmethod
-    async def get_page(url, priority=0):
+    async def get_page(url: str, priority: int = 0) -> (int, Optional[ClientResponse]):
+        """
+        Fetches async the page.
+
+        Args:
+            url: The url what else?
+
+            priority: The priority of the requested page:
+
+        Returns:
+            A tuple containing the priority in the first position and the page (or none) in the second position.
+        """
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
