@@ -1,10 +1,13 @@
 import asyncio
+from datetime import datetime
+from io import BytesIO
 from typing import Union
 
 import aiohttp
-from discord import Message, MessageReference, TextChannel, Member, User, Embed
+from discord import Message, MessageReference, TextChannel, Member, User, Embed, File
 from discord.ext.commands import Bot, Cog
 from discord.ext.commands import command, Context
+from prettytable import PrettyTable
 
 from core.error.error_collection import ManPageNotFound
 
@@ -69,6 +72,38 @@ class Spielereien(Cog):
                 return
         else:
             raise ManPageNotFound(arg)
+
+    @command(name="list-guild-member",
+             aliases=["lgm"])
+    async def list_guild_member(self, ctx: Context):
+        column = ["name", "roles", "joined_at", "pending"]
+        table = PrettyTable(column)
+        members = await ctx.guild.fetch_members(limit=None).flatten()
+        for member in members:
+            member: Union[Member, User]
+
+            roles = reversed(member.roles)
+            role_list = ""
+            for role in roles:
+                if role.name != "@everyone":
+                    role_list += role.name + "\n"
+
+            joined = member.joined_at.strftime("%d.%m.%Y")
+
+            nick = f"Nick: {str(member.nick)}\n" if member.nick else ""
+            names = nick + f"Name: {str(member.name)}#{str(member.discriminator)}"
+
+            table.add_row((names, role_list, joined, member.pending))
+
+        table.title = f"List status from {datetime.now().strftime('%d.%m.%Y, %H:%M:%S')}" \
+                      f" - there are {len(members)} members"
+
+        await ctx.reply(
+            file=File(
+                BytesIO(bytes(str(table), encoding='utf-8')),
+                filename="List_of_all_members.text"),
+            content="Here is a list of all members that are currently on this server.",
+            delete_after=600)
 
     @staticmethod
     async def get_page(url, priority=0):
