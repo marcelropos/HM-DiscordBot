@@ -56,13 +56,15 @@ class Spielereien(Cog):
                                                      f"It contains useful information that will hopefully help you.\n"
                                                      f"On your UNIX/UNIX-like system you can probably run "
                                                      f"`$ man {arg}` to receive this manpage.\n"
-                                                     f"For now you can also click on this link to gather these information.\n"
+                                                     f"For now you can also click on this link to gather the "
+                                                     f"information.\n"
                                                      f"{page.url}")
                     await ctx.reply(embed=embed, content=ping)
                 else:
                     embed: Embed = Embed(title="Manpage",
-                                         description=f"On your UNIX/UNIX-like system you can probably run `$ man {arg}`"
-                                                     f"{page.url}")
+                                         description=f"On your UNIX/UNIX-like system you can probably run:\n"
+                                                     f"`$ man {arg}`\n"
+                                                     f"You can also use this site: {page.url}")
                     await ctx.reply(embed=embed)
                 return
         else:
