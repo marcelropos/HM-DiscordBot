@@ -2,14 +2,18 @@ from datetime import datetime
 from distutils.util import strtobool
 from typing import Union
 
-from discord import Embed, Guild, Member, Role, TextChannel
+from discord import Embed, Guild, Member, Role, TextChannel, User
+from discord.ext import commands
 from discord.ext.commands import Cog, Bot, BadArgument
 from discord.ext.commands import group, Context
 
 from core.error.error_collection import CouldNotEditEntryError
 from core.globalEnum import CollectionEnum
+from core.logger import get_discord_child_logger
 # noinspection PyUnresolvedReferences
 from mongo.primitiveMongoData import PrimitiveMongoData
+
+logger = get_discord_child_logger("mongo")
 
 
 class Mongo(Cog):
@@ -18,9 +22,12 @@ class Mongo(Cog):
         self.bot: Bot = bot
 
     @group(pass_context=True)
+    @commands.bot_has_guild_permissions(administrator=True)
     async def mongo(self, ctx: Context):
         if not ctx.invoked_subcommand:
             raise BadArgument
+        member: Union[Member, User] = ctx.author
+        logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @mongo.group(pass_context=True,
                  name="add")
