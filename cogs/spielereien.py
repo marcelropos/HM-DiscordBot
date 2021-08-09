@@ -28,14 +28,14 @@ class Spielereien(Cog):
         await reply.edit(content=f"{reply.created_at.timestamp() - msg.created_at.timestamp()}")
 
     @command()
-    async def man(self, ctx: Context, cmd: str):
+    async def man(self, ctx: Context, manpage: str):
         """
         Fetches a requested manpage.
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            cmd: The command to search for.
+            manpage: The command to search for.
 
         Replies:
             The Manpage.
@@ -45,6 +45,12 @@ class Spielereien(Cog):
         """
         msg: Message = ctx.message
         mentions: set = set(msg.mentions)
+        cmd_sec = manpage.split("#")
+        cmd = cmd_sec[0]
+        if len(cmd_sec) > 1:
+            subsection = f"#{cmd_sec[1]}"
+        else:
+            subsection = ""
 
         reference: MessageReference = msg.reference
         if reference:
@@ -78,13 +84,13 @@ class Spielereien(Cog):
                                                      f"`$ man {cmd}` to receive this manpage.\n"
                                                      f"For now you can also click on this link to gather the "
                                                      f"information.\n"
-                                                     f"{page.url}")
+                                                     f"{page.url}{subsection}")
                     await ctx.reply(embed=embed, content=ping)
                 else:
                     embed: Embed = Embed(title="Manpage",
                                          description=f"On your UNIX/UNIX-like system you can probably run:\n"
                                                      f"`$ man {cmd}`\n"
-                                                     f"You can also use this site: {page.url}")
+                                                     f"You can also use this site: {page.url}{subsection}")
                     await ctx.reply(embed=embed)
                 return
         else:
