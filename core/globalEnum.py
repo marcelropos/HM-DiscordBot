@@ -9,6 +9,7 @@ class CollectionEnum(Enum):
     AUDIO_FILES = "audioFiles"
     EMOJIS = "emojis"
     KICK_GHOSTS = "kickGhosts"
+    LOGGER = "logger"
 
 
 class ConfigurationNameEnum(Enum):
@@ -42,3 +43,9 @@ class LoggingLevel(Enum):
     WARNING = logging.WARNING
     INFO = logging.INFO
     DEBUG = logging.DEBUG
+
+
+class LoggerEnum(Enum):
+    DISCORD = "discord"
+    MONGO = "mongo"
+    LOGGER_LOGGER = "logger"
