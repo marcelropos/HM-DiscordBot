@@ -11,8 +11,9 @@ from core.error.error_reply import error_reply
 class BaseHandler(ABC):
     __handler = set()
 
-    def __init__(self, error: Exception):
+    def __init__(self, error: Exception, ctx: Context):
         self.error = error
+        self.ctx = ctx
 
     @staticmethod
     @abstractmethod
@@ -26,7 +27,7 @@ class BaseHandler(ABC):
 
     @property
     @abstractmethod
-    def solution(self) -> str:
+    async def solution(self) -> str:
         pass
 
     @property
@@ -45,19 +46,19 @@ class BaseHandler(ABC):
         return None
 
     @final
-    async def handle(self, ctx: Context):
-        await error_reply(ctx=ctx,
+    async def handle(self):
+        await error_reply(ctx=self.ctx,
                           logger=self.logger("error"),
                           cause=self.cause,
-                          solution=self.solution,
+                          solution=await self.solution,
                           content=self.content,
                           delete_after=self.delete_after)
 
     @staticmethod
-    def handlers(error: Exception):
+    def handlers(error: Exception, ctx: Context):
         for handler in BaseHandler.__handler:
             if error.__class__ == handler.handles_type():
-                return handler(error)
+                return handler(error, ctx)
 
     def __init_subclass__(cls, **kwargs):
         cls.__handler.add(cls)
