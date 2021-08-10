@@ -74,23 +74,20 @@ class Spielereien(Cog):
 
         for _, page in result:
             if page.ok:
+                answer = f"On your UNIX/UNIX-like system you can probably run " \
+                         f"`$ man {cmd}` to receive this manpage.\n" \
+                         f"For now you can also click on this link to gather the information.\n{page.url}{subsection}"
 
                 if mentions:
                     embed: Embed = Embed(title="Manpage",
                                          # TODO: This message should be stored into the database
                                          description=f"I was asked to show you this man page:\n"
                                                      f"It contains useful information that will hopefully help you.\n"
-                                                     f"On your UNIX/UNIX-like system you can probably run "
-                                                     f"`$ man {cmd}` to receive this manpage.\n"
-                                                     f"For now you can also click on this link to gather the "
-                                                     f"information.\n"
-                                                     f"{page.url}{subsection}")
+                                                     + answer)
                     await ctx.reply(embed=embed, content=ping)
                 else:
                     embed: Embed = Embed(title="Manpage",
-                                         description=f"On your UNIX/UNIX-like system you can probably run:\n"
-                                                     f"`$ man {cmd}`\n"
-                                                     f"You can also use this site: {page.url}{subsection}")
+                                         description=answer)
                     await ctx.reply(embed=embed)
                 return
         else:
