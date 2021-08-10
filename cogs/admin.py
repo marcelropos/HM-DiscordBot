@@ -3,7 +3,7 @@ from time import sleep
 from typing import Union, Callable
 
 import discord
-from discord import Embed, Member, User, Message, Guild, TextChannel
+from discord import Embed, Member, User, Message
 from discord.ext import commands
 from discord.ext.commands import Cog, Bot, Context, group, command, is_owner, BadArgument
 
@@ -113,7 +113,7 @@ class Admin(Cog):
 
     @purge.group()
     @commands.bot_has_guild_permissions(administrator=True)
-    async def member(self, ctx: Context, after, guild_purge: bool = False):
+    async def member(self, ctx: Context, after):
         """
         Cleans a chat.
 
@@ -121,8 +121,6 @@ class Admin(Cog):
             ctx: The command context provided by the discord.py wrapper.
 
             after: Messages younger than after will be deleted.
-
-            guild_purge: Determines if only one chat shall be purged or all chats contained by the guild.
 
         Special Args:
             mentions: The user to be purged. (supplied by ctx.message.mentions)
@@ -134,17 +132,7 @@ class Admin(Cog):
         message: Message = ctx.message
         mentions: set[Union[Member, User]] = message.mentions
         check = self.purge_check(mentions)
-        count = 0
-        if guild_purge:
-            guild: Guild = ctx.guild
-            for channel in guild.channels:
-                channel: TextChannel
-                try:
-                    count += len(await channel.purge(after=after, check=check, bulk=True))
-                except AttributeError:
-                    pass
-        else:
-            count += len(await ctx.channel.purge(after=after, check=check, bulk=True))
+        count = len(await ctx.channel.purge(after=after, check=check, bulk=True))
         embed = Embed(title=ctx.channel.name,
                       description=f"Purged {count} messages")
         await ctx.send(embed=embed)
