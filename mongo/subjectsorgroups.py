@@ -6,12 +6,12 @@ from discord import Role, Guild
 from discord import TextChannel
 from discord.ext.commands import Bot
 
-from core.globalEnum import DBKeyWrapperEnum
+from core.globalEnum import DBKeyWrapperEnum, SubjectsOrGroupsEnum
 from mongo.mongoCollection import MongoCollection, MongoDocument
 
 
 @dataclass(frozen=True)
-class Subject(MongoDocument):
+class SubjectOrGroup(MongoDocument):
     _id: int
     chat: TextChannel
     role: Role
@@ -37,26 +37,26 @@ class Subject(MongoDocument):
         }
 
 
-class Subjects(MongoCollection):
-    def __init__(self, bot: Bot):
-        super().__init__(self.__class__.__name__)
+class SubjectsOrGroups(MongoCollection):
+    def __init__(self, bot: Bot, collection: SubjectsOrGroupsEnum):
+        super().__init__(collection.value)
         self.bot = bot
 
     def __contains__(self, item):
         raise NotImplementedError("Use await contains() instead!")
 
-    async def contains(self, subject: Subject) -> bool:
+    async def contains(self, subject: SubjectOrGroup) -> bool:
         return True if await self.find_one(subject.document) else False
 
-    async def _create_subject(self, result):
+    async def _create_document(self, result):
         guild: Guild = self.bot.guilds[0]
         _id = result["_id"]
         chat = await self.bot.fetch_channel(int(result[DBKeyWrapperEnum.CHAT.value]))
         role: Role = discord.utils.get(guild.roles, id=result[DBKeyWrapperEnum.ROLE.value])
-        subject = Subject(_id, chat, role)
+        subject = SubjectOrGroup(_id, chat, role)
         return subject
 
-    async def insert_one(self, entry: tuple[TextChannel, Role]) -> Subject:
+    async def insert_one(self, entry: tuple[TextChannel, Role]) -> SubjectOrGroup:
         chat, role = entry
         document = {
             DBKeyWrapperEnum.CHAT.value: chat.id,
@@ -65,18 +65,18 @@ class Subjects(MongoCollection):
         await self.collection.insert_one(document)
         return await self.find_one(document)
 
-    async def find_one(self, find_params: dict) -> Subject:
+    async def find_one(self, find_params: dict) -> SubjectOrGroup:
         result = await self.collection.find_one(find_params)
-        return await self._create_subject(result)
+        return await self._create_document(result)
 
-    async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[Subject]:
+    async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[SubjectOrGroup]:
         cursor = self.collection.find(find_params)
         if sort:
             cursor = cursor.sort(self)
 
-        return [await self._create_subject(entry) for entry in await cursor.to_list(limit)]
+        return [await self._create_document(entry) for entry in await cursor.to_list(limit)]
 
-    async def update_one(self, find_params: dict, replace: dict) -> Subject:
+    async def update_one(self, find_params: dict, replace: dict) -> SubjectOrGroup:
         await self.collection.update_one(find_params, {"$set": replace})
         document = find_params.copy()
         document.update(replace)

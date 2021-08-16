@@ -49,3 +49,19 @@ class LoggerEnum(Enum):
     DISCORD = "discord"
     MONGO = "mongo"
     LOGGER_LOGGER = "logger"
+
+
+class SubjectsOrGroupsEnum(Enum):
+    SUBJECT = "subject"
+    GROUP = "group"
+
+
+def no_intersection():
+    """
+    Checks if CollectionEnum and SubjectsOrGroupsEnum does not contain the same collection.
+    """
+    if {e.value for e in CollectionEnum}.intersection({e.value for e in SubjectsOrGroupsEnum}):
+        raise KeyError("The collection value must be unique.")
+
+
+no_intersection()
