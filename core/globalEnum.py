@@ -24,6 +24,7 @@ class ConfigurationNameEnum(Enum):
     BOT_COMMAND_CHAT = "botChat"
     HELP_CHAT = "help"
     ROLE_NOT_FOUND_MESSAGE = "roleNotFound"
+    TIME = "time"
 
 
 class DBKeyWrapperEnum(Enum):

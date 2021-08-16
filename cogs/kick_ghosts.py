@@ -1,9 +1,12 @@
-from datetime import datetime
+import asyncio
+from collections import namedtuple
+from datetime import datetime, timedelta
 from typing import Union
 
 from discord import Member, User, Role, Embed, Guild, TextChannel, Forbidden
-from discord.ext.commands import Cog, Bot, group, bot_has_guild_permissions, Context, BadArgument, command
+from discord.ext.commands import Cog, Bot, group, bot_has_guild_permissions, Context, BadArgument
 # noinspection PyPackageRequirements
+from discord.ext.tasks import loop
 from pymongo.errors import ServerSelectionTimeoutError
 
 from cogs.botStatus import listener
@@ -13,6 +16,7 @@ from core.logger import get_discord_child_logger
 from mongo.primitiveMongoData import PrimitiveMongoData
 
 logger = get_discord_child_logger("KickGhosts")
+event = namedtuple("KickTime", ["hour", "min"])
 
 
 class KickGhosts(Cog):
@@ -22,11 +26,14 @@ class KickGhosts(Cog):
         self.startup = True
 
         # The actual values will be set at the on_ready method.
-        self.config: dict[ConfigurationNameEnum: Union[bool, int]] = {
+        self.config: dict[ConfigurationNameEnum: Union[bool, int, event]] = {
             ConfigurationNameEnum.ENABLED: False,
             ConfigurationNameEnum.DEADLINE: 30,
             ConfigurationNameEnum.WARNING: 7,
+            ConfigurationNameEnum.TIME: event(hour=8, min=0)
         }
+
+        self.kick_not_verified.start()
 
     @listener()
     async def on_ready(self):
@@ -42,6 +49,7 @@ class KickGhosts(Cog):
                         self.config[c] = enabled[key]
                     else:
                         await self.db.insert_one({key: default})
+                self.config[ConfigurationNameEnum.TIME] = event(*self.config[ConfigurationNameEnum.TIME])
 
             except ServerSelectionTimeoutError:
                 title = "Error on Startup"
@@ -60,6 +68,16 @@ class KickGhosts(Cog):
     @bot_has_guild_permissions(administrator=True)
     async def kick_ghosts(self, ctx: Context):
         self.check_subcommand(ctx)
+
+    @kick_ghosts.group(pass_context=True)
+    async def time(self, ctx: Context, time):
+        time: datetime = datetime.strptime(time, '%H:%M')
+        key = ConfigurationNameEnum.TIME
+        await self.db.update_one({key.value: {"$exists": True}}, {key.value: event(hour=time.hour, min=time.minute)})
+
+        embed = Embed(title="Kick Ghosts",
+                      description="The time has been updated.")
+        await ctx.reply(embed=embed)
 
     @kick_ghosts.group(pass_context=True)
     async def enabled(self, ctx: Context, mode: bool):
@@ -150,12 +168,13 @@ class KickGhosts(Cog):
 
     # Loop
 
-    @command()
+    @loop(minutes=1)
     async def kick_not_verified(self):
         """
-        Kick not verified Ghosts.
+        Kick not verified Ghosts and warn not verified user.
         """
-        if not self.config[ConfigurationNameEnum.ENABLED]:
+
+        if not await self.kick():
             return
 
         deadline, debug_chat, guild, help_chat, safe_roles, safe_roles_names, warning = await self.assign_variables()
@@ -174,11 +193,12 @@ class KickGhosts(Cog):
             left = deadline - self.days_on_server(member)
             embed = Embed(title="WARNING YOU WILL BE KICKED SOON")
             embed.add_field(name="Cause",
-                            value="To stay on the server, you need at least one of the following roles:\n"
-                                  f"{safe_roles_names}",
+                            value="You are not verified\n",
                             inline=False)
             embed.add_field(name="Solution",
-                            value=f"Receive one of these roles within the next **{left}** days.",
+                            value=f"Receive one of these roles:\n"
+                                  f"{safe_roles_names}\n"
+                                  f"within the next **{left}** days.",
                             inline=False)
             await help_chat.send(embed=embed)  # , content=f"<@{member.id}>")
 
@@ -193,6 +213,29 @@ class KickGhosts(Cog):
                 await debug_chat.send(embed=embed)
 
     # Helper methods
+
+    async def kick(self) -> bool:
+        """
+        Determines the time to execute the method, if it has been activated.
+
+        Return:
+            Permission to remove user.
+        """
+
+        while self.startup:
+            await asyncio.sleep(10)
+
+        now = datetime.now()
+        _event: event = self.config[ConfigurationNameEnum.TIME]
+        until_time = now.replace(hour=_event.hour, minute=_event.min, second=0, microsecond=0)
+        if until_time < now:
+            until_time += timedelta(days=1)
+        until_time = (until_time.year, until_time.month, until_time.day, until_time.hour, until_time.minute)
+        wait_seconds = (datetime(*until_time) - now).total_seconds()
+        activate = wait_seconds < 60 * 5
+        if activate:
+            await asyncio.sleep(wait_seconds)
+        return activate and self.config[ConfigurationNameEnum.ENABLED]
 
     async def assign_variables(self) -> (int, TextChannel, Guild, TextChannel, set[Role], str, int):
         """
