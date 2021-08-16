@@ -14,20 +14,32 @@ from core.error.error_collection import ManPageNotFound
 
 
 class Spielereien(Cog):
+    """
+    Small collection of commands for various purposes.
+    """
 
     def __init__(self, bot: Bot):
         self.bot: Bot = bot
 
-    @command()
+    @command(help="Computes the time between the command and it's (first) reply.")
     async def ping(self, ctx: Context):
         """
         Replies the needed time to gather and answer the message.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+        Replies:
+            The time between sending and sending the pong reply.
         """
         reply: Message = await ctx.reply("Pong")
         msg: Message = ctx.message
         await reply.edit(content=f"{reply.created_at.timestamp() - msg.created_at.timestamp()}")
 
-    @command()
+    @command(brief="Searches a manpage",
+             help=f"Search for a man page and jump to a section if specified.\n"
+                  f"Manpage und subsection must be seperated by an '#'\n"
+                  f"  >> Example: <manpage> = bridge#SPANNING_TREE\n")
     async def man(self, ctx: Context, manpage: str):
         """
         Fetches a requested manpage.
