@@ -35,6 +35,9 @@ class KickGhosts(Cog):
 
         self.kick_not_verified.start()
 
+    def cog_unload(self):
+        self.kick_not_verified.stop()
+
     @listener()
     async def on_ready(self):
         if self.startup:
