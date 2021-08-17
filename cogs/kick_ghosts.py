@@ -5,11 +5,11 @@ from typing import Union
 
 from discord import Member, User, Role, Embed, Guild, TextChannel, Forbidden
 from discord.ext.commands import Cog, Bot, group, bot_has_guild_permissions, Context, BadArgument
-# noinspection PyPackageRequirements
 from discord.ext.tasks import loop
 from pymongo.errors import ServerSelectionTimeoutError
 
 from cogs.botStatus import listener
+from core.error.error_collection import BrokenConfigurationError
 from core.error.error_reply import startup_error_reply
 from core.globalEnum import CollectionEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
@@ -20,6 +20,10 @@ event = namedtuple("KickTime", ["hour", "min"])
 
 
 class KickGhosts(Cog):
+    """
+    Manage not verified member by kicking them after an amount of time.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.db: PrimitiveMongoData = PrimitiveMongoData(CollectionEnum.KICK_GHOSTS)
@@ -38,6 +42,9 @@ class KickGhosts(Cog):
 
     @listener()
     async def on_ready(self):
+        """
+        Load configuration data or use a default if it is not available.
+        """
         if self.startup:
             self.startup = False
             try:
@@ -71,8 +78,23 @@ class KickGhosts(Cog):
     async def kick_ghosts(self, ctx: Context):
         self.check_subcommand(ctx)
 
-    @kick_ghosts.group(pass_context=True)
-    async def time(self, ctx: Context, time):
+    @kick_ghosts.command(pass_context=True,
+                         brief="Sets the daily kick time.",
+                         help="Use the Format '%H:%M' to set the time properly.")
+    async def time(self, ctx: Context, time: str):
+        """
+        Sets the daily kick time.
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            time: The daily Time when the user shall be kicked.
+
+        Reply:
+            A success message.
+
+        Raises:
+            ValueError
+        """
         time: datetime = datetime.strptime(time, '%H:%M')
         key = ConfigurationNameEnum.TIME
         await self.db.update_one({key.value: {"$exists": True}}, {key.value: event(hour=time.hour, min=time.minute)})
@@ -81,8 +103,24 @@ class KickGhosts(Cog):
                       description="The time has been updated.")
         await ctx.reply(embed=embed)
 
-    @kick_ghosts.group(pass_context=True)
+    @kick_ghosts.command(pass_context=True,
+                         brief="Enables or disables the daily kick.",
+                         help="Pleas use 'true' or 'false' to set the mode properly.\n"
+                              "Other values that may interpreted as bool could also work.")
     async def enabled(self, ctx: Context, mode: bool):
+        """
+        Enable or Disable the daily kick
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            mode: A boolean that indicates the activation status.
+
+        Reply:
+            A success message.
+
+        Raises:
+            BadBoolArgument
+        """
         key = ConfigurationNameEnum.ENABLED
         self.config[key] = mode
         await self.db.update_one({key.value: {"$exists": True}}, {key.value: mode})
@@ -91,8 +129,23 @@ class KickGhosts(Cog):
                       description="The mode has been updated.")
         await ctx.reply(embed=embed)
 
-    @kick_ghosts.group(pass_context=True)
+    @kick_ghosts.command(pass_context=True,
+                         brief="Sets the deadline after the member will be kicked.",
+                         help="You can set any natural number. (except 0)")
     async def deadline(self, ctx: Context, days: int):
+        """
+        Set the deadline after the member will be kicked.
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            days: An integer for the deadline after the member will be kicked.
+
+        Reply:
+            A success message.
+
+        Raises:
+            BadArgument
+        """
         if not days > 0:
             raise BadArgument
 
@@ -104,8 +157,23 @@ class KickGhosts(Cog):
                       description="The deadline has been updated.")
         await ctx.reply(embed=embed)
 
-    @kick_ghosts.group(pass_context=True)
+    @kick_ghosts.command(pass_context=True,
+                         brief="Sets the days to start warn the member.",
+                         help="You can set any natural number. (except 0)")
     async def warning(self, ctx: Context, days: int):
+        """
+        Enable or Disable the daily kick.
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            days: An integer for the deadline after the member will be kicked.
+
+        Reply:
+            A success message.
+
+        Raises:
+            BadArgument
+        """
         if not days > 0:
             raise BadArgument
 
@@ -120,13 +188,28 @@ class KickGhosts(Cog):
     # safe_roles group
 
     @group(pass_context=True,
-           name="safeRoles")
+           name="safeRoles",
+           help="Manages the safe roles.")
     @bot_has_guild_permissions(administrator=True)
     async def safe_roles(self, ctx: Context):
         self.check_subcommand(ctx)
 
-    @safe_roles.group(pass_context=True)
-    async def add(self, ctx: Context):
+    # noinspection PyUnusedLocal
+    @safe_roles.command(pass_context=True,
+                        brief="Adds one or more roles to the list of safe roles.",
+                        help="Ping all roles you want to add.\n"
+                             "You should probably use this role on a private debug chat.")
+    async def add(self, ctx: Context, *, roles):  # roles is used for pretty help
+        """
+        Add one or more roles to the list of safe roles.
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            roles: The pinged roles to be added to the safe list.
+
+        Reply:
+            A success message.
+        """
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find_one({key: {"$exists": True}})
         safe_roles = set()
@@ -138,12 +221,26 @@ class KickGhosts(Cog):
             await self.db.insert_one({key: list(safe_roles)})
 
         embed = Embed(title="Safe Roles",
-                      description="The role is now added to the safe list.")
+                      description="The role(s) is/are now added to the safe list.")
         await ctx.reply(embed=embed)
 
-    @safe_roles.group(pass_context=True,
-                      aliases=["rem", "rm"])
-    async def remove(self, ctx: Context):
+    # noinspection PyUnusedLocal
+    @safe_roles.command(pass_context=True,
+                        aliases=["rem", "rm"],
+                        brief="Removes one or more roles to the list of safe roles.",
+                        help="Ping all roles you want to remove.\n"
+                             "You should probably use this role on a private debug chat.")
+    async def remove(self, ctx: Context, *, roles):  # role is used for pretty help
+        """
+       Remove one or more roles to the list of safe roles.
+       Args:
+           ctx: The command context provided by the discord.py wrapper.
+
+           roles: The pinged roles to be removed to the safe list.
+
+       Reply:
+           A success message.
+       """
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find({key: {"$exists": True}})
         safe_roles: set[int] = set(found[key])
@@ -151,12 +248,19 @@ class KickGhosts(Cog):
         await self.db.update_one({key: {"$exists": True}}, {key: safe_roles})
 
         embed = Embed(title="Safe Roles",
-                      description="The role is now removed from the safe list.")
+                      description="The role(s) is/are now removed from the safe list.")
         await ctx.reply(embed=embed)
 
-    @safe_roles.group(pass_context=True,
-                      aliases=["view"])
+    @safe_roles.command(pass_context=True,
+                        aliases=["view"],
+                        help="Shows all as safe registered roles.")
     async def show(self, ctx: Context):
+        """
+        Shows the list of safe roles.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+        """
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find_one({key: {"$exists": True}})
         if found:
