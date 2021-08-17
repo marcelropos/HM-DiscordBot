@@ -55,13 +55,13 @@ class StudyGroups(Cog):
         await ctx.reply(content="Please select **one** of the following groups.",
                         components=[group_names_options, group_semester_options])
 
-        role: Role = await self.get_role(groups, group_names, group_semester)
+        role: Role = await self.get_role(member, groups, group_names, group_semester)
         await member.add_roles(role)
 
-    async def get_role(self, groups: list[Role], group_names, group_semester) -> Role:
+    async def get_role(self, member, groups: list[Role], group_names, group_semester) -> Role:
         a, b = await asyncio.gather(
-            self.wait_for_group(group_names),
-            self.wait_for_semester(group_semester)
+            self.wait_for_group(group_names, member),
+            self.wait_for_semester(group_semester, member)
         )
 
         result = set()
@@ -70,25 +70,23 @@ class StudyGroups(Cog):
         # noinspection PyTypeChecker
         return result.pop()
 
-    async def wait_for_group(self, group_names):
-        res: Interaction = await self.bot.wait_for("select_option", check=lambda x: x.component[0].value in group_names)
+    async def wait_for_group(self, group_names, member):
+        res: Interaction = await self.bot.wait_for("select_option",
+                                                   check=lambda x: self.check(x, group_names, member))
         await res.respond(content=f"I received your group input.")
         # noinspection PyUnresolvedReferences
         return res.component[0].value
 
-    async def wait_for_semester(self, group_semester):
+    async def wait_for_semester(self, group_semester, member):
         res: Interaction = await self.bot.wait_for("select_option",
-                                                   check=lambda x: x.component[0].value in group_semester)
+                                                   check=lambda x: self.check(x, group_semester, member))
         await res.respond(content="I received your semester input.")
         # noinspection PyUnresolvedReferences
         return res.component[0].value
 
-    # loops
-
-    @group(pass_context=True)
-    @bot_has_guild_permissions(administrator=True)
-    async def group(self, ctx: Context):
-        pass
+    @staticmethod
+    def check(res, collection: dict, member: Member) -> bool:
+        return res.component[0].value in collection and res.user.id == member.id
 
     @group.command(pass_context=True,
                    name="add")
