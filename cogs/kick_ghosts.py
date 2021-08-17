@@ -33,8 +33,6 @@ class KickGhosts(Cog):
             ConfigurationNameEnum.TIME: event(hour=8, min=0)
         }
 
-        self.kick_not_verified.start()
-
     def cog_unload(self):
         self.kick_not_verified.stop()
 
@@ -53,6 +51,7 @@ class KickGhosts(Cog):
                     else:
                         await self.db.insert_one({key: default})
                 self.config[ConfigurationNameEnum.TIME] = event(*self.config[ConfigurationNameEnum.TIME])
+                self.kick_not_verified.start()
 
             except ServerSelectionTimeoutError:
                 title = "Error on Startup"
