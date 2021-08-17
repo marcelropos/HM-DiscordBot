@@ -356,12 +356,20 @@ class KickGhosts(Cog):
 
         Return:
             A far too fat tuple
+
+        Raises:
+            BrokenConfigurationError
         """
         guild: Guild = self.bot.guilds[0]
 
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find_one({key: {"$exists": True}})
         safe_roles: set[Role] = {guild.get_role(safe_role_id) for safe_role_id in found[key]}
+
+        if None in safe_roles:
+            logger.error("A non-existent role id was loaded. For security reasons, "
+                         "the execution of the member kick was aborted.")
+            raise BrokenConfigurationError
 
         deadline = self.config[ConfigurationNameEnum.DEADLINE]
         warning = self.config[ConfigurationNameEnum.WARNING]
