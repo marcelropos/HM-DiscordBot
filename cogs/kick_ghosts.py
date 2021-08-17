@@ -93,6 +93,9 @@ class KickGhosts(Cog):
 
     @kick_ghosts.group(pass_context=True)
     async def deadline(self, ctx: Context, days: int):
+        if not days > 0:
+            raise BadArgument
+
         key = ConfigurationNameEnum.DEADLINE
         self.config[key] = days
         await self.db.update_one({key.value: {"$exists": True}}, {key.value: days})
@@ -103,6 +106,9 @@ class KickGhosts(Cog):
 
     @kick_ghosts.group(pass_context=True)
     async def warning(self, ctx: Context, days: int):
+        if not days > 0:
+            raise BadArgument
+
         key = ConfigurationNameEnum.WARNING
         self.config[key] = days
         await self.db.update_one({key.value: {"$exists": True}}, {key.value: days})
