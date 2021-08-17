@@ -3,7 +3,7 @@ import re
 from typing import Union
 
 from discord import Guild, Role, Member, User
-from discord.ext.commands import Cog, Bot, command, Context, group, bot_has_guild_permissions, BadArgument
+from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument
 from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
 
@@ -36,7 +36,7 @@ class StudyGroups(Cog):
         guild: Guild = ctx.guild
         member: Union[Member, User] = ctx.author
         groups = sorted({guild.get_role(document.role_id) for document in await self.db.find({})},
-                        key=lambda role: role.name)
+                        key=lambda _role: _role.name)
         groups: list[Role]
         # limit self assigment to semester one and two
         groups = [_group for _group in groups if (int((re.match(self.match, _group.name).groups())[1]) < 3)]
