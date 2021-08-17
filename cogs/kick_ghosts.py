@@ -73,7 +73,8 @@ class KickGhosts(Cog):
     # kick_ghosts group
 
     @group(pass_context=True,
-           name="kickGhosts")
+           name="kick",
+           help="Manages the conditions when unverified members should be kicked or warned.")
     @bot_has_guild_permissions(administrator=True)
     async def kick_ghosts(self, ctx: Context):
         self.check_subcommand(ctx)
