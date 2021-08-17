@@ -24,8 +24,9 @@ class BadArgumentHandler(BaseHandler):
         cmd: str = self.ctx.command
         if self.ctx.subcommand_passed:
             cmd += f" {self.ctx.subcommand_passed}"
-        return f"Type `{self.ctx.bot.command_prefix}help {cmd}` and read how to use this command correctly.\n" \
-               f"If you still don't understand how this command works, post a request in the help chat."
+        await self.ctx.send_help(cmd)
+        return f"I have sent you a help message that describes how to correctly use the command.\n" \
+               f"With {self.ctx.bot.command_prefix}help you can also see what other commands exist and how to use them."
 
     @property
     def logger(self) -> Callable[[str], Logger]:
