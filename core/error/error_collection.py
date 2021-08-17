@@ -1,3 +1,6 @@
+from discord import TextChannel, Role
+from discord.ext.commands import CommandError
+
 from core.globalEnum import CollectionEnum, SubjectsOrGroupsEnum
 
 
@@ -10,6 +13,24 @@ class CouldNotEditEntryError(Exception):
         self.collection = collection
         self.key = key
         self.value = value
+
+
+class NoBotChatError(CommandError):
+    def __init__(self, channels: set[TextChannel]):
+        self.channels = channels
+
+
+class NoMultipleGroupsError(CommandError):
+    def __init__(self, role: Role):
+        self.role = role
+
+
+class MayNotUseCommandError(CommandError):
+    pass
+
+
+class NoRulesError(CommandError):
+    pass
 
 
 class GroupOrSubjectNotFoundError(Exception):
