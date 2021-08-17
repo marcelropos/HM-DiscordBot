@@ -58,6 +58,54 @@ class StudyGroups(Cog):
         role: Role = await self.get_role(member, groups, group_names, group_semester)
         await member.add_roles(role)
 
+    # group group
+
+    @group(name="group")
+    async def _group(self):
+        pass
+
+    @_group.command(pass_context=True,
+                    name="add")
+    async def group_add(self, ctx: Context, name: str):
+        guild: Guild = ctx.guild
+        category_key = ConfigurationNameEnum.STUDY_CATEGORY
+        separator_key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
+
+        await StudySubjectUtil.get_server_objects(category_key,
+                                                  guild,
+                                                  name,
+                                                  separator_key,
+                                                  self.db)
+
+    @_group.command(pass_context=True,
+                    name="rename")
+    async def group_rename(self):
+        pass
+
+    @_group.command(pass_context=True,
+                    name="category")
+    async def group_category(self, ctx: Context, category: int):
+        db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
+        key = ConfigurationNameEnum.STUDY_CATEGORY
+        msg = "category"
+        await StudySubjectUtil.update_category_and_separator(category, ctx, db, key, msg)
+
+    @_group.command(pass_context=True,
+                    name="separator")
+    async def group_separator(self, ctx: Context, role):
+        # noinspection PyStatementEffect
+        role
+        if len(ctx.message.role_mentions) > 1:
+            raise BadArgument
+
+        role: Role = ctx.message.role_mentions[0]
+        db = PrimitiveMongoData(CollectionEnum.ROLES)
+        key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
+        msg = "separator"
+        await StudySubjectUtil.update_category_and_separator(role.id, ctx, db, key, msg)
+
+    # help methods
+
     async def get_role(self, member, groups: list[Role], group_names, group_semester) -> Role:
         a, b = await asyncio.gather(
             self.wait_for_group(group_names, member),
@@ -87,46 +135,6 @@ class StudyGroups(Cog):
     @staticmethod
     def check(res, collection: dict, member: Member) -> bool:
         return res.component[0].value in collection and res.user.id == member.id
-
-    @group.command(pass_context=True,
-                   name="add")
-    async def group_add(self, ctx: Context, name: str):
-        guild: Guild = ctx.guild
-        category_key = ConfigurationNameEnum.STUDY_CATEGORY
-        separator_key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
-
-        await StudySubjectUtil.get_server_objects(category_key,
-                                                  guild,
-                                                  name,
-                                                  separator_key,
-                                                  self.db)
-
-    @group.command(pass_context=True,
-                   name="rename")
-    async def group_rename(self):
-        pass
-
-    @group.command(pass_context=True,
-                   name="category")
-    async def group_category(self, ctx: Context, category: int):
-        db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
-        key = ConfigurationNameEnum.STUDY_CATEGORY
-        msg = "category"
-        await StudySubjectUtil.update_category_and_separator(category, ctx, db, key, msg)
-
-    @group.command(pass_context=True,
-                   name="separator")
-    async def group_separator(self, ctx: Context, role):
-        # noinspection PyStatementEffect
-        role
-        if len(ctx.message.role_mentions) > 1:
-            raise BadArgument
-
-        role: Role = ctx.message.role_mentions[0]
-        db = PrimitiveMongoData(CollectionEnum.ROLES)
-        key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
-        msg = "separator"
-        await StudySubjectUtil.update_category_and_separator(role.id, ctx, db, key, msg)
 
 
 def setup(bot: Bot):
