@@ -2,7 +2,7 @@ import asyncio
 import re
 from typing import Union
 
-from discord import Guild, Role, Member, User
+from discord import Guild, Role, Member, User, TextChannel
 from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument
 from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
@@ -10,8 +10,12 @@ from discord_components import DiscordComponents, Interaction, Select, \
 from cogs.botStatus import listener
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
+from core.predicates import bot_chat, is_not_in_group
 from mongo.primitiveMongoData import PrimitiveMongoData
 from mongo.subjectsorgroups import SubjectsOrGroups
+
+bot_channels: set[TextChannel] = set()
+study_groups: set[Role] = set()
 
 
 class StudyGroups(Cog):
@@ -24,14 +28,23 @@ class StudyGroups(Cog):
 
     @listener()
     async def on_ready(self):
+        global bot_channels, study_groups
         if self.startup:
             DiscordComponents(self.bot)
+            bot_channels.clear()
+            bot_channels.add(self.bot.get_channel(793280245746630685))
+
+            guild: Guild = self.bot.guilds[0]
+            study_groups.clear()
+            study_groups.update({guild.get_role(document.role_id) for document in await self.db.find({})})
             self.startup = False
 
     def cog_unload(self):
         pass
 
     @command()
+    @bot_chat(bot_channels)
+    @is_not_in_group(study_groups)
     async def study(self, ctx: Context):
         guild: Guild = ctx.guild
         member: Union[Member, User] = ctx.author
