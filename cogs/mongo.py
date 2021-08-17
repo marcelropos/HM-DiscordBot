@@ -14,14 +14,23 @@ from core.logger import get_discord_child_logger
 from mongo.primitiveMongoData import PrimitiveMongoData
 
 logger = get_discord_child_logger("mongo")
+collection_enum = []
 
 
 class Mongo(Cog):
+    """
+    Accesses and modifies primitive data collections.
+    """
 
     def __init__(self, bot: Bot):
+        global collection_enum
         self.bot: Bot = bot
+        collection_enum = [e.value for e in CollectionEnum]
 
-    @group(pass_context=True)
+    @group(pass_context=True,
+           brief="Accesses and modifies primitive data collections.",
+           help=f"You can modify data from the following collection with one of the subcommands.\n"
+                f"{collection_enum}")
     @commands.bot_has_guild_permissions(administrator=True)
     async def mongo(self, ctx: Context):
         if not ctx.invoked_subcommand:
@@ -29,8 +38,9 @@ class Mongo(Cog):
         member: Union[Member, User] = ctx.author
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
-    @mongo.group(pass_context=True,
-                 name="add")
+    @mongo.command(pass_context=True,
+                   name="add",
+                   help="Adds a key value pair to the collection.")
     async def mongo_add(self, ctx: Context, collection: CollectionEnum, key: str, *, value: str):
         """
         Adds a key value pair to the collection.
@@ -55,8 +65,9 @@ class Mongo(Cog):
                                   f"```\n{respond}\n```")
         await ctx.reply(embed=embed, delete_after=600)
 
-    @mongo.group(pass_context=True,
-                 name="find")
+    @mongo.command(pass_context=True,
+                   name="find",
+                   help="Finds a record in a specific collection.")
     async def mongo_find(self, ctx: Context, collection: CollectionEnum, key: str):
         """
         Finds a record in a specific collection.
@@ -83,8 +94,10 @@ class Mongo(Cog):
                                       f"Did you choose the wrong collection?")
         await ctx.reply(embed=embed, delete_after=600)
 
-    @mongo.group(pass_context=True,
-                 name="edit")
+    @mongo.command(pass_context=True,
+                   name="edit",
+                   brief="Edits a existing record.",
+                   help="Edits a existing record.\n Throws: CouldNotEditEntryError if no entry was found to edit.")
     async def mongo_edit(self, ctx: Context, collection: CollectionEnum, key: str, *, value: str):
         """
         Edits a existing record.
@@ -116,9 +129,10 @@ class Mongo(Cog):
         else:
             raise CouldNotEditEntryError(collection, key, value)
 
-    @mongo.group(pass_context=True,
-                 name="remove",
-                 aliases=["rem", "rm"])
+    @mongo.command(pass_context=True,
+                   name="remove",
+                   aliases=["rem", "rm"],
+                   help="Removes any records which has a specific key.")
     async def mongo_remove(self, ctx: Context, collection: CollectionEnum, key: str):
         """
         Removes any records which has a specific key.

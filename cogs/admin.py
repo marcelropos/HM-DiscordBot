@@ -13,6 +13,10 @@ logger = get_discord_child_logger("admin")
 
 
 class Admin(Cog):
+    """
+    Provides administrative commands for this bot and the sever.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
 
@@ -27,7 +31,7 @@ class Admin(Cog):
         member: Union[Member, User] = ctx.author
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
-    @module.group(pass_context=True)
+    @module.command(pass_context=True, help="Loads a cog.")
     async def load(self, ctx: Context, cog: str):
         """
         Loads a cog.
@@ -45,7 +49,7 @@ class Admin(Cog):
         embed = Embed(title="Cog", description=f"The {cog} cog was loaded successfully.")
         await ctx.reply(embed=embed)
 
-    @module.group(pass_context=True)
+    @module.command(pass_context=True, help="Reloads a cog.")
     async def reload(self, ctx: Context, cog: str):
         """
         Reloads a cog.
@@ -63,7 +67,7 @@ class Admin(Cog):
         embed = Embed(title="Cog", description=f"The {cog} cog was reloaded successfully.")
         await ctx.reply(embed=embed)
 
-    @module.group(pass_context=True)
+    @module.command(pass_context=True, help="Unloads a cog.")
     async def unload(self, ctx: Context, cog: str):
         """
         Unloads a cog.
@@ -82,7 +86,8 @@ class Admin(Cog):
 
     # Purge group
 
-    @group(pass_context=True)
+    @group(pass_context=True, brief="Deletes messages",
+           help="Depending on the subcommand either a whole chat is deleted or messages of one or more members.")
     async def purge(self, ctx: Context):
         """
         A group of commands.
@@ -92,7 +97,8 @@ class Admin(Cog):
         member: Union[Member, User] = ctx.author
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
-    @purge.group()
+    @purge.command(brief="Deletes ALL chat messages.",
+                   help="All X messages written to the chat with this command will be deleted.")
     @is_owner()
     async def chat(self, ctx: Context, count: int):
         """
@@ -111,9 +117,11 @@ class Admin(Cog):
                       description=f"Purged {count} messages")
         await ctx.send(embed=embed)
 
-    @purge.group()
+    @purge.command(brief="Deletes message from mentioned member.",
+                   help="All messages after a certain date and from specified members will be deleted.\n"
+                        "Dateformat: dd.mm.yyyy")
     @commands.bot_has_guild_permissions(administrator=True)
-    async def member(self, ctx: Context, after):
+    async def member(self, ctx: Context, after, *, mentions):
         """
         Cleans a chat.
 
@@ -122,12 +130,14 @@ class Admin(Cog):
 
             after: Messages younger than after will be deleted.
 
-        Special Args:
             mentions: The user to be purged. (supplied by ctx.message.mentions)
 
         Replies:
             A success message containing the deleted amount of messages.
         """
+        # noinspection PyStatementEffect
+        mentions  # mentions is only assigned for PrettyHelp and This statement is to suppress a not used parameter.
+
         after: datetime = datetime.strptime(after, '%d.%m.%y')
         message: Message = ctx.message
         mentions: set[Union[Member, User]] = message.mentions
@@ -139,7 +149,8 @@ class Admin(Cog):
 
     # Single commands
 
-    @command()
+    @command(brief="Tuns off the bot.",
+             help="The bot will be shut down properly. The program must be restarted to start the bot.")
     @is_owner()
     async def shutdown(self, _: Context):
         """Closes the bot"""

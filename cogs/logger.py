@@ -11,8 +11,14 @@ from mongo.primitiveMongoData import PrimitiveMongoData
 
 logger = get_discord_child_logger("logger")
 
+pretty_logger_help = "You can assign one of these verbose levels:\n{}\n to on of these logger: \n{}"
+
 
 class Logger(Cog):
+    """
+    Modifies the main logger.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.db: PrimitiveMongoData = PrimitiveMongoData(CollectionEnum.LOGGER)
@@ -37,7 +43,10 @@ class Logger(Cog):
                 logger.info(f"No default for {_logger.value} has been found, default is now set to {default.name}")
         logger.info("All levels has been applied.")
 
-    @command()
+    @command(brief="Modifies a main logger.",
+             help=pretty_logger_help.format(
+                 [e.name for e in LoggingLevel],
+                 [e.value for e in LoggerEnum]))
     @bot_has_guild_permissions(administrator=True)
     async def logger(self, ctx: Context, _logger: LoggerEnum, level: str):
         """
