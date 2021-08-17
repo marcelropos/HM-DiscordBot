@@ -50,13 +50,12 @@ class KickGhosts(Cog):
             try:
                 for c in self.config:
                     key = c.value
-                    default = self.config[c]
 
                     enabled = await self.db.find_one({key: {"$exists": True}})
                     if enabled:
                         self.config[c] = enabled[key]
                     else:
-                        await self.db.insert_one({key: default})
+                        await self.db.insert_one({key: self.config[c]})
                 self.config[ConfigurationNameEnum.TIME] = event(*self.config[ConfigurationNameEnum.TIME])
                 self.kick_not_verified.start()
 
@@ -318,12 +317,15 @@ class KickGhosts(Cog):
         for member in kick_member:
             try:
                 await member.kick(reason="Too long without verification")
+                logger.info('Kicked user: User="{member.name}#{member.discriminator}({member.id})" ')
+                embed = Embed(title="Kick Ghosts",
+                              description=f"Kicked <@{member.id}>.")
             except Forbidden:
                 logger.error(f'Tried to kick User="{member.name}#{member.discriminator}({member.id})" '
                              f'but failed due missing permissions.')
                 embed = Embed(title="Kick Ghosts",
                               description=f"Tried to kick <@{member.id}> but failed due missing permissions.")
-                await debug_chat.send(embed=embed)
+            await debug_chat.send(embed=embed)
 
     # Helper methods
 
