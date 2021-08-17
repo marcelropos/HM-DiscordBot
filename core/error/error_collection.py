@@ -15,6 +15,10 @@ class CouldNotEditEntryError(Exception):
         self.value = value
 
 
+class BrokenConfigurationError:
+    pass
+
+
 class NoBotChatError(CommandError):
     def __init__(self, channels: set[TextChannel]):
         self.channels = channels
