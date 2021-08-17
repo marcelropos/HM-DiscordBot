@@ -5,6 +5,7 @@ from enum import Enum
 class CollectionEnum(Enum):
     ROLES = "roles"
     CHANNELS = "channels"
+    CATEGORIES = "categories"
     MESSAGES = "messages"
     AUDIO_FILES = "audioFiles"
     EMOJIS = "emojis"
@@ -17,6 +18,8 @@ class ConfigurationNameEnum(Enum):
     MODERATOR_ROLE = "moderator"
     STUDY_SEPARATOR_ROLE = "studySeparator"
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
+    STUDY_CATEGORY = "studyCategory"
+    SUBJECTS_CATEGORY = "subjectsCategory"
     ENABLED = "enabled"
     DEADLINE = "deadline"
     WARNING = "warning"

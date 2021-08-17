@@ -1,4 +1,4 @@
-from core.globalEnum import CollectionEnum
+from core.globalEnum import CollectionEnum, SubjectsOrGroupsEnum
 
 
 class ManPageNotFound(Exception):
@@ -10,3 +10,9 @@ class CouldNotEditEntryError(Exception):
         self.collection = collection
         self.key = key
         self.value = value
+
+
+class GroupOrSubjectNotFoundError(Exception):
+    def __init__(self, group: str, _type: SubjectsOrGroupsEnum):
+        self.group = group
+        self._type = _type
