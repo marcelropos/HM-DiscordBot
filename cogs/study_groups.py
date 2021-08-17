@@ -8,6 +8,7 @@ from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
 
 from cogs.botStatus import listener
+from cogs.util.accepted_chats import assign_accepted_chats
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
 from core.predicates import bot_chat, is_not_in_group
@@ -31,8 +32,8 @@ class StudyGroups(Cog):
         global bot_channels, study_groups
         if self.startup:
             DiscordComponents(self.bot)
-            bot_channels.clear()
-            bot_channels.add(self.bot.get_channel(793280245746630685))
+
+            await assign_accepted_chats(self.bot, bot_channels)
 
             guild: Guild = self.bot.guilds[0]
             study_groups.clear()
