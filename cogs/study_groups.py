@@ -8,15 +8,19 @@ from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
 
 from cogs.botStatus import listener
-from cogs.util.accepted_chats import assign_accepted_chats
+from cogs.util.accepted_chats import assign_accepted_chats, assign_verified_role
+from cogs.util.place_holder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
-from core.predicates import bot_chat, is_not_in_group
+from core.logger import get_discord_child_logger
+from core.predicates import bot_chat, is_not_in_group, has_role_plus
 from mongo.primitiveMongoData import PrimitiveMongoData
 from mongo.subjectsorgroups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
 study_groups: set[Role] = set()
+
+logger = get_discord_child_logger("StudyGroups")
 
 
 class StudyGroups(Cog):
@@ -74,9 +78,13 @@ class StudyGroups(Cog):
 
     # group group
 
-    @group(name="group")
-    async def _group(self):
-        pass
+    @group(pass_context=True,
+           name="group")
+    async def _group(self, ctx: Context):
+        if not ctx.invoked_subcommand:
+            raise BadArgument
+        member: Union[Member, User] = ctx.author
+        logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @_group.command(pass_context=True,
                     name="add")
