@@ -1,6 +1,6 @@
 from typing import Optional
 
-from discord import TextChannel
+from discord import TextChannel, Role
 from discord.ext.commands import Bot
 from pymongo.errors import ServerSelectionTimeoutError
 
@@ -39,21 +39,62 @@ async def assign_accepted_chats(bot: Bot, channels: set[TextChannel]):
             raise BrokenConfigurationError
 
     except (TypeError, BrokenConfigurationError):
-        cause = "The bot chat configuration is broken."
-        await startup_error_reply(bot=bot,
-                                  title="Invalid command Chat configuration.",
-                                  cause=cause,
-                                  solution=f"Please check {ConfigurationNameEnum.BOT_COMMAND_CHAT} "
-                                           f"& {ConfigurationNameEnum.DEBUG_CHAT} and reload all modules.")
-
-        get_discord_child_logger(__name__).error(f"{cause} {error_msg}")
+        await handle_broken_config(bot)
 
     except ServerSelectionTimeoutError:
-        title = "Error on Startup"
-        cause = "Could not connect to database."
-        solution = f"```\n" \
-                   f"1. Establish the connection to the database.\n" \
-                   f"2. Reload all modules." \
-                   f"```"
-        get_mongo_child_logger(__name__).error(f"{cause} {error_msg}")
-        await startup_error_reply(bot=bot, title=title, cause=cause, solution=solution)
+        await handle_db_connection(bot)
+
+
+async def assign_verified_role(bot: Bot) -> Optional[Role]:
+    """
+    Loads the verified role and takes care of possible errors.
+
+    Args:
+         bot: The bot class.
+
+    Return:
+        If success verified role, otherwise none.
+    """
+    try:
+        db = PrimitiveMongoData(CollectionEnum.ROLES)
+
+        role_key = ConfigurationNameEnum.STUDENTY.value
+        role_id: Optional[dict] = await db.find_one({role_key: {"$exists": True}})
+
+        role: Optional[Role]
+        if role_id:
+            role = bot.guilds[0].get_role(role_id[role_key])
+        else:
+            role = None
+
+        if not role:
+            raise BrokenConfigurationError
+
+        return role
+
+    except (TypeError, BrokenConfigurationError):
+        await handle_broken_config(bot)
+
+    except ServerSelectionTimeoutError:
+        await handle_db_connection(bot)
+
+
+async def handle_db_connection(bot):
+    title = "Error on Startup"
+    cause = "Could not connect to database."
+    solution = f"```\n" \
+               f"1. Establish the connection to the database.\n" \
+               f"2. Reload all modules." \
+               f"```"
+    get_mongo_child_logger(__name__).error(f"{cause} {error_msg}")
+    await startup_error_reply(bot=bot, title=title, cause=cause, solution=solution)
+
+
+async def handle_broken_config(bot):
+    cause = "The bot chat configuration is broken."
+    await startup_error_reply(bot=bot,
+                              title="Invalid command Chat configuration.",
+                              cause=cause,
+                              solution=f"Please check {ConfigurationNameEnum.BOT_COMMAND_CHAT} "
+                                       f"& {ConfigurationNameEnum.DEBUG_CHAT} and reload all modules.")
+    get_discord_child_logger(__name__).error(f"{cause} {error_msg}")
