@@ -13,6 +13,26 @@ class StudySubjectUtil:
                                  name: str,
                                  separator_key: ConfigurationNameEnum,
                                  db: SubjectsOrGroups) -> SubjectOrGroup:
+        """
+        Creates a "role-chat" pair, saves it and places it correctly.
+
+        Args:
+            category_key: The category under which the chat should appear.
+
+            guild: The server on which the bot is.
+
+            name: The name of the role and the chat
+
+            separator_key: The position under which the role should be.
+
+            db: The database connection to be used.
+
+        Returns:
+            A SubjectOrGroup which contains the created pair.
+
+        Raises:
+            Forbidden,ServerSelectionTimeoutError
+        """
         study_category: CategoryChannel = guild.get_channel(
             (await PrimitiveMongoData(CollectionEnum.CATEGORIES)
              .find_one({category_key.value: {"$exists": True}}))[category_key.value])
@@ -41,6 +61,9 @@ class StudySubjectUtil:
                                             db: PrimitiveMongoData,
                                             key: ConfigurationNameEnum,
                                             msg: str):
+        """
+        Updates a db entry.
+        """
         find = {key.value: {"$exists": True}}
         if await db.find_one(find):
             await db.update_one(find, {key.value: value})

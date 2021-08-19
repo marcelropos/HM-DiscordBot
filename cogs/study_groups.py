@@ -45,6 +45,9 @@ class StudyGroups(Cog):
 
     @loop()
     async def ainit(self):
+        """
+        Loads the configuration for the module.
+        """
         global bot_channels, study_groups, verified
         # noinspection PyTypeChecker
         async with AinitManager(self.bot, self.ainit, self.need_init) as need_init:
@@ -143,7 +146,19 @@ class StudyGroups(Cog):
 
     # help methods
 
-    async def get_role(self, member, groups: list[Role], group_names, group_semester) -> Role:
+    async def get_role(self, member, groups: list[Role], group_names: set[str], group_semester: set[str]) -> Role:
+        """
+        Expects multiple inputs in unknown order processes them to an existing role.
+
+        Args:
+            member: The Member whose input is requested.
+
+            groups: All available groups.
+
+            group_semester: All available group names.
+
+            group_names: All available semester yrs.
+        """
         a, b = await asyncio.gather(
             self.wait_for_group(group_names, member),
             self.wait_for_semester(group_semester, member)
@@ -155,14 +170,36 @@ class StudyGroups(Cog):
         # noinspection PyTypeChecker
         return result.pop()
 
-    async def wait_for_group(self, group_names, member):
+    async def wait_for_group(self, group_names: set[str], member: Member) -> str:
+        """
+        Waits for a selection.
+
+        Args:
+            group_names: A set of all courses.
+
+            member: The Member whose input is requested.
+
+        Returns:
+            The course name.
+        """
         res: Interaction = await self.bot.wait_for("select_option",
                                                    check=lambda x: self.check(x, group_names, member))
         await res.respond(content=f"I received your group input.")
         # noinspection PyUnresolvedReferences
         return res.component[0].value
 
-    async def wait_for_semester(self, group_semester, member):
+    async def wait_for_semester(self, group_semester: set[str], member: Member) -> Union[str, int]:
+        """
+        Waits for a selection.
+
+        Args:
+            group_semester: A set of all  semester yrs.
+
+            member: The Member whose input is requested.
+
+        Returns:
+            Semester yr.
+        """
         res: Interaction = await self.bot.wait_for("select_option",
                                                    check=lambda x: self.check(x, group_semester, member))
         await res.respond(content="I received your semester input.")
@@ -170,7 +207,7 @@ class StudyGroups(Cog):
         return res.component[0].value
 
     @staticmethod
-    def check(res, collection: dict, member: Member) -> bool:
+    def check(res, collection: set[str], member: Member) -> bool:
         return res.component[0].value in collection and res.user.id == member.id
 
 

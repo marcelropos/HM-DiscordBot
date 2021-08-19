@@ -11,6 +11,13 @@ error_msg = "Due to the previous reason, all commands limited to chats are out o
 
 
 class AinitManager:
+    """
+    Manages the asynchronous start of a module.
+
+    This manager is used if a task is to be run once after (re)loading a module and then terminates the task.
+    Defined errors are handled.
+    """
+
     def __init__(self, bot: Bot, loop: Loop, need_init: bool):
         self.bot = bot
         self.loop = loop
