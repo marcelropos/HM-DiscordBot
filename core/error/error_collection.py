@@ -15,7 +15,7 @@ class CouldNotEditEntryError(Exception):
         self.value = value
 
 
-class BrokenConfigurationError:
+class BrokenConfigurationError(Exception):
     pass
 
 
