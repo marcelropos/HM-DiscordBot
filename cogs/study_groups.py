@@ -4,11 +4,13 @@ from typing import Union
 
 from discord import Guild, Role, Member, User, TextChannel
 from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument
+from discord.ext.tasks import loop
 from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
 
 from cogs.botStatus import listener
 from cogs.util.accepted_chats import assign_accepted_chats, assign_verified_role
+from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.place_holder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
@@ -20,6 +22,7 @@ from mongo.subjectsorgroups import SubjectsOrGroups
 bot_channels: set[TextChannel] = set()
 verified: Placeholder = Placeholder()
 study_groups: set[Role] = set()
+first_init = True
 
 logger = get_discord_child_logger("StudyGroups")
 
@@ -29,26 +32,34 @@ class StudyGroups(Cog):
         self.bot = bot
         self.match = re.compile(r"([a-z]+)([0-9]+)", re.I)
         self.db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP)
-        self.startup = True
-        self.groups = {}
+        self.need_init = True
+        if not first_init:
+            self.ainit.start()
 
     @listener()
     async def on_ready(self):
+        global first_init
+        if first_init:
+            first_init = False
+            self.ainit.start()
+
+    @loop()
+    async def ainit(self):
         global bot_channels, study_groups, verified
-        if self.startup:
-            DiscordComponents(self.bot)
+        # noinspection PyTypeChecker
+        async with AinitManager(self.bot, self.ainit, self.need_init) as need_init:
+            if need_init:
+                DiscordComponents(self.bot)
 
-            await assign_accepted_chats(self.bot, bot_channels)
+                await assign_accepted_chats(self.bot, bot_channels)
 
-            verified.item = await assign_verified_role(self.bot)
+                verified.item = await assign_verified_role(self.bot)
 
-            guild: Guild = self.bot.guilds[0]
-            study_groups.clear()
-            study_groups.update({guild.get_role(document.role_id) for document in await self.db.find({})})
-            self.startup = False
+                guild: Guild = self.bot.guilds[0]
+                study_groups.clear()
+                study_groups.update({guild.get_role(document.role_id) for document in await self.db.find({})})
 
-    def cog_unload(self):
-        pass
+    # commands
 
     @command()
     @bot_chat(bot_channels)
