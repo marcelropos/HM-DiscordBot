@@ -18,6 +18,7 @@ from mongo.primitiveMongoData import PrimitiveMongoData
 from mongo.subjectsorgroups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
+verified: Placeholder = Placeholder()
 study_groups: set[Role] = set()
 
 logger = get_discord_child_logger("StudyGroups")
@@ -33,11 +34,13 @@ class StudyGroups(Cog):
 
     @listener()
     async def on_ready(self):
-        global bot_channels, study_groups
+        global bot_channels, study_groups, verified
         if self.startup:
             DiscordComponents(self.bot)
 
             await assign_accepted_chats(self.bot, bot_channels)
+
+            verified.item = await assign_verified_role(self.bot)
 
             guild: Guild = self.bot.guilds[0]
             study_groups.clear()
@@ -50,6 +53,7 @@ class StudyGroups(Cog):
     @command()
     @bot_chat(bot_channels)
     @is_not_in_group(study_groups)
+    @has_role_plus(verified)
     async def study(self, ctx: Context):
         guild: Guild = ctx.guild
         member: Union[Member, User] = ctx.author
