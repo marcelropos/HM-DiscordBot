@@ -10,6 +10,9 @@ class Placeholder:
     def __init__(self):
         self.__item: list[any] = [None]
 
+    def __bool__(self):
+        return True if self.__item[0] else False
+
     @property
     def item(self) -> any:
         return self.__item[0]

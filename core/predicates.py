@@ -1,6 +1,7 @@
 from discord import TextChannel, Role
-from discord.ext.commands import Context, check
+from discord.ext.commands import Context, check, has_role
 
+from cogs.util.place_holder import Placeholder
 from core.error.error_collection import NoBotChatError, NoMultipleGroupsError, NoRulesError
 
 
@@ -27,5 +28,15 @@ def is_not_in_group(check_roles: set[Role]):
         if have_roles:
             raise NoMultipleGroupsError(have_roles.pop())
         return True
+
+    return check(predicate)
+
+
+def has_role_plus(item: Placeholder):
+    def predicate(ctx):
+        _predicate = has_role(item.item)
+        if not item:
+            raise NoRulesError
+        return _predicate(ctx)
 
     return check(predicate)
