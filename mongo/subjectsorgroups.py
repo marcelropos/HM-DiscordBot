@@ -72,7 +72,7 @@ class SubjectsOrGroups(MongoCollection):
     async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[SubjectOrGroup]:
         cursor = self.collection.find(find_params)
         if sort:
-            cursor = cursor.sort(self)
+            cursor = cursor.sort(sort)
 
         return [await self._create_document(entry) for entry in await cursor.to_list(limit)]
 
