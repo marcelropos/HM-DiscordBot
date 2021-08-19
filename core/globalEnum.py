@@ -16,6 +16,7 @@ class CollectionEnum(Enum):
 class ConfigurationNameEnum(Enum):
     ADMIN_ROLE = "admin"
     MODERATOR_ROLE = "moderator"
+    STUDENTY = "studenty"
     STUDY_SEPARATOR_ROLE = "studySeparator"
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
     STUDY_CATEGORY = "studyCategory"
