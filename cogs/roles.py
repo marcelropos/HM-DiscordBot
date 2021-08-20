@@ -7,7 +7,7 @@ from cogs.util.accepted_chats import assign_role, assign_accepted_chats
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.place_holder import Placeholder
 from core.globalEnum import ConfigurationNameEnum
-from core.predicates import has_not_role, has_role_plus
+from core.predicates import has_not_role, has_role_plus, bot_chat
 
 first_init = True
 news = Placeholder()
@@ -51,6 +51,7 @@ class Roles(Cog):
              help="Add nsfw role")
     @has_role_plus(verified)
     @has_not_role(nsfw)
+    @bot_chat(bot_channels)
     async def nsfw_add(self, ctx: Context):
         global nsfw
         await ctx.author.add_roles(nsfw.item, reason="request by user")
@@ -58,6 +59,7 @@ class Roles(Cog):
     @command(name="nsfw-rem",
              help="Remove nsfw role")
     @has_role_plus(nsfw)
+    @bot_chat(bot_channels)
     async def nsfw_rem(self, ctx: Context):
         global nsfw
         await ctx.author.remove_roles(nsfw.item, reason="request by user")
@@ -68,6 +70,7 @@ class Roles(Cog):
              help="Add news role")
     @has_role_plus(verified)
     @has_not_role(news)
+    @bot_chat(bot_channels)
     async def news_add(self, ctx: Context):
         global news
         await ctx.author.add_roles(news.item, reason="request by user")
@@ -75,6 +78,7 @@ class Roles(Cog):
     @command(name="news-rem",
              help="Remove news role")
     @has_role_plus(news)
+    @bot_chat(bot_channels)
     async def news_rem(self, ctx: Context):
         global news
         await ctx.author.remove_roles(news.item, reason="request by user")
