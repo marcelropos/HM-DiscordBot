@@ -35,12 +35,14 @@ async def assign_accepted_chats(bot: Bot, channels: set[TextChannel]):
         raise BrokenConfigurationError
 
 
-async def assign_verified_role(bot: Bot) -> Optional[Role]:
+async def assign_role(bot: Bot, role_name: ConfigurationNameEnum) -> Optional[Role]:
     """
     Loads the verified role and takes care of possible errors.
 
     Args:
          bot: The bot class.
+
+         role_name: The configured role.
 
     Return:
         If success verified role, otherwise none.
@@ -48,7 +50,7 @@ async def assign_verified_role(bot: Bot) -> Optional[Role]:
 
     db = PrimitiveMongoData(CollectionEnum.ROLES)
 
-    role_key = ConfigurationNameEnum.STUDENTY.value
+    role_key = role_name.value
     role_id: Optional[dict] = await db.find_one({role_key: {"$exists": True}})
 
     role: Optional[Role]

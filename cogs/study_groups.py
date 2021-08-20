@@ -2,17 +2,18 @@ import asyncio
 import re
 from typing import Union
 
-from discord import Guild, Role, Member, User, TextChannel
+from discord import Guild, Role, Member, User, TextChannel, Embed
 from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
 
 from cogs.botStatus import listener
-from cogs.util.accepted_chats import assign_accepted_chats, assign_verified_role
+from cogs.util.accepted_chats import assign_accepted_chats, assign_role
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.place_holder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
+from core.error.error_collection import FailedToGrantRoleError
 from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, is_not_in_group, has_role_plus
@@ -21,6 +22,7 @@ from mongo.subjectsorgroups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
 verified: Placeholder = Placeholder()
+moderator: Placeholder = Placeholder()
 study_groups: set[Role] = set()
 first_init = True
 
@@ -56,7 +58,9 @@ class StudyGroups(Cog):
 
                 await assign_accepted_chats(self.bot, bot_channels)
 
-                verified.item = await assign_verified_role(self.bot)
+                verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
+
+                moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
 
                 guild: Guild = self.bot.guilds[0]
                 study_groups.clear()
@@ -71,28 +75,26 @@ class StudyGroups(Cog):
     async def study(self, ctx: Context):
         guild: Guild = ctx.guild
         member: Union[Member, User] = ctx.author
-        groups = sorted({guild.get_role(document.role_id) for document in await self.db.find({})},
-                        key=lambda _role: _role.name)
-        groups: list[Role]
+
+        groups: list[Role] = [guild.get_role(document.role_id) for document in await self.db.find({})]
         # limit self assigment to semester one and two
         groups = [_group for _group in groups if (int((re.match(self.match, _group.name).groups())[1]) < 3)]
+        await self.assign_role(ctx, groups, member)
 
-        group_names = {str((re.match(self.match, _role.name).groups())[0])
-                       for _role in groups}
-        group_names_options = Select(
-            placeholder="Select your group",
-            options=[SelectOption(label=name, value=name) for name in group_names])
+    @command()
+    @bot_chat(bot_channels)
+    @has_role_plus(moderator)
+    async def grant(self, ctx: Context, member):  # parameter only for pretty help.
+        global study_groups
+        guild: Guild = ctx.guild
+        member: Union[Member, User] = ctx.message.mentions[0]
 
-        group_semester = {str((re.match(self.match, _role.name).groups())[1]) for _role in groups}
-        group_semester_options = Select(
-            placeholder="Select your semester",
-            options=[SelectOption(label=semester, value=semester) for semester in group_semester])
+        assigned_to = study_groups.intersection(set(member.roles))
+        if assigned_to:
+            raise FailedToGrantRoleError(assigned_to.pop(), member)
 
-        await ctx.reply(content="Please select **one** of the following groups.",
-                        components=[group_names_options, group_semester_options])
-
-        role: Role = await self.get_role(member, groups, group_names, group_semester)
-        await member.add_roles(role)
+        groups: list[Role] = [guild.get_role(document.role_id) for document in await self.db.find({})]
+        await self.assign_role(ctx, groups, member)
 
     # group group
 
@@ -164,12 +166,35 @@ class StudyGroups(Cog):
 
     # help methods
 
-    async def get_role(self, member, groups: list[Role], group_names: set[str], group_semester: set[str]) -> Role:
+    async def assign_role(self, ctx: Context,
+                          groups: list[Role],
+                          member: Union[Member, User]):
+        group_names = sorted({str((re.match(self.match, _role.name).groups())[0])
+                              for _role in groups})
+        group_names_options = Select(
+            placeholder="Select your group",
+            options=[SelectOption(label=name, value=name) for name in group_names])
+        group_semester = sorted({str((re.match(self.match, _role.name).groups())[1]) for _role in groups})
+        group_semester_options = Select(
+            placeholder="Select your semester",
+            options=[SelectOption(label=semester, value=semester) for semester in group_semester])
+        await ctx.reply(content="Please select **one** of the following groups.",
+                        components=[group_names_options, group_semester_options])
+        role: Role = await self.get_role(ctx.author, groups, group_names, group_semester)
+        await member.add_roles(role)
+        embed = Embed(title="Grant new role",
+                      description=f"Congratulations, you have received the <@&{role.id}> role.")
+        await ctx.reply(content=f"<@{member.id}>", embed=embed)
+
+    async def get_role(self, author: Union[Member, User],
+                       groups: list[Role],
+                       group_names: list[str],
+                       group_semester: list[str]) -> Role:
         """
         Expects multiple inputs in unknown order processes them to an existing role.
 
         Args:
-            member: The Member whose input is requested.
+            author: The Member whose input is requested.
 
             groups: All available groups.
 
@@ -178,8 +203,8 @@ class StudyGroups(Cog):
             group_names: All available semester yrs.
         """
         a, b = await asyncio.gather(
-            self.wait_for_group(group_names, member),
-            self.wait_for_semester(group_semester, member)
+            self.wait_for_group(group_names, author),
+            self.wait_for_semester(group_semester, author)
         )
 
         result = set()
@@ -188,7 +213,7 @@ class StudyGroups(Cog):
         # noinspection PyTypeChecker
         return result.pop()
 
-    async def wait_for_group(self, group_names: set[str], member: Member) -> str:
+    async def wait_for_group(self, group_names: list[str], member: Union[Member, User]) -> str:
         """
         Waits for a selection.
 
@@ -206,7 +231,7 @@ class StudyGroups(Cog):
         # noinspection PyUnresolvedReferences
         return res.component[0].value
 
-    async def wait_for_semester(self, group_semester: set[str], member: Member) -> Union[str, int]:
+    async def wait_for_semester(self, group_semester: list[str], member: Union[Member, User]) -> Union[str, int]:
         """
         Waits for a selection.
 
@@ -225,7 +250,7 @@ class StudyGroups(Cog):
         return res.component[0].value
 
     @staticmethod
-    def check(res, collection: set[str], member: Member) -> bool:
+    def check(res, collection: list[str], member: Member) -> bool:
         return res.component[0].value in collection and res.user.id == member.id
 
 

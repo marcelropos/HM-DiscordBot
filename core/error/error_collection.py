@@ -1,4 +1,6 @@
-from discord import TextChannel, Role
+from typing import Union
+
+from discord import TextChannel, Role, Member, User
 from discord.ext.commands import CommandError
 
 from core.globalEnum import CollectionEnum, SubjectsOrGroupsEnum
@@ -27,6 +29,12 @@ class NoBotChatError(CommandError):
 class NoMultipleGroupsError(CommandError):
     def __init__(self, role: Role):
         self.role = role
+
+
+class FailedToGrantRoleError(CommandError):
+    def __init__(self, role: Role, member: Union[Member, User]):
+        self.role = role
+        self.member = member
 
 
 class MayNotUseCommandError(CommandError):
