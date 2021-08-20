@@ -3,7 +3,7 @@ import re
 from typing import Union
 
 from discord import Guild, Role, Member, User, TextChannel, Embed
-from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument
+from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument, has_guild_permissions
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
@@ -117,6 +117,8 @@ class StudyGroups(Cog):
 
     @group(pass_context=True,
            name="group")
+    @bot_chat(bot_channels)
+    @has_guild_permissions(administrator=True)
     async def _group(self, ctx: Context):
         if not ctx.invoked_subcommand:
             raise BadArgument
