@@ -56,7 +56,7 @@ class Moderator(Cog):
 
     # commands
 
-    @command()
+    @command(brief="Verify a mentioned user")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
     async def verify(self, ctx: Context, member):  # parameter only for pretty help.
@@ -74,7 +74,7 @@ class Moderator(Cog):
         await member.add_roles(verified.item, reason=f"{str(ctx.author)}")
         logger.info(f"User {str(member)} was verified by {str(ctx.author)}")
 
-    @command()
+    @command(help="Place or remove a restriction on the mentioned user.")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
     async def restrict(self, ctx: Context, mode: bool, member):  # parameter only for pretty help.
@@ -103,7 +103,8 @@ class Moderator(Cog):
 
         await mod_chat.item.send(embed=embed)
 
-    @command()
+    @command(brief="Write an anonymous message to the mods.",
+             help="You can send an anonymous message to the mods twice an hour.")
     @cooldown(2, 3600, BucketType.user)
     async def mail(self, ctx: Context, *, message: str):
         embed = Embed(title="Mod Mail",
