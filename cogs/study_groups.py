@@ -107,6 +107,14 @@ class StudyGroups(Cog):
     @_group.command(pass_context=True,
                     name="add")
     async def group_add(self, ctx: Context, name: str):
+        """
+        Adds a new role-channel pair as a group.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            name: The name of the role and the chat.
+        """
         guild: Guild = ctx.guild
         category_key = ConfigurationNameEnum.STUDY_CATEGORY
         separator_key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
@@ -118,13 +126,17 @@ class StudyGroups(Cog):
                                                   self.db)
 
     @_group.command(pass_context=True,
-                    name="rename")
-    async def group_rename(self):
-        pass
-
-    @_group.command(pass_context=True,
                     name="category")
     async def group_category(self, ctx: Context, category: int):
+        """
+                Saves the group separator role:
+
+                Args:
+                    ctx: The command context provided by the discord.py wrapper.
+
+                    category: The category id for the channels.
+                """
+
         db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
         key = ConfigurationNameEnum.STUDY_CATEGORY
         msg = "category"
@@ -132,9 +144,15 @@ class StudyGroups(Cog):
 
     @_group.command(pass_context=True,
                     name="separator")
-    async def group_separator(self, ctx: Context, role):
-        # noinspection PyStatementEffect
-        role
+    async def group_separator(self, ctx: Context, role):  # parameter only for pretty help.
+        """
+        Saves the group separator role:
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            role: The mentioned role.
+        """
         if len(ctx.message.role_mentions) > 1:
             raise BadArgument
 
