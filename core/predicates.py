@@ -1,5 +1,5 @@
 from discord import TextChannel, Role
-from discord.ext.commands import Context, check, has_role
+from discord.ext.commands import Context, check, NoPrivateMessage
 
 from cogs.util.place_holder import Placeholder
 from core.error.error_collection import NoBotChatError, NoMultipleGroupsError, NoRulesError
@@ -7,6 +7,8 @@ from core.error.error_collection import NoBotChatError, NoMultipleGroupsError, N
 
 def bot_chat(channels: set[TextChannel]):
     def predicate(ctx: Context):
+        if ctx.guild is None:
+            raise NoPrivateMessage()
         if not channels:
             raise NoRulesError
 
@@ -20,6 +22,8 @@ def bot_chat(channels: set[TextChannel]):
 
 def is_not_in_group(check_roles: set[Role]):
     def predicate(ctx: Context):
+        if ctx.guild is None:
+            raise NoPrivateMessage()
         if not check_roles:
             raise NoRulesError
 
@@ -34,9 +38,31 @@ def is_not_in_group(check_roles: set[Role]):
 
 def has_role_plus(item: Placeholder):
     def predicate(ctx):
-        _predicate = has_role(item.item)
+        if ctx.guild is None:
+            raise NoPrivateMessage()
+
         if not item:
             raise NoRulesError
-        return _predicate(ctx)
+
+        if {_ for _ in set(ctx.author.roles) if _ is item.item}:
+            return True
+        else:
+            return False
+
+    return check(predicate)
+
+
+def has_not_role(item: Placeholder):
+    def predicate(ctx):
+        if ctx.guild is None:
+            raise NoPrivateMessage()
+
+        if not item:
+            raise NoRulesError
+
+        if {_ for _ in set(ctx.author.roles) if _ is item.item}:
+            return False
+        else:
+            return True
 
     return check(predicate)
