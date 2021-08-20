@@ -73,6 +73,12 @@ class StudyGroups(Cog):
     @is_not_in_group(study_groups)
     @has_role_plus(verified)
     async def study(self, ctx: Context):
+        """
+        Assigns a role to the user of the command.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+        """
         guild: Guild = ctx.guild
         member: Union[Member, User] = ctx.author
 
@@ -85,6 +91,17 @@ class StudyGroups(Cog):
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
     async def grant(self, ctx: Context, member):  # parameter only for pretty help.
+        """
+        Assigns a role to the mentioned member.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            member: The member who is to receive a role.
+
+        Raises:
+            FailedToGrantRoleError
+        """
         global study_groups
         guild: Guild = ctx.guild
         member: Union[Member, User] = ctx.message.mentions[0]
