@@ -45,6 +45,10 @@ class NoRulesError(CommandError):
     pass
 
 
+class YouAlreadyHaveThisRoleError(CommandError):
+    pass
+
+
 class GroupOrSubjectNotFoundError(Exception):
     def __init__(self, group: str, _type: SubjectsOrGroupsEnum):
         self.group = group
