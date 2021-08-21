@@ -42,7 +42,12 @@ class Subjects(Cog):
         """
         global bot_channels, subjects, verified, moderator
         # noinspection PyTypeChecker
-        async with AinitManager(self.bot, self.ainit, self.need_init, bot_channels, verified, moderator) as need_init:
+        async with AinitManager(bot=self.bot,
+                                loop=self.ainit,
+                                need_init=self.need_init,
+                                bot_channels=bot_channels,
+                                verified=verified,
+                                moderator=moderator) as need_init:
             if need_init:
                 DiscordComponents(self.bot)
                 await assign_set_of_roles(self.bot.guilds[0], self.db, subjects)

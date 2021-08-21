@@ -25,13 +25,13 @@ class AinitManager:
                  bot: Bot,
                  loop: Loop,
                  need_init: bool,
-                 bot_channels: set[TextChannel],
-                 verified: Placeholder,
-                 moderator: Placeholder):
+                 bot_channels: set[TextChannel] = None,
+                 verified: Placeholder = Placeholder(),
+                 moderator: Placeholder = Placeholder()):
         self.bot = bot
         self.loop = loop
         self.need_init = need_init
-        self.bot_channels = bot_channels
+        self.bot_channels = bot_channels if bot_channels else set()
         self.verified = verified
         self.moderator = moderator
 
