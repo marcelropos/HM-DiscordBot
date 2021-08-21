@@ -12,6 +12,7 @@ class CollectionEnum(Enum):
     KICK_GHOSTS = "kickGhosts"
     LOGGER = "logger"
     COOLDOWN = "cooldown"
+    GROUP_SUBJECT_RELATION = "groupSubjectRelation"
 
 
 class ConfigurationNameEnum(Enum):
@@ -45,6 +46,9 @@ class DBKeyWrapperEnum(Enum):
     TOKEN = "token"
     DELETE_AT = "deleteAt"
     ROLE = "role"
+    GROUP = "group"
+    SUBJECT = "subject"
+    DEFAULT = "default"
 
 
 class LoggingLevel(Enum):
