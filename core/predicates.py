@@ -1,7 +1,7 @@
 from discord import TextChannel, Role
 from discord.ext.commands import Context, check, NoPrivateMessage
 
-from cogs.util.place_holder import Placeholder
+from cogs.util.placeholder import Placeholder
 from core.error.error_collection import NoBotChatError, NoMultipleGroupsError, NoRulesError
 
 

@@ -7,7 +7,7 @@ from discord.ext.tasks import loop
 from cogs.botStatus import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role, assign_accepted_chats, assign_chat
-from cogs.util.place_holder import Placeholder
+from cogs.util.placeholder import Placeholder
 from core.globalEnum import ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -17,8 +17,6 @@ verified = Placeholder()
 moderator = Placeholder()
 restricted = Placeholder()
 mod_chat = Placeholder()
-rate = Placeholder()
-per = Placeholder()
 first_init = True
 
 logger = get_discord_child_logger("Moderator")

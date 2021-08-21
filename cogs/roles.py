@@ -5,7 +5,7 @@ from discord.ext.tasks import loop
 from cogs.botStatus import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role, assign_accepted_chats
-from cogs.util.place_holder import Placeholder
+from cogs.util.placeholder import Placeholder
 from core.globalEnum import ConfigurationNameEnum
 from core.predicates import has_not_role, has_role_plus, bot_chat
 
