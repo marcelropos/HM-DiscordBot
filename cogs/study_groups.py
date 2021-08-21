@@ -10,7 +10,7 @@ from discord_components import DiscordComponents, Interaction, Select, \
 
 from cogs.botStatus import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_accepted_chats, assign_role
+from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import FailedToGrantRoleError
@@ -52,19 +52,10 @@ class StudyGroups(Cog):
         """
         global bot_channels, study_groups, verified
         # noinspection PyTypeChecker
-        async with AinitManager(self.bot, self.ainit, self.need_init) as need_init:
+        async with AinitManager(self.bot, self.ainit, self.need_init, bot_channels, verified, moderator) as need_init:
             if need_init:
                 DiscordComponents(self.bot)
-
-                await assign_accepted_chats(self.bot, bot_channels)
-
-                verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
-
-                moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
-
-                guild: Guild = self.bot.guilds[0]
-                study_groups.clear()
-                study_groups.update({guild.get_role(document.role_id) for document in await self.db.find({})})
+                await assign_set_of_roles(self.bot.guilds[0], self.db, study_groups)
 
     # commands
 
