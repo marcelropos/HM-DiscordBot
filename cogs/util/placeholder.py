@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class Placeholder:
     """
     Wraps a variable.
@@ -8,15 +11,15 @@ class Placeholder:
     """
 
     def __init__(self):
-        self.__item: list[any] = [None]
+        self.__item: list[Any] = [None]
 
     def __bool__(self):
         return True if self.__item[0] else False
 
     @property
-    def item(self) -> any:
+    def item(self) -> Any:
         return self.__item[0]
 
     @item.setter
-    def item(self, item: any):
+    def item(self, item: Any):
         self.__item[0] = item
