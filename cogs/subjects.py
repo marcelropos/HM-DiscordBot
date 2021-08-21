@@ -28,7 +28,7 @@ logger = get_discord_child_logger("Subjects")
 class Subjects(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP)
+        self.db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT)
         self.need_init = True
         if not first_init:
             self.ainit.start()
