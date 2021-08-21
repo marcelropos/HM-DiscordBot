@@ -63,3 +63,33 @@ async def assign_role(bot: Bot, role_name: ConfigurationNameEnum) -> Optional[Ro
         raise BrokenConfigurationError
 
     return role
+
+
+async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional[TextChannel]:
+    """
+    Loads the verified channel and takes care of possible errors.
+
+    Args:
+         bot: The bot class.
+
+         channel_name: The configured channel.
+
+    Return:
+        If success verified channel, otherwise none.
+    """
+
+    db = PrimitiveMongoData(CollectionEnum.CHANNELS)
+
+    role_key = channel_name.value
+    channel_id: Optional[dict] = await db.find_one({role_key: {"$exists": True}})
+
+    channel: Optional[TextChannel]
+    if channel_id:
+        channel = bot.guilds[0].get_channel(channel_id[role_key])
+    else:
+        channel = None
+
+    if not channel:
+        raise BrokenConfigurationError
+
+    return channel

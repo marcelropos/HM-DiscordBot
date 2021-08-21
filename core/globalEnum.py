@@ -11,14 +11,17 @@ class CollectionEnum(Enum):
     EMOJIS = "emojis"
     KICK_GHOSTS = "kickGhosts"
     LOGGER = "logger"
+    COOLDOWN = "cooldown"
 
 
 class ConfigurationNameEnum(Enum):
     ADMIN_ROLE = "admin"
     MODERATOR_ROLE = "moderator"
+    MOD_CHAT = "modChat"
     STUDENTY = "studenty"
     NSFW = "nsfw"
     NEWSLETTER = "newsletter"
+    RESTRICTED = "restricted"
     STUDY_SEPARATOR_ROLE = "studySeparator"
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
     STUDY_CATEGORY = "studyCategory"

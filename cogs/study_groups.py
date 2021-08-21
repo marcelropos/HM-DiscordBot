@@ -9,9 +9,9 @@ from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
 
 from cogs.botStatus import listener
-from cogs.util.accepted_chats import assign_accepted_chats, assign_role
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.place_holder import Placeholder
+from cogs.util.assign_variables import assign_accepted_chats, assign_role
+from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import FailedToGrantRoleError
 from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
