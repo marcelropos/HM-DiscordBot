@@ -37,9 +37,16 @@ class AinitManager:
 
     async def __aenter__(self):
 
-        await assign_accepted_chats(self.bot, self.bot_channels)
-        self.verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
-        self.moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
+        try:
+            await assign_accepted_chats(self.bot, self.bot_channels)
+            self.verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
+            self.moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
+
+        except (TypeError, BrokenConfigurationError):
+            await handle_broken_config(self.bot)
+
+        except ServerSelectionTimeoutError:
+            await handle_db_connection(self.bot)
 
         return self.need_init
 
