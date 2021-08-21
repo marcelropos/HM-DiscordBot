@@ -31,7 +31,7 @@ class AinitManager:
         self.bot = bot
         self.loop = loop
         self.need_init = need_init
-        self.bot_channels = bot_channels if bot_channels else set()
+        self.bot_channels = bot_channels if bot_channels is not None else set()
         self.verified = verified
         self.moderator = moderator
 
