@@ -1,7 +1,9 @@
-from discord import TextChannel, Role
+from typing import Union
+
+from discord import TextChannel, Role, Member, User
 from discord.ext.commands import CommandError
 
-from core.globalEnum import CollectionEnum
+from core.globalEnum import CollectionEnum, SubjectsOrGroupsEnum
 
 
 class ManPageNotFound(Exception):
@@ -29,9 +31,21 @@ class NoMultipleGroupsError(CommandError):
         self.role = role
 
 
+class FailedToGrantRoleError(CommandError):
+    def __init__(self, role: Role, member: Union[Member, User]):
+        self.role = role
+        self.member = member
+
+
 class MayNotUseCommandError(CommandError):
     pass
 
 
 class NoRulesError(CommandError):
     pass
+
+
+class GroupOrSubjectNotFoundError(Exception):
+    def __init__(self, group: str, _type: SubjectsOrGroupsEnum):
+        self.group = group
+        self._type = _type
