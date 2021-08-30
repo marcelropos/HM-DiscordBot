@@ -1,5 +1,6 @@
 #PyCharm may remove discord.py~=1.7.2
 discord.py~=1.7.2
+discord_components~=2.0.4
 aiohttp~=3.7.4.post0
 prettytable~=2.1.0
 aiosqlite~=0.17.0
