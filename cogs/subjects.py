@@ -118,7 +118,7 @@ class Subjects(Cog):
 
             role: The mentioned role.
         """
-        if len(ctx.message.role_mentions) > 1:
+        if len(ctx.message.role_mentions) != 1:
             raise BadArgument
 
         role: Role = ctx.message.role_mentions[0]
