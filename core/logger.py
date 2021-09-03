@@ -1,5 +1,6 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
 
 from core.globalEnum import LoggingLevel
 
@@ -14,9 +15,13 @@ class Logger:
         # Formatter for all Loggers
         formatter = logging.Formatter("%(asctime)s %(name)s/%(levelname)s %(funcName)s %(lineno)d: %(message)s")
 
+        # create log folder if it doesn't exist
+        log_folder = "./data/logs"
+        Path(log_folder).mkdir(parents=True, exist_ok=True)
+
         # File Handler to write all logs in the same File
         file_handler = TimedRotatingFileHandler(
-            filename=f'./data/logs/discord.log',
+            filename=log_folder + '/discord.log',
             encoding='utf-8',
             when='midnight',
             utc=True)
