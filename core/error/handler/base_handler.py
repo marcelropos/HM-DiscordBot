@@ -59,6 +59,8 @@ class BaseHandler(ABC):
         for handler in BaseHandler.__handler:
             if error.__class__ == handler.handles_type():
                 return handler(error, ctx)
+        from core.error.handler.default_handler import DefaultHandler
+        return DefaultHandler(error, ctx)
 
     def __init_subclass__(cls, **kwargs):
         cls.__handler.add(cls)

@@ -52,4 +52,12 @@ class YouAlreadyHaveThisRoleError(CommandError):
 class GroupOrSubjectNotFoundError(Exception):
     def __init__(self, group: str, _type: SubjectsOrGroupsEnum):
         self.group = group
-        self._type = _type
+        self.type = _type
+
+
+class LinkingNotFoundError(CommandError):
+    pass
+
+
+class HasNoHandlerException(Exception):
+    pass
