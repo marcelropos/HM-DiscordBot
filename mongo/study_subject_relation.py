@@ -48,11 +48,11 @@ class StudySubjectRelations(MongoCollection):
     async def insert_one(self, document: tuple[Role, Role, bool]) -> StudySubjectRelation:
         group, subject, default = document
 
-        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT).find({}) if
+        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({}) if
                 _.role is group}:
             raise BadArgument
 
-        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({}) if _.role is subject}:
+        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT).find({}) if _.role is subject}:
             raise BadArgument
 
         document = {
