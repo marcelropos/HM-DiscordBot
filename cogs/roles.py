@@ -2,11 +2,11 @@ from discord import TextChannel
 from discord.ext.commands import Cog, Bot, Context, command
 from discord.ext.tasks import loop
 
-from cogs.botStatus import listener
+from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role
 from cogs.util.placeholder import Placeholder
-from core.globalEnum import ConfigurationNameEnum
+from core.global_enum import ConfigurationNameEnum
 from core.predicates import has_not_role, has_role_plus, bot_chat
 
 first_init = True

@@ -8,12 +8,12 @@ from discord.ext.commands import Cog, Bot, group, bot_has_guild_permissions, Con
 from discord.ext.tasks import loop
 from pymongo.errors import ServerSelectionTimeoutError
 
-from cogs.botStatus import listener
+from cogs.bot_status import listener
 from core.error.error_collection import BrokenConfigurationError
 from core.error.error_reply import startup_error_reply
-from core.globalEnum import CollectionEnum, ConfigurationNameEnum
+from core.global_enum import CollectionEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
-from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.primitive_mongo_data import PrimitiveMongoData
 
 logger = get_discord_child_logger("KickGhosts")
 event = namedtuple("KickTime", ["hour", "min"])

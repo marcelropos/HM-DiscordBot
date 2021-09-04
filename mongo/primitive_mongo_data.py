@@ -1,5 +1,5 @@
-from core.globalEnum import CollectionEnum
-from mongo.mongoCollection import MongoCollection
+from core.global_enum import CollectionEnum
+from mongo.mongo_collection import MongoCollection
 
 
 class PrimitiveMongoData(MongoCollection):

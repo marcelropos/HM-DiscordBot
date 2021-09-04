@@ -7,7 +7,7 @@ from cogs.util.assign_variables import assign_accepted_chats, assign_role
 from cogs.util.placeholder import Placeholder
 from core.error.error_collection import BrokenConfigurationError
 from core.error.error_reply import startup_error_reply
-from core.globalEnum import ConfigurationNameEnum
+from core.global_enum import ConfigurationNameEnum
 from core.logger import get_mongo_child_logger, get_discord_child_logger
 
 error_msg = "Due to the previous reason, all commands limited to chats are out of function!"

@@ -8,10 +8,10 @@ from discord.ext.commands import Cog, Bot, BadArgument
 from discord.ext.commands import group, Context
 
 from core.error.error_collection import CouldNotEditEntryError
-from core.globalEnum import CollectionEnum
+from core.global_enum import CollectionEnum
 from core.logger import get_discord_child_logger
 # noinspection PyUnresolvedReferences
-from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.primitive_mongo_data import PrimitiveMongoData
 
 logger = get_discord_child_logger("mongo")
 collection_enum = []

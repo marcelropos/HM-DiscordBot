@@ -6,14 +6,14 @@ from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
-from cogs.botStatus import listener
+from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from core.error.error_collection import GroupOrSubjectNotFoundError, LinkingNotFoundError
-from core.globalEnum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
+from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat
 from mongo.study_subject_relation import StudySubjectRelations
-from mongo.subjectsorgroups import SubjectsOrGroups
+from mongo.subjects_or_groups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
 first_init = True

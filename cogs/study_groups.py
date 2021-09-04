@@ -8,18 +8,18 @@ from discord.ext.tasks import loop
 from discord_components import DiscordComponents, Interaction, Select, \
     SelectOption
 
-from cogs.botStatus import listener
+from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import FailedToGrantRoleError
-from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
+from core.global_enum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, is_not_in_group, has_role_plus
-from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.study_subject_relation import StudySubjectRelations
-from mongo.subjectsorgroups import SubjectsOrGroups
+from mongo.subjects_or_groups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
 verified: Placeholder = Placeholder()

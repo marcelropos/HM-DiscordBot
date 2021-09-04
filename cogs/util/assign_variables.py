@@ -4,9 +4,9 @@ from discord import TextChannel, Role, Guild
 from discord.ext.commands import Bot
 
 from core.error.error_collection import BrokenConfigurationError
-from core.globalEnum import CollectionEnum, ConfigurationNameEnum
-from mongo.primitiveMongoData import PrimitiveMongoData
-from mongo.subjectsorgroups import SubjectsOrGroups
+from core.global_enum import CollectionEnum, ConfigurationNameEnum
+from mongo.primitive_mongo_data import PrimitiveMongoData
+from mongo.subjects_or_groups import SubjectsOrGroups
 
 
 async def assign_accepted_chats(bot: Bot, channels: set[TextChannel]):
