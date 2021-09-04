@@ -6,7 +6,7 @@ from typing import Optional, Union
 from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
-from core.global_enum import CollectionEnum, ConfigurationNameEnum, ConfigurationAttributeEnum, DBKeyWrapperEnum
+from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from mongo.mongo_collection import MongoCollection, MongoDocument
 from mongo.primitive_mongo_data import PrimitiveMongoData
 
@@ -70,7 +70,7 @@ class StudyChannels(MongoCollection):
 
         hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS,
                                                             ConfigurationNameEnum.DELETE_AFTER,
-                                                            ConfigurationAttributeEnum.HOURS)
+                                                            ConfigurationNameEnum.HOURS)
 
         document = {
             DBKeyWrapperEnum.OWNER.value: owner.id,
