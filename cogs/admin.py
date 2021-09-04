@@ -121,22 +121,20 @@ class Admin(Cog):
                    help="All messages after a certain date and from specified members will be deleted.\n"
                         "Dateformat: dd.mm.yyyy")
     @commands.bot_has_guild_permissions(administrator=True)
-    async def member(self, ctx: Context, after, *, mentions):
+    async def member(self, ctx: Context, after, *, mentions):  # parameter only for pretty help.
         """
-        Cleans a chat.
+        Cleans a chat of the messages from a user for the defined time.
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
             after: Messages younger than after will be deleted.
 
-            mentions: The user to be purged. (supplied by ctx.message.mentions)
+            mentions: The user to be purged.
 
         Replies:
             A success message containing the deleted amount of messages.
         """
-        # noinspection PyStatementEffect
-        mentions  # mentions is only assigned for PrettyHelp and This statement is to suppress a not used parameter.
 
         after: datetime = datetime.strptime(after, '%d.%m.%y')
         message: Message = ctx.message
