@@ -147,13 +147,13 @@ class StudyGroups(Cog):
                     name="category")
     async def group_category(self, ctx: Context, category: int):
         """
-                Saves the group separator role:
+        Saves the group separator role:
 
-                Args:
-                    ctx: The command context provided by the discord.py wrapper.
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
 
-                    category: The category id for the channels.
-                """
+            category: The category id for the channels.
+        """
 
         db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
         key = ConfigurationNameEnum.STUDY_CATEGORY
