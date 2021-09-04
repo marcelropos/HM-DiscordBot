@@ -11,7 +11,7 @@ from mongo.primitive_mongo_data import PrimitiveMongoData
 
 logger = get_discord_child_logger("logger")
 
-pretty_logger_help = "You can assign one of these verbose levels:\n{}\n to on of these logger: \n{}"
+pretty_logger_help = "You can assign one of these verbose levels:\n{}\n to one of these logger: \n{}"
 
 
 class Logger(Cog):
