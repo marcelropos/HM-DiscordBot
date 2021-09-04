@@ -21,7 +21,7 @@ class BadArgumentHandler(BaseHandler):
     @property
     async def solution(self) -> str:
         # TODO: reply with the proper help message and supply the proper chat for more help
-        cmd: str = self.ctx.command
+        cmd: str = self.ctx.command.name
         if self.ctx.subcommand_passed:
             cmd += f" {self.ctx.subcommand_passed}"
         await self.ctx.send_help(cmd)
