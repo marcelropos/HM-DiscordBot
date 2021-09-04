@@ -1,6 +1,7 @@
+import re
 from typing import Union
 
-from discord import Role, TextChannel, Member, User, Guild
+from discord import Role, TextChannel, Member, User, Guild, Embed
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
@@ -12,8 +13,9 @@ from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.globalEnum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
 from core.logger import get_discord_child_logger
-from core.predicates import bot_chat
+from core.predicates import bot_chat, has_role_plus
 from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.study_subject_relation import StudySubjectRelations
 from mongo.subjectsorgroups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
@@ -28,6 +30,7 @@ logger = get_discord_child_logger("Subjects")
 class Subjects(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
+        self.match = re.compile(r"([a-z]+)([0-9]+)", re.I)
         self.db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT)
         self.need_init = True
         if not first_init:
@@ -56,6 +59,118 @@ class Subjects(Cog):
             if need_init:
                 DiscordComponents(self.bot)
                 await assign_set_of_roles(self.bot.guilds[0], self.db, subjects_roles)
+
+    # subject group
+
+    @group(pass_context=True,
+           name="subject")
+    @bot_chat(bot_channels)
+    @has_role_plus(verified)
+    async def subject(self, ctx: Context):
+        if not ctx.invoked_subcommand:
+            raise BadArgument
+        member: Union[Member, User] = ctx.author
+        logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
+
+    @subject.command(pass_context=True,
+                     name="show")
+    async def subject_show(self, ctx: Context):
+        """
+        Shows all possible opt-in and opt-out subjects of the user
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+        """
+        member: Union[Member, User] = ctx.author
+        roles: list[Role] = member.roles
+
+        subjects: list[Role] = await self.get_possible_subjects(ctx, member, roles)
+
+        if not subjects:
+            return
+
+        embed = Embed(title="Subjects",
+                      description="You can opt-in/out of following subjects:")
+        subjects_text: str = str([subject.name for subject in subjects if subject in roles])
+        embed.add_field(name="Opt-out Subjects", value=subjects_text[1:-1].replace("'", "`").replace(",", "\n"),
+                        inline=False)
+        subjects_text: str = str([subject.name for subject in subjects if subject not in roles])
+        embed.add_field(name="Opt-in Subjects", value=subjects_text[1:-1].replace("'", "`").replace(",", "\n"),
+                        inline=False)
+
+        await ctx.reply(embed=embed)
+
+    @subject.command(pass_context=True,
+                     name="add")
+    async def subject_add(self, ctx: Context, subject: str):
+        """
+        opts-in a user into the specified subject
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            subject: The Subject to opt into
+        """
+        member: Union[Member, User] = ctx.author
+        roles: list[Role] = member.roles
+
+        subjects: list[Role] = await self.get_possible_subjects(ctx, member, roles)
+
+        if not subjects:
+            return
+
+        if subject not in [subject.name for subject in subjects]:
+            embed = Embed(title="No permission",
+                          description=f"You can't be assigned to this subject.\n"
+                                      f"Please contact an admin if you think this is a mistake")
+            await ctx.reply(content=f"<@{member.id}>", embed=embed)
+            return
+
+        if subject not in [subject.name for subject in subjects if subject not in roles]:
+            embed = Embed(title="Already assigned",
+                          description=f"You are already assigned to this subject")
+            await ctx.reply(content=f"<@{member.id}>", embed=embed)
+            return
+
+        role: Role = [role for role in subjects if role.name == subject][0]
+        await member.add_roles(role)
+        embed = Embed(title="successfully assigned",
+                      description=f"Assigned you to <@&{role.id}>")
+        await ctx.reply(content=f"<@{member.id}>", embed=embed)
+        return
+
+    @subject.command(pass_context=True,
+                     aliases=["rem", "rm"],
+                     name="remove")
+    async def subject_remove(self, ctx: Context, subject: str):
+        """
+        opts-out a user into the specified subject
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            subject: The Subject to opt into
+        """
+        member: Union[Member, User] = ctx.author
+        roles: list[Role] = member.roles
+
+        subjects: list[Role] = await self.get_possible_subjects(ctx, member, roles)
+
+        if not subjects:
+            return
+
+        if subject not in [subject.name for subject in subjects if subject in roles]:
+            embed = Embed(title="Not assigned",
+                          description=f"You are not assigned to this subject")
+            await ctx.reply(content=f"<@{member.id}>", embed=embed)
+            return
+
+        role: Role = [role for role in subjects if role.name == subject][0]
+        await member.add_roles(role)
+        embed = Embed(title="successfully Opted out of subject",
+                      description=f"Removed you from <@&{role.id}>")
+        await ctx.reply(content=f"<@{member.id}>", embed=embed)
+        return
 
     # subjects group
 
@@ -127,6 +242,30 @@ class Subjects(Cog):
         db = PrimitiveMongoData(CollectionEnum.ROLES)
         msg = "separator"
         await StudySubjectUtil.update_category_and_separator(role.id, ctx, db, key, msg)
+
+    async def get_possible_subjects(self, ctx: Context,
+                                    member: Union[Member, User],
+                                    roles: list[Role]) -> list[Role]:
+        study_group: list[Role] = [document.role for document in
+                                   await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({}) if
+                                   document.role in roles]
+        if not study_group:
+            embed = Embed(title="No Study group assigned",
+                          description=f"You have no study group assigned to yourself.\n"
+                                      f"Please assign yourself to a study group with `!study`")
+            await ctx.reply(content=f"<@{member.id}>", embed=embed)
+            return []
+        study_group: Role = study_group[0]
+        study_master, study_semester = re.match(self.match, study_group.name).groups()
+        study_semester = int(study_semester)
+        compatible_study_groups: list[Role] = [study_group]
+        for i in range(study_semester):
+            compatible_study_groups += [document.role for document in
+                                        await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({}) if
+                                        document.role.name == study_master + str(i)]
+        return [document.subject for document in
+                await StudySubjectRelations(self.bot).find({}) if
+                document.group in compatible_study_groups]
 
 
 def setup(bot: Bot):
