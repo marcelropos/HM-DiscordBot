@@ -64,9 +64,9 @@ class Linking(Cog):
 
     @link.command(pass_context=True)
     async def add(self, ctx: Context,
-                  study_role: Role,
-                  subject_role: Role,
-                  default: bool):  # parameter only for pretty help.
+                  study_role: Role,  # parameter only for pretty help.
+                  subject_role: Role,  # parameter only for pretty help.
+                  default: bool):
         """
         Adds a new subject to study link
 
@@ -98,17 +98,19 @@ class Linking(Cog):
             }
             await self.db.update_one(existing_link, new_link)
             embed = Embed(title="Linking Add",
-                          description=f"Successfully updated <@&{study_role.id}> to <@&{subject_role.id}> with default={default}")
+                          description=f"Successfully updated <@&{study_role.id}> to <@&{subject_role.id}> "
+                                      f"with default={default}")
         else:
             await self.db.insert_one((study_role, subject_role, default))
             embed = Embed(title="Linking Add",
-                          description=f"Successfully linked <@&{study_role.id}> to <@&{subject_role.id}> with default={default}")
+                          description=f"Successfully linked <@&{study_role.id}> to <@&{subject_role.id}> "
+                                      f"with default={default}")
         await ctx.reply(embed=embed)
 
     @link.command(pass_context=True,
                   aliases=["rem", "rm"])
     async def remove(self, ctx: Context,
-                     study_role: Role,
+                     study_role: Role,  # parameter only for pretty help.
                      subject_role: Role):  # parameter only for pretty help.
         """
         Removes a link between study group and subject
@@ -137,7 +139,8 @@ class Linking(Cog):
 
         await self.db.delete_one(document)
         embed = Embed(title="Linking Remove",
-                      description=f"Successfully deleted link <@&{study_role.id}> to <@&{subject_role.id}> with default={link[0].default}")
+                      description=f"Successfully deleted link <@&{study_role.id}> to <@&{subject_role.id}> "
+                                  f"with default={link[0].default}")
         await ctx.reply(embed=embed)
 
     @link.command(pass_context=True)
