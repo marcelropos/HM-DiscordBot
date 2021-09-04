@@ -136,11 +136,11 @@ class StudyGroups(Cog):
         category_key = ConfigurationNameEnum.STUDY_CATEGORY
         separator_key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
 
-        await StudySubjectUtil.get_server_objects(category_key,
-                                                  guild,
-                                                  name,
-                                                  separator_key,
-                                                  self.db)
+        study_groups.add((await StudySubjectUtil.get_server_objects(category_key,
+                                                                    guild,
+                                                                    name,
+                                                                    separator_key,
+                                                                    self.db)).role)
 
     @_group.command(pass_context=True,
                     name="category")
