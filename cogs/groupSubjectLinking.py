@@ -166,8 +166,8 @@ class Linking(Cog):
                     else:
                         non_default_links[study] = [subject]
 
-            embed = Embed(title="Safe Roles:",
-                          description=f"At the moment there are the following Roles selected as 'Safe Roles'")
+            embed = Embed(title="Linking:",
+                          description=f"At the moment there are following linking between study groups and subjects:")
             linking_text = ""
             for study, subjects in default_links.items():
                 linking_text += f"{study} : {reduce((lambda x, y: x + ' ' + y), subjects)}\n"
