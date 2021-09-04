@@ -18,6 +18,7 @@ from core.globalEnum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationN
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, is_not_in_group, has_role_plus
 from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.study_subject_relation import StudySubjectRelations
 from mongo.subjectsorgroups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
@@ -196,9 +197,12 @@ class StudyGroups(Cog):
         await ctx.reply(content="Please select **one** of the following groups.",
                         components=[group_names_options, group_semester_options])
         role: Role = await self.get_role(ctx.author, groups, group_names, group_semester)
-        await member.add_roles(role)
+        subjects = [document.subject for document in await StudySubjectRelations(self.bot).find({}) if
+                    document.group == role and document.default]
+        await member.add_roles(role, *subjects)
         embed = Embed(title="Grant new role",
-                      description=f"Congratulations, you have received the <@&{role.id}> role.")
+                      description=f"Congratulations, you have received the <@&{role.id}> role.\n"
+                                  f"You also received the appropriate subjects for this study group.")
         await ctx.reply(content=f"<@{member.id}>", embed=embed)
 
     async def get_role(self, author: Union[Member, User],
@@ -244,7 +248,7 @@ class StudyGroups(Cog):
                                                    check=lambda x: self.check(x, group_names, member))
         await res.respond(content=f"I received your group input.")
         # noinspection PyUnresolvedReferences
-        return res.component[0].value
+        return res.values[0]
 
     async def wait_for_semester(self, group_semester: list[str], member: Union[Member, User]) -> Union[str, int]:
         """
@@ -262,11 +266,11 @@ class StudyGroups(Cog):
                                                    check=lambda x: self.check(x, group_semester, member))
         await res.respond(content="I received your semester input.")
         # noinspection PyUnresolvedReferences
-        return res.component[0].value
+        return res.values[0]
 
     @staticmethod
     def check(res, collection: list[str], member: Member) -> bool:
-        return res.component[0].value in collection and res.user.id == member.id
+        return res.values[0] in collection and res.user.id == member.id
 
 
 def setup(bot: Bot):
