@@ -1,6 +1,9 @@
+from typing import Optional
+
 from discord import CategoryChannel, Role, PermissionOverwrite, TextChannel, Guild, Embed
 from discord.ext.commands import Context
 
+from core.error.error_collection import BrokenConfigurationError
 from core.global_enum import CollectionEnum, ConfigurationNameEnum
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.subjects_or_groups import SubjectOrGroup, SubjectsOrGroups
@@ -44,7 +47,18 @@ class StudySubjectUtil:
         role: Role = await guild.create_role(name=name,
                                              reason="")
 
-        overwrites = {role: PermissionOverwrite(read_messages=True)}
+        role_id: Optional[dict] = await PrimitiveMongoData(CollectionEnum.ROLES).find_one(
+            {ConfigurationNameEnum.RESTRICTED.value: {"$exists": True}})
+
+        restricted_role = None
+        if role_id:
+            restricted_role = guild.get_role(role_id[ConfigurationNameEnum.RESTRICTED.value])
+
+        if not restricted_role:
+            raise BrokenConfigurationError
+
+        overwrites = {role: PermissionOverwrite(read_messages=True),
+                      restricted_role: PermissionOverwrite(send_messages=False)}
         channel: TextChannel = await guild.create_text_channel(name=name,
                                                                category=study_category,
                                                                overwrites=overwrites,
