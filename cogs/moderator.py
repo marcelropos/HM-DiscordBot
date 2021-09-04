@@ -65,8 +65,6 @@ class Moderator(Cog):
             ctx: The command context provided by the discord.py wrapper.
 
             member: The member who is to receive a role.
-
-
         """
         member: Union[Member, User] = ctx.message.mentions[0]
         await member.add_roles(verified.item, reason=f"{str(ctx.author)}")
@@ -76,7 +74,6 @@ class Moderator(Cog):
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
     async def restrict(self, ctx: Context, mode: bool, member):  # parameter only for pretty help.
-        global mod_chat, restricted
         """
         Assigns a role to the mentioned member.
 
@@ -86,8 +83,8 @@ class Moderator(Cog):
             mode: True if the role should be added, false if it should be removed.
 
             member: The member who is to receive a role.
-
         """
+        global mod_chat, restricted
         member: Union[Member, User] = ctx.message.mentions[0]
         title = "User restriction"
         if mode:
