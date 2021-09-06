@@ -6,7 +6,7 @@ from typing import Optional, Union
 from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
-from core.global_enum import DBKeyWrapperEnum
+from core.global_enum import DBKeyWrapperEnum, CollectionEnum
 from mongo.mongo_collection import MongoCollection, MongoDocument
 
 
@@ -47,7 +47,7 @@ class GamingChannel(MongoDocument):
 
 class GamingChannels(MongoCollection):
     def __init__(self, bot: Bot):
-        super().__init__(self.__class__.__name__)
+        super().__init__(CollectionEnum.GAMING_CHANNELS.value)
         self.bot = bot
 
     async def _create_gaming_channel(self, result):

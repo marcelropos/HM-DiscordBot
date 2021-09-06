@@ -23,7 +23,7 @@ class StudyChannel(GamingChannel):
 
 class StudyChannels(MongoCollection):
     def __init__(self, bot: Bot):
-        super().__init__(self.__class__.__name__)
+        super().__init__(CollectionEnum.STUDY_CHANNELS.value)
         self.bot = bot
 
     async def _create_study_channel(self, result):
@@ -40,10 +40,9 @@ class StudyChannels(MongoCollection):
                                             int,
                                             Optional[datetime.datetime]]) -> StudyChannel:
         owner, chat, voice, token, delete_at = entry
-
-        hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS,
-                                                            ConfigurationNameEnum.DELETE_AFTER,
-                                                            ConfigurationNameEnum.HOURS)
+        key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+        hours = (await PrimitiveMongoData(CollectionEnum.TEMP_CHANNELS_CONFIGURATION.value).find_one(
+            {key: {"$exists": True}}))[key]
 
         document = {
             DBKeyWrapperEnum.OWNER.value: owner.id,
