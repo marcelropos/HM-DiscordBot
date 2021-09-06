@@ -57,9 +57,9 @@ class StudySubjectUtil:
         if not restricted_role:
             raise BrokenConfigurationError
 
-        overwrites = {role: PermissionOverwrite(read_messages=True),
+        overwrites = {role: PermissionOverwrite(view_channel=True),
                       restricted_role: PermissionOverwrite(send_messages=False),
-                      guild.default_role: PermissionOverwrite(read_messages=False)}
+                      guild.default_role: PermissionOverwrite(view_channel=False)}
         channel: TextChannel = await guild.create_text_channel(name=name,
                                                                category=study_category,
                                                                overwrites=overwrites,
