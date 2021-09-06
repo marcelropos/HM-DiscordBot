@@ -18,7 +18,7 @@ from mongo.subjectsorgroups import SubjectsOrGroups
 bot_channels: set[TextChannel] = set()
 first_init = True
 
-logger = get_discord_child_logger("Subjects")
+logger = get_discord_child_logger("Linking")
 
 
 class Linking(Cog):
