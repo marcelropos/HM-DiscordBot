@@ -134,7 +134,7 @@ class StudyGroups(Cog):
             name: The name of the role and the chat.
         """
         guild: Guild = ctx.guild
-        category_key = ConfigurationNameEnum.STUDY_CATEGORY
+        category_key = ConfigurationNameEnum.GROUP_CATEGORY
         separator_key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
 
         study_groups.add((await StudySubjectUtil.get_server_objects(category_key,
@@ -156,7 +156,7 @@ class StudyGroups(Cog):
         """
 
         db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
-        key = ConfigurationNameEnum.STUDY_CATEGORY
+        key = ConfigurationNameEnum.GROUP_CATEGORY
         msg = "category"
         await StudySubjectUtil.update_category_and_separator(category, ctx, db, key, msg)
 

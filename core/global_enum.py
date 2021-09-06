@@ -25,7 +25,7 @@ class ConfigurationNameEnum(Enum):
     RESTRICTED = "restricted"
     STUDY_SEPARATOR_ROLE = "studySeparator"
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
-    STUDY_CATEGORY = "studyCategory"
+    GROUP_CATEGORY = "groupCategory"
     SUBJECTS_CATEGORY = "subjectsCategory"
     ENABLED = "enabled"
     DEADLINE = "deadline"
