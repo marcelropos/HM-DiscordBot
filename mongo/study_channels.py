@@ -7,45 +7,18 @@ from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
-from mongo.mongo_collection import MongoCollection, MongoDocument
+from mongo.gaming_channels import GamingChannel
+from mongo.mongo_collection import MongoCollection
 from mongo.primitive_mongo_data import PrimitiveMongoData
 
 
 @dataclass
-class StudyChannel(MongoDocument):
-    _id: int
-    owner: Union[Member, User]
-    chat: TextChannel
-    voice: VoiceChannel
-    token: int
+class StudyChannel(GamingChannel):
     deleteAt: datetime
 
     @property
-    def owner_id(self) -> int:
-        return self.owner.id
-
-    @property
-    def voice_id(self) -> int:
-        return self.voice.id
-
-    @property
-    def channel_id(self) -> int:
-        return self.chat.id
-
-    @property
-    def voice_member(self) -> set[Union[Member, User]]:
-        return {member for member in self.voice.members if not member.bot}
-
-    @property
     def document(self) -> dict[str: typing.Any]:
-        return {
-            DBKeyWrapperEnum.ID.value: self._id,
-            DBKeyWrapperEnum.OWNER.value: self.owner.id,
-            DBKeyWrapperEnum.CHAT.value: self.chat.id,
-            DBKeyWrapperEnum.VOICE.value: self.voice.id,
-            DBKeyWrapperEnum.TOKEN.value: self.token,
-            DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt
-        }
+        return super(StudyChannel, self).document() + {DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt}
 
 
 class StudyChannels(MongoCollection):

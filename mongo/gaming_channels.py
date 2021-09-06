@@ -50,7 +50,7 @@ class GamingChannels(MongoCollection):
         super().__init__(self.__class__.__name__)
         self.bot = bot
 
-    async def _create_study_channel(self, result):
+    async def _create_gaming_channel(self, result):
         _id, owner_id, chat_id, voice_id, token = result
         guild: Guild = self.bot.guilds[0]
 
@@ -78,14 +78,14 @@ class GamingChannels(MongoCollection):
 
     async def find_one(self, find_params: dict) -> GamingChannel:
         result = await self.collection.find_one(find_params)
-        return await self._create_study_channel(result)
+        return await self._create_gaming_channel(result)
 
     async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[GamingChannel]:
         cursor = self.collection.find(find_params)
         if sort:
             cursor = cursor.sort(self)
 
-        return [await self._create_study_channel(entry) for entry in await cursor.to_list(limit)]
+        return [await self._create_gaming_channel(entry) for entry in await cursor.to_list(limit)]
 
     async def update_one(self, find_params: dict, replace: dict) -> GamingChannel:
         await self.collection.update_one(find_params, {"$set": replace})
