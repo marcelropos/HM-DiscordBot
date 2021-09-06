@@ -61,3 +61,7 @@ class LinkingNotFoundError(CommandError):
 
 class HasNoHandlerException(Exception):
     pass
+
+
+class DatabaseIllegalState(Exception):
+    pass

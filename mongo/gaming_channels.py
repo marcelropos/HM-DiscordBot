@@ -39,8 +39,8 @@ class GamingChannel(MongoDocument):
         return {
             DBKeyWrapperEnum.ID.value: self._id,
             DBKeyWrapperEnum.OWNER.value: self.owner.id,
-            DBKeyWrapperEnum.CHAT.value: self.chat.id,
-            DBKeyWrapperEnum.VOICE.value: self.voice.id,
+            DBKeyWrapperEnum.CHAT.value: self.chat.id if self.chat else None,
+            DBKeyWrapperEnum.VOICE.value: self.voice.id if self.voice else None,
             DBKeyWrapperEnum.TOKEN.value: self.token,
         }
 
@@ -51,14 +51,13 @@ class GamingChannels(MongoCollection):
         self.bot = bot
 
     async def _create_gaming_channel(self, result):
-        _id, owner_id, chat_id, voice_id, token = result
-        guild: Guild = self.bot.guilds[0]
-
-        chat: TextChannel = guild.get_channel(chat_id)
-        voice: VoiceChannel = guild.get_channel(voice_id)
-        owner: Union[Member, User] = await guild.fetch_member(owner_id)
-
-        return GamingChannel(_id, owner, chat, voice, token)
+        if result:
+            guild: Guild = self.bot.guilds[0]
+            return GamingChannel(result[DBKeyWrapperEnum.ID.value],
+                                await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
+                                guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
+                                guild.get_channel(DBKeyWrapperEnum.VOICE.value),
+                                result[DBKeyWrapperEnum.TOKEN.value])
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
