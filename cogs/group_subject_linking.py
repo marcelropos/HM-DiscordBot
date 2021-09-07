@@ -18,7 +18,7 @@ from mongo.subjects_or_groups import SubjectsOrGroups
 bot_channels: set[TextChannel] = set()
 first_init = True
 
-logger = get_discord_child_logger("Subjects")
+logger = get_discord_child_logger("Linking")
 
 
 class Linking(Cog):
@@ -86,11 +86,7 @@ class Linking(Cog):
                          document.group == study_role and document.subject == subject_role]
 
         if existing_link:
-            existing_link = {
-                DBKeyWrapperEnum.GROUP.value: existing_link[0].group.id,
-                DBKeyWrapperEnum.SUBJECT.value: existing_link[0].subject.id,
-                DBKeyWrapperEnum.DEFAULT.value: existing_link[0].default
-            }
+            existing_link = existing_link[0].document
             new_link = {
                 DBKeyWrapperEnum.GROUP.value: study_role.id,
                 DBKeyWrapperEnum.SUBJECT.value: subject_role.id,
@@ -131,13 +127,7 @@ class Linking(Cog):
         if not link:
             raise LinkingNotFoundError
 
-        document = {
-            DBKeyWrapperEnum.GROUP.value: link[0].group.id,
-            DBKeyWrapperEnum.SUBJECT.value: link[0].subject.id,
-            DBKeyWrapperEnum.DEFAULT.value: link[0].default
-        }
-
-        await self.db.delete_one(document)
+        await self.db.delete_one(link[0].document)
         embed = Embed(title="Linking Remove",
                       description=f"Successfully deleted link <@&{study_role.id}> to <@&{subject_role.id}> "
                                   f"with default={link[0].default}")

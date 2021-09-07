@@ -69,3 +69,15 @@ class DatabaseIllegalState(Exception):
 
 class WrongChatForCommand(Exception):
     pass
+
+
+class CantAssignToSubject(CommandError):
+    pass
+
+
+class CantRemoveSubject(CommandError):
+    pass
+
+
+class NoStudyGroupAssigned(CommandError):
+    pass
