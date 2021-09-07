@@ -91,12 +91,14 @@ class Subjects(Cog):
 
         embed = Embed(title="Subjects",
                       description="You can opt-in/out of following subjects:")
-        subjects_text: str = str([subject.name for subject in subjects if subject in roles])
-        embed.add_field(name="Opt-out Subjects", value=subjects_text[1:-1].replace("'", "`").replace(",", "\n"),
-                        inline=False)
-        subjects_text: str = str([subject.name for subject in subjects if subject not in roles])
-        embed.add_field(name="Opt-in Subjects", value=subjects_text[1:-1].replace("'", "`").replace(",", "\n"),
-                        inline=False)
+        subjects_text: str = str([subject.name for subject in subjects if subject in roles])[1:-1]
+        if subjects_text:
+            embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
+                            inline=False)
+        subjects_text: str = str([subject.name for subject in subjects if subject not in roles])[1:-1]
+        if subjects_text:
+            embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
+                            inline=False)
 
         await ctx.reply(embed=embed)
 
@@ -246,9 +248,8 @@ class Subjects(Cog):
     async def get_possible_subjects(self, ctx: Context,
                                     member: Union[Member, User],
                                     roles: list[Role]) -> list[Role]:
-        study_group: list[Role] = [document.role for document in
-                                   await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({}) if
-                                   document.role in roles]
+        all_study_groups = await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({})
+        study_group: list[Role] = [document.role for document in all_study_groups if document.role in roles]
         if not study_group:
             embed = Embed(title="No Study group assigned",
                           description=f"You have no study group assigned to yourself.\n"
@@ -260,8 +261,7 @@ class Subjects(Cog):
         study_semester = int(study_semester)
         compatible_study_groups: list[Role] = [study_group]
         for i in range(study_semester):
-            compatible_study_groups += [document.role for document in
-                                        await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({}) if
+            compatible_study_groups += [document.role for document in all_study_groups if
                                         document.role.name == study_master + str(i)]
         return [document.subject for document in
                 await StudySubjectRelations(self.bot).find({}) if
