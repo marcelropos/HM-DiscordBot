@@ -1,7 +1,8 @@
 from collections import namedtuple
+from datetime import datetime, timedelta
 from typing import Union
 
-from discord import VoiceState, Member, User, VoiceChannel, Guild, TextChannel
+from discord import VoiceState, Member, User, VoiceChannel, Guild, TextChannel, Embed
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
 
@@ -72,12 +73,16 @@ class StudyTmpChannels(Cog):
                 guild: Guild = self.bot.guilds[0]
                 study_channels = {document.voice for document in await self.db.find({})}
 
+    def cog_unload(self):
+        self.delete_old_channels.stop()
+
     @listener()
     async def on_ready(self):
         global first_init
         if first_init:
             first_init = False
             self.ainit.start()
+            self.delete_old_channels.start()
 
     @listener()
     async def on_voice_state_update(self, member: Union[Member, User], before: VoiceState, after: VoiceState):
@@ -111,16 +116,25 @@ class StudyTmpChannels(Cog):
 
                 document: StudyChannel = document[0]
 
-                # TODO check if it should be deleted at a later date
+                if not document.deleteAt:
+                    await document.voice.delete(reason="No longer used")
+                    await document.chat.delete(reason="No longer used")
 
-                await document.voice.delete(reason="No longer used")
-                await document.chat.delete(reason="No longer used")
+                    await self.db.delete_one(document.document)
 
-                await self.db.delete_one(document.document)
+                    study_channels.remove(voice_channel)
 
-                study_channels.remove(voice_channel)
-
-                logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+                    logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+                else:
+                    key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+                    time_difference: tuple[int, int] = (await self.config_db.find_one({key: {"$exists": True}}))[key]
+                    document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+                    await self.db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+                    embed = Embed(title="Channel Deletion",
+                                  description=f"This channel will be deleted "
+                                              f"<t:{int(document.deleteAt.timestamp())}:R> at "
+                                              f"<t:{int(document.deleteAt.timestamp())}:F>")
+                    await document.chat.send(embed=embed)
 
     @group(pass_context=True,
            name="studyChannel")
@@ -165,6 +179,30 @@ class StudyTmpChannels(Cog):
         key = ConfigurationNameEnum.STUDY_JOIN_VOICE_CHANNEL
         msg = "voice Channel"
         await TmpChannelUtil.update_category_and_voice_channel(channel, ctx, db, key, msg)
+
+    @loop(minutes=10)
+    async def delete_old_channels(self):
+        to_delete = set()
+        for voice_channel in study_channels:
+            if len({member for member in voice_channel.members if not member.bot}) == 0:
+                document: list[StudyChannel] = await self.db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+
+                if not document:
+                    raise DatabaseIllegalState
+
+                document: StudyChannel = document[0]
+
+                if datetime.now() < document.deleteAt:
+                    await document.voice.delete(reason="No longer used")
+                    await document.chat.delete(reason="No longer used")
+
+                    await self.db.delete_one(document.document)
+
+                    to_delete.add(voice_channel)
+
+                    logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+        for old in to_delete:
+            study_channels.remove(old)
 
 
 def setup(bot: Bot):
