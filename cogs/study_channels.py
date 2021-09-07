@@ -70,7 +70,6 @@ class StudyTmpChannels(Cog):
                 for deleted in deleted_channels:
                     await self.db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
 
-                guild: Guild = self.bot.guilds[0]
                 study_channels = {document.voice for document in await self.db.find({})}
 
     def cog_unload(self):
@@ -103,38 +102,20 @@ class StudyTmpChannels(Cog):
                 logger.info(f"Created Tmp Study Channel with the name '{voice_channel.name}'")
 
             if voice_channel in study_channels:
-                pass  # TODO permissions
-
-        if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
-            voice_channel: VoiceChannel = before.channel
-            if voice_channel in study_channels and len(
-                    {member for member in voice_channel.members if not member.bot}) == 0:
                 document: list[StudyChannel] = await self.db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
                 if not document:
                     raise DatabaseIllegalState
 
                 document: StudyChannel = document[0]
+                await document.chat.set_permissions(member, view_channel=True)
+                await document.voice.set_permissions(member, view_channel=True)
 
-                if not document.deleteAt:
-                    await document.voice.delete(reason="No longer used")
-                    await document.chat.delete(reason="No longer used")
-
-                    await self.db.delete_one(document.document)
-
-                    study_channels.remove(voice_channel)
-
-                    logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
-                else:
-                    key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
-                    time_difference: tuple[int, int] = (await self.config_db.find_one({key: {"$exists": True}}))[key]
-                    document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
-                    await self.db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
-                    embed = Embed(title="Channel Deletion",
-                                  description=f"This channel will be deleted "
-                                              f"<t:{int(document.deleteAt.timestamp())}:R> at "
-                                              f"<t:{int(document.deleteAt.timestamp())}:F>")
-                    await document.chat.send(embed=embed)
+        if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
+            voice_channel: VoiceChannel = before.channel
+            if voice_channel in study_channels:
+                await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger,
+                                                          reset_delete_at=(True, self.config_db))
 
     @group(pass_context=True,
            name="studyChannel")
@@ -184,23 +165,8 @@ class StudyTmpChannels(Cog):
     async def delete_old_channels(self):
         to_delete = set()
         for voice_channel in study_channels:
-            if len({member for member in voice_channel.members if not member.bot}) == 0:
-                document: list[StudyChannel] = await self.db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
-
-                if not document:
-                    raise DatabaseIllegalState
-
-                document: StudyChannel = document[0]
-
-                if datetime.now() < document.deleteAt:
-                    await document.voice.delete(reason="No longer used")
-                    await document.chat.delete(reason="No longer used")
-
-                    await self.db.delete_one(document.document)
-
-                    to_delete.add(voice_channel)
-
-                    logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
+                to_delete.add(voice_channel)
         for old in to_delete:
             study_channels.remove(old)
 

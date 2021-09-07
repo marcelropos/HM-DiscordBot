@@ -1,10 +1,13 @@
+import logging
+from datetime import datetime, timedelta
 from typing import Union
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed
 from discord.ext.commands import Context
 
-from core.global_enum import ConfigurationNameEnum, CollectionEnum
+from core.error.error_collection import DatabaseIllegalState
+from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.study_channels import StudyChannels, StudyChannel
@@ -111,3 +114,36 @@ class TmpChannelUtil:
         secret = pyotp.random_base32()
         totp = pyotp.TOTP(secret)
         return int(totp.now())
+
+    @staticmethod
+    async def check_delete_channel(voice_channel: VoiceChannel, db: Union[GamingChannels, StudyChannels],
+                                   logger: logging.Logger,
+                                   reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
+        if len({member for member in voice_channel.members if not member.bot}) == 0:
+            document: list[StudyChannel] = await db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+
+            if not document:
+                logger.error(voice_channel.name)
+                raise DatabaseIllegalState
+
+            document: StudyChannel = document[0]
+
+            if not document.deleteAt or (not reset_delete_at[0] and datetime.now() > document.deleteAt):
+                await document.voice.delete(reason="No longer used")
+                await document.chat.delete(reason="No longer used")
+
+                await db.delete_one(document.document)
+
+                logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+                return True
+            elif reset_delete_at[0] and document.deleteAt:
+                key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+                time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[key]
+                document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+                embed = Embed(title="Channel Deletion",
+                              description=f"This channel will be deleted "
+                                          f"<t:{int(document.deleteAt.timestamp())}:R> at "
+                                          f"<t:{int(document.deleteAt.timestamp())}:F>")
+                await document.chat.send(embed=embed)
+        return False

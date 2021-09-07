@@ -9,6 +9,7 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role
 from cogs.util.placeholder import Placeholder
+from cogs.util.tmp_channel_util import TmpChannelUtil
 from core.error.error_collection import WrongChatForCommand, MayNotUseCommandError
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
@@ -80,6 +81,7 @@ class Tmpc(Cog):
 
         await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
 
     async def check_tmpc_channel(self, ctx: Context) -> Union[GamingChannel, StudyChannel]:
         key = DBKeyWrapperEnum.CHAT.value
