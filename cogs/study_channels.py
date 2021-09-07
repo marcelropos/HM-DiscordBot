@@ -26,7 +26,7 @@ default_study_channel_name = "Study-{0:02d}"
 study_channels: set[VoiceChannel] = set()
 first_init = True
 
-logger = get_discord_child_logger("GamingChannels")
+logger = get_discord_child_logger("StudyChannels")
 
 
 class StudyTmpChannels(Cog):
