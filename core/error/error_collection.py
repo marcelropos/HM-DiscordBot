@@ -81,3 +81,7 @@ class CantRemoveSubject(CommandError):
 
 class NoStudyGroupAssigned(CommandError):
     pass
+
+
+class CouldNotFindToken(CommandError):
+    pass

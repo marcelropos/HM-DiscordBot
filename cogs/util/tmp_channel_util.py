@@ -73,10 +73,10 @@ class TmpChannelUtil:
                                                                     nsfw=False,
                                                                     reason="")
 
-        overwrites = {member: PermissionOverwrite(view_channel=True),
-                      verified: PermissionOverwrite(view_channel=True),
-                      moderator: PermissionOverwrite(view_channel=not is_moderator),
-                      guild.default_role: PermissionOverwrite(view_channel=False)}
+        overwrites = {member: PermissionOverwrite(view_channel=True, connect=True),
+                      verified: PermissionOverwrite(view_channel=True, connect=True),
+                      moderator: PermissionOverwrite(view_channel=not is_moderator, connect=not is_moderator),
+                      guild.default_role: PermissionOverwrite(view_channel=False, connect=False)}
 
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
                                                                        category=channel_category,

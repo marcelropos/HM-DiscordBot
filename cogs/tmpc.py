@@ -1,22 +1,25 @@
 from datetime import datetime, timedelta
 from typing import Union
 
-from discord import Member, User, Embed, Guild
+from discord import Member, User, Embed, Guild, TextChannel
 from discord.ext.commands import Bot, group, Cog, Context, BadArgument
 from discord.ext.tasks import loop
+from discord_components import DiscordComponents
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommand, MayNotUseCommandError
+from core.error.error_collection import WrongChatForCommand, MayNotUseCommandError, CouldNotFindToken
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
+from core.predicates import bot_chat
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.study_channels import StudyChannels, StudyChannel
 
+bot_channels: set[TextChannel] = set()
 moderator = Placeholder()
 first_init = True
 
@@ -45,11 +48,15 @@ class Tmpc(Cog):
         """
         Loads the configuration for the module.
         """
-        global moderator
+        global moderator, bot_channels
         # noinspection PyTypeChecker
-        async with AinitManager(self.bot, self.ainit, self.need_init) as need_init:
+        async with AinitManager(bot=self.bot,
+                                loop=self.ainit,
+                                need_init=self.need_init,
+                                bot_channels=bot_channels,
+                                moderator=moderator) as need_init:
             if need_init:
-                moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
+                DiscordComponents(self.bot)
 
     @group(pass_context=True,
            name="tmpc")
@@ -95,7 +102,7 @@ class Tmpc(Cog):
         verified = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, view_channel=False)
+        await document.voice.set_permissions(verified, view_channel=False, connect=False)
 
         embed = Embed(title="Locked",
                       description=f"Locked this channel. Now only the students that you can see on the "
@@ -115,7 +122,7 @@ class Tmpc(Cog):
         verified = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, view_channel=True)
+        await document.voice.set_permissions(verified, view_channel=True, connect=True)
 
         embed = Embed(title="Unlocked",
                       description=f"Unlocked this channel. Now every Student can join the vc.")
@@ -135,7 +142,6 @@ class Tmpc(Cog):
             user: The user if you want to send the token directly to a user
         """
         document = await self.check_tmpc_channel(ctx)
-        guild: Guild = ctx.guild
 
         if mode.lower() == "show":
             embed: Embed = Embed(title="Token",
@@ -168,6 +174,34 @@ class Tmpc(Cog):
             raise BadArgument
 
         await ctx.reply(embed=embed)
+
+    @tmpc.command(pass_context=True)
+    @bot_chat(bot_channels)
+    async def join(self, ctx: Context, token: int):
+        """
+        Join a Study or Gaming Channel
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            token: The token for the Channel
+        """
+        key = DBKeyWrapperEnum.TOKEN.value
+        document = await self.study_db.find_one({key: token})
+        if not document:
+            document = await self.gaming_db.find_one({key: token})
+
+        if not document:
+            raise CouldNotFindToken
+
+        await document.voice.set_permissions(ctx.author, view_channel=True)
+        await document.chat.set_permissions(ctx.author, view_channel=True)
+
+        try:
+            await ctx.author.move_to(document.voice, reason="Joined via Token")
+        except Exception:
+            pass
+
 
     async def check_tmpc_channel(self, ctx: Context) -> Union[GamingChannel, StudyChannel]:
         key = DBKeyWrapperEnum.CHAT.value
