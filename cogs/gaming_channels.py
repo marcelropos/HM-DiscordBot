@@ -7,7 +7,6 @@ from discord.ext.tasks import loop
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_chat, assign_category
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from cogs.util.voice_state_change import EventType
@@ -48,23 +47,13 @@ class GamingTmpChannels(Cog):
         async with AinitManager(bot=self.bot, loop=self.ainit, need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:
             if need_init:
-                await assign_category(self.bot, ConfigurationNameEnum.GAMING_CATEGORY)
-                gaming_join_voice_channel.item = await assign_chat(self.bot,
-                                                                   ConfigurationNameEnum.GAMING_JOIN_VOICE_CHANNEL)
-
-                key = ConfigurationNameEnum.DEFAULT_GAMING_NAME.value
-                default_gaming_channel_name_tmp = await self.config_db.find_one({key: {"$exists": True}})
-                if default_gaming_channel_name_tmp:
-                    default_gaming_channel_name = default_gaming_channel_name_tmp[key]
-                else:
-                    await self.config_db.insert_one({key: default_gaming_channel_name})
-
-                deleted_channels: list[GamingChannel] = [document for document in await self.db.find({}) if
-                                                         not document.voice or not document.chat]
-                for deleted in deleted_channels:
-                    await self.db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
-
-                gaming_channels = {document.voice for document in await self.db.find({})}
+                gaming_channels, default_gaming_channel_name \
+                    = await TmpChannelUtil.ainit_helper(self.bot, self.db, self.config_db,
+                                                        gaming_join_voice_channel,
+                                                        ConfigurationNameEnum.GAMING_CATEGORY,
+                                                        ConfigurationNameEnum.GAMING_JOIN_VOICE_CHANNEL,
+                                                        ConfigurationNameEnum.DEFAULT_GAMING_NAME,
+                                                        default_gaming_channel_name)
 
     def cog_unload(self):
         self.delete_old_channels.stop()

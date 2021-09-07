@@ -1,14 +1,12 @@
 from collections import namedtuple
-from datetime import datetime, timedelta
 from typing import Union
 
-from discord import VoiceState, Member, User, VoiceChannel, Guild, TextChannel, Embed
+from discord import VoiceState, Member, User, VoiceChannel, Guild, TextChannel
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_chat, assign_category
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from cogs.util.voice_state_change import EventType
@@ -49,28 +47,19 @@ class StudyTmpChannels(Cog):
         async with AinitManager(bot=self.bot, loop=self.ainit, need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:
             if need_init:
-                await assign_category(self.bot, ConfigurationNameEnum.STUDY_CATEGORY)
-                study_join_voice_channel.item = await assign_chat(self.bot,
-                                                                  ConfigurationNameEnum.STUDY_JOIN_VOICE_CHANNEL)
+                study_channels, default_study_channel_name \
+                    = await TmpChannelUtil.ainit_helper(self.bot, self.db,
+                                                        self.config_db,
+                                                        study_join_voice_channel,
+                                                        ConfigurationNameEnum.STUDY_CATEGORY,
+                                                        ConfigurationNameEnum.STUDY_JOIN_VOICE_CHANNEL,
+                                                        ConfigurationNameEnum.DEFAULT_STUDY_NAME,
+                                                        default_study_channel_name)
 
                 key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
                 default_keep_time = await self.config_db.find_one({key: {"$exists": True}})
                 if not default_keep_time:
                     await self.config_db.insert_one({key: event(hour=24, min=0)})
-
-                key = ConfigurationNameEnum.DEFAULT_STUDY_NAME.value
-                default_study_channel_name_tmp = await self.config_db.find_one({key: {"$exists": True}})
-                if default_study_channel_name_tmp:
-                    default_study_channel_name = default_study_channel_name_tmp[key]
-                else:
-                    await self.config_db.insert_one({key: default_study_channel_name})
-
-                deleted_channels: list[StudyChannel] = [document for document in await self.db.find({}) if
-                                                        not document.voice or not document.chat]
-                for deleted in deleted_channels:
-                    await self.db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
-
-                study_channels = {document.voice for document in await self.db.find({})}
 
     def cog_unload(self):
         self.delete_old_channels.stop()

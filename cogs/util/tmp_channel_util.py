@@ -4,8 +4,10 @@ from typing import Union
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Bot
 
+from cogs.util.assign_variables import assign_category, assign_chat
+from cogs.util.placeholder import Placeholder
 from core.error.error_collection import DatabaseIllegalState
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from mongo.gaming_channels import GamingChannels, GamingChannel
@@ -149,3 +151,25 @@ class TmpChannelUtil:
                                           f"<t:{int(document.deleteAt.timestamp())}:F>")
                 await document.chat.send(embed=embed)
         return False
+
+    @staticmethod
+    async def ainit_helper(bot: Bot, db: Union[GamingChannels, StudyChannels],
+                           config_db: PrimitiveMongoData, join_voice_channel: Placeholder,
+                           category: ConfigurationNameEnum, join_channel: ConfigurationNameEnum,
+                           default_name_key: ConfigurationNameEnum,
+                           default_channel_name: str) -> tuple[set[VoiceChannel], str]:
+        await assign_category(bot, category)
+        join_voice_channel.item = await assign_chat(bot, join_channel)
+
+        default_channel_name_tmp = await config_db.find_one({default_name_key.value: {"$exists": True}})
+        if default_channel_name_tmp:
+            default_channel_name = default_channel_name_tmp[default_name_key.value]
+        else:
+            await config_db.insert_one({default_name_key.value: default_channel_name})
+
+        deleted_channels: list[Union[GamingChannel, StudyChannel]] = [document for document in await db.find({}) if
+                                                                      not document.voice or not document.chat]
+        for deleted in deleted_channels:
+            await db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
+
+        return {document.voice for document in await db.find({})}, default_channel_name
