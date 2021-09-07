@@ -10,12 +10,11 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from cogs.util.voice_state_change import EventType
-from core.error.error_collection import DatabaseIllegalState
-from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
+from core.global_enum import CollectionEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat
 from mongo.primitive_mongo_data import PrimitiveMongoData
-from mongo.study_channels import StudyChannels, StudyChannel
+from mongo.study_channels import StudyChannels
 
 bot_channels: set[TextChannel] = set()
 event = namedtuple("DeleteTime", ["hour", "min"])
@@ -91,8 +90,9 @@ class StudyTmpChannels(Cog):
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
             if voice_channel in study_channels:
-                await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger,
-                                                          reset_delete_at=(True, self.config_db))
+                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger,
+                                                             reset_delete_at=(True, self.config_db)):
+                    study_channels.remove(voice_channel)
 
     @group(pass_context=True,
            name="studyChannel")

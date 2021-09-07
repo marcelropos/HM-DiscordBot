@@ -84,7 +84,8 @@ class GamingTmpChannels(Cog):
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
             if voice_channel in gaming_channels:
-                await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger)
+                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
+                    gaming_channels.remove(voice_channel)
 
     @group(pass_context=True,
            name="gamingChannel")
