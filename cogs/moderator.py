@@ -41,7 +41,7 @@ class Moderator(Cog):
         """
         Loads the configuration for the module.
         """
-        global bot_channels, verified, moderator, moderator, rate, per
+        global bot_channels, verified, moderator, restricted
         # noinspection PyTypeChecker
         async with AinitManager(self.bot, self.ainit, self.need_init) as need_init:
             if need_init:
