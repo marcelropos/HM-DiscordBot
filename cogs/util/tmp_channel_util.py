@@ -120,15 +120,17 @@ class TmpChannelUtil:
                                    logger: logging.Logger,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
         if len({member for member in voice_channel.members if not member.bot}) == 0:
-            document: list[StudyChannel] = await db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+            document: list[Union[StudyChannel, GamingChannel]] = await db.find(
+                {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
             if not document:
                 logger.error(voice_channel.name)
                 raise DatabaseIllegalState
 
-            document: StudyChannel = document[0]
+            document: Union[StudyChannel, GamingChannel] = document[0]
 
-            if not document.deleteAt or (not reset_delete_at[0] and datetime.now() > document.deleteAt):
+            if type(document) == GamingChannel or not document.deleteAt or (
+                    not reset_delete_at[0] and datetime.now() > document.deleteAt):
                 await document.voice.delete(reason="No longer used")
                 await document.chat.delete(reason="No longer used")
 

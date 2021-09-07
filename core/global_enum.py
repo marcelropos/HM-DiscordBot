@@ -46,6 +46,7 @@ class ConfigurationNameEnum(Enum):
     HOURS = "hours"
     DEFAULT_KEEP_TIME = "defaultTime"
     DEFAULT_STUDY_NAME = "studyDefaultName"
+    DEFAULT_GAMING_NAME = "gamingDefaultName"
 
 
 class DBKeyWrapperEnum(Enum):
