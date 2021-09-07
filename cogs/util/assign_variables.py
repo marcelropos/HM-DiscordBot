@@ -1,11 +1,12 @@
 from typing import Optional
 
-from discord import TextChannel, Role
+from discord import TextChannel, Role, Guild
 from discord.ext.commands import Bot
 
 from core.error.error_collection import BrokenConfigurationError
 from core.globalEnum import CollectionEnum, ConfigurationNameEnum
 from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.subjectsorgroups import SubjectsOrGroups
 
 
 async def assign_accepted_chats(bot: Bot, channels: set[TextChannel]):
@@ -93,3 +94,8 @@ async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional
         raise BrokenConfigurationError
 
     return channel
+
+
+async def assign_set_of_roles(guild: Guild, db: SubjectsOrGroups, roles: set[Role]):
+    roles.clear()
+    roles.update({guild.get_role(document.role_id) for document in await db.find({})})

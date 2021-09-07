@@ -4,7 +4,7 @@ from discord.ext.tasks import loop
 
 from cogs.botStatus import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_role, assign_accepted_chats
+from cogs.util.assign_variables import assign_role
 from cogs.util.placeholder import Placeholder
 from core.globalEnum import ConfigurationNameEnum
 from core.predicates import has_not_role, has_role_plus, bot_chat
@@ -37,11 +37,12 @@ class Roles(Cog):
         """
         global news, nsfw, verified, bot_channels
         # noinspection PyTypeChecker
-        async with AinitManager(self.bot, self.ainit, self.need_init) as need_init:
+        async with AinitManager(bot=self.bot,
+                                loop=self.ainit,
+                                need_init=self.need_init,
+                                bot_channels=bot_channels,
+                                verified=verified) as need_init:
             if need_init:
-                await assign_accepted_chats(self.bot, bot_channels)
-
-                verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
                 news.item = await assign_role(self.bot, ConfigurationNameEnum.NEWSLETTER)
                 nsfw.item = await assign_role(self.bot, ConfigurationNameEnum.NSFW)
 
