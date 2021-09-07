@@ -42,7 +42,7 @@ class TmpChannelUtil:
                 category_key.value])
 
         if name_format.format(0) != name_format:
-            i = 0
+            i = 1
             channels = {channel.name for channel in channel_category.voice_channels}
             while name_format.format(i) in channels:
                 i += 1
