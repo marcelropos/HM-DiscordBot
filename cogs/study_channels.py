@@ -102,8 +102,8 @@ class StudyTmpChannels(Cog):
 
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
-            if voice_channel in study_channels and len(voice_channel.members) == 0:
-                # TODO exclude bots in the list of members
+            if voice_channel in study_channels and len(
+                    {member for member in voice_channel.members if not member.bot}) == 0:
                 document: list[StudyChannel] = await self.db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
                 if not document:
