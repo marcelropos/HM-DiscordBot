@@ -82,11 +82,11 @@ class Linking(Cog):
 
         study_role, subject_role = await self.check_mentions(ctx)
 
-        existing_link = [document for document in await self.db.find({}) if
-                         document.group == study_role and document.subject == subject_role]
+        existing_link = await self.db.find_one({DBKeyWrapperEnum.GROUP.value: study_role.id,
+                                                DBKeyWrapperEnum.SUBJECT.value: subject_role.id})
 
         if existing_link:
-            existing_link = existing_link[0].document
+            existing_link = existing_link.document
             new_link = {
                 DBKeyWrapperEnum.GROUP.value: study_role.id,
                 DBKeyWrapperEnum.SUBJECT.value: subject_role.id,
@@ -121,13 +121,13 @@ class Linking(Cog):
 
         study_role, subject_role = await self.check_mentions(ctx)
 
-        link = [document for document in await self.db.find({}) if
-                document.group == study_role and document.subject == subject_role]
+        link = await self.db.find_one({DBKeyWrapperEnum.GROUP.value: study_role.id,
+                                       DBKeyWrapperEnum.SUBJECT.value: subject_role.id})
 
         if not link:
             raise LinkingNotFoundError
 
-        await self.db.delete_one(link[0].document)
+        await self.db.delete_one(link.document)
         embed = Embed(title="Linking Remove",
                       description=f"Successfully deleted link <@&{study_role.id}> to <@&{subject_role.id}> "
                                   f"with default={link[0].default}")

@@ -14,7 +14,7 @@ from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import FailedToGrantRoleError
-from core.global_enum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum
+from core.global_enum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, is_not_in_group, has_role_plus
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -197,8 +197,8 @@ class StudyGroups(Cog):
         await ctx.reply(content="Please select **one** of the following groups.",
                         components=[group_names_options, group_semester_options])
         role: Role = await self.get_role(ctx.author, groups, group_names, group_semester)
-        subjects = [document.subject for document in await StudySubjectRelations(self.bot).find({}) if
-                    document.group == role and document.default]
+        subjects = [document.subject for document in await StudySubjectRelations(self.bot).find(
+            {DBKeyWrapperEnum.GROUP.value: role.id, DBKeyWrapperEnum.DEFAULT.value: True})]
         await member.add_roles(role, *subjects)
         embed = Embed(title="Grant new role",
                       description=f"Congratulations, you have received the <@&{role.id}> role.\n"
