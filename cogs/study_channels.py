@@ -83,22 +83,10 @@ class StudyTmpChannels(Cog):
         event_type: EventType = EventType.status(before, after)
 
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
-            voice_channel: VoiceChannel = after.channel
-            if voice_channel is study_join_voice_channel.item:
-                study_channels.add((await TmpChannelUtil.get_server_objects(ConfigurationNameEnum.STUDY_CATEGORY,
-                                                                            guild, default_study_channel_name,
-                                                                            member, self.db)).voice)
-                logger.info(f"Created Tmp Study Channel with the name '{voice_channel.name}'")
-
-            if voice_channel in study_channels:
-                document: list[StudyChannel] = await self.db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
-
-                if not document:
-                    raise DatabaseIllegalState
-
-                document: StudyChannel = document[0]
-                await document.chat.set_permissions(member, view_channel=True)
-                await document.voice.set_permissions(member, view_channel=True)
+            await TmpChannelUtil.joined_voice_channel(self.db, study_channels, after.channel,
+                                                      study_join_voice_channel.item, guild,
+                                                      default_study_channel_name, member,
+                                                      ConfigurationNameEnum.STUDY_CATEGORY, logger)
 
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel

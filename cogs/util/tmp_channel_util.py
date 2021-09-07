@@ -153,6 +153,27 @@ class TmpChannelUtil:
         return False
 
     @staticmethod
+    async def joined_voice_channel(db: Union[GamingChannels, StudyChannels], channels: set[VoiceChannel],
+                                   voice_channel: VoiceChannel, join_voice_channel: VoiceChannel, guild: Guild,
+                                   default_channel_name: str, member: Union[Member, User],
+                                   category: ConfigurationNameEnum, logger: logging.Logger):
+        if voice_channel is join_voice_channel:
+            channels.add((await TmpChannelUtil.get_server_objects(category, guild,
+                                                                  default_channel_name, member, db)).voice)
+            logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
+
+        if voice_channel in channels:
+            document: list[Union[GamingChannel, StudyChannel]] = await db.find(
+                {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+
+            if not document:
+                raise DatabaseIllegalState
+
+            document: Union[GamingChannel, StudyChannel] = document[0]
+            await document.chat.set_permissions(member, view_channel=True)
+            await document.voice.set_permissions(member, view_channel=True)
+
+    @staticmethod
     async def ainit_helper(bot: Bot, db: Union[GamingChannels, StudyChannels],
                            config_db: PrimitiveMongoData, join_voice_channel: Placeholder,
                            category: ConfigurationNameEnum, join_channel: ConfigurationNameEnum,

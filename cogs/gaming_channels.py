@@ -10,11 +10,10 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from cogs.util.voice_state_change import EventType
-from core.error.error_collection import DatabaseIllegalState
-from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
+from core.global_enum import CollectionEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat
-from mongo.gaming_channels import GamingChannels, GamingChannel
+from mongo.gaming_channels import GamingChannels
 from mongo.primitive_mongo_data import PrimitiveMongoData
 
 bot_channels: set[TextChannel] = set()
@@ -77,22 +76,10 @@ class GamingTmpChannels(Cog):
         event_type: EventType = EventType.status(before, after)
 
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
-            voice_channel: VoiceChannel = after.channel
-            if voice_channel is gaming_join_voice_channel.item:
-                gaming_channels.add((await TmpChannelUtil.get_server_objects(ConfigurationNameEnum.GAMING_CATEGORY,
-                                                                             guild, default_gaming_channel_name,
-                                                                             member, self.db)).voice)
-                logger.info(f"Created Tmp Gaming Channel with the name '{voice_channel.name}'")
-
-            if voice_channel in gaming_channels:
-                document: list[GamingChannel] = await self.db.find({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
-
-                if not document:
-                    raise DatabaseIllegalState
-
-                document: GamingChannel = document[0]
-                await document.chat.set_permissions(member, view_channel=True)
-                await document.voice.set_permissions(member, view_channel=True)
+            await TmpChannelUtil.joined_voice_channel(self.db, gaming_channels, after.channel,
+                                                      gaming_join_voice_channel.item, guild,
+                                                      default_gaming_channel_name, member,
+                                                      ConfigurationNameEnum.GAMING_CATEGORY, logger)
 
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
