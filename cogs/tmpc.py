@@ -8,13 +8,12 @@ from discord_components import DiscordComponents
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_role
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from core.error.error_collection import WrongChatForCommand, MayNotUseCommandError, CouldNotFindToken
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
-from core.predicates import bot_chat
+from core.predicates import bot_chat, has_role_plus
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.study_channels import StudyChannels, StudyChannel
@@ -194,7 +193,7 @@ class Tmpc(Cog):
         if not document:
             raise CouldNotFindToken
 
-        await document.voice.set_permissions(ctx.author, view_channel=True)
+        await document.voice.set_permissions(ctx.author, view_channel=True, connect=True)
         await document.chat.set_permissions(ctx.author, view_channel=True)
 
         try:
@@ -202,6 +201,23 @@ class Tmpc(Cog):
         except Exception:
             pass
 
+    @tmpc.command(pass_context=True)
+    @has_role_plus(moderator)
+    async def nomod(self, ctx: Context):
+        """
+        Keeps out the Mods out of the Gaming or Study Channel
+
+        Args:
+           ctx: The command context provided by the discord.py wrapper.
+        """
+        global moderator
+
+        document = await self.check_tmpc_channel(ctx)
+        await document.voice.set_permissions(moderator.item, view_channel=False, connect=False)
+        await document.chat.set_permissions(moderator.item, view_channel=False)
+        embed: Embed = Embed(title="No Mod",
+                             description=f"Mods can't see or join this channel anymore")
+        await ctx.reply(embed=embed)
 
     async def check_tmpc_channel(self, ctx: Context) -> Union[GamingChannel, StudyChannel]:
         key = DBKeyWrapperEnum.CHAT.value
