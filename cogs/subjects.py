@@ -11,6 +11,8 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
+from core.error.error_collection import CantAssignToSubject, YouAlreadyHaveThisRoleError, NoStudyGroupAssigned, \
+    CantRemoveSubject
 from core.globalEnum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -84,10 +86,7 @@ class Subjects(Cog):
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
 
-        subjects: list[Role] = await self.get_possible_subjects(ctx, member, roles)
-
-        if not subjects:
-            return
+        subjects: list[Role] = await self.get_possible_subjects(roles)
 
         embed = Embed(title="Subjects",
                       description="You can opt-in/out of following subjects:")
@@ -116,28 +115,20 @@ class Subjects(Cog):
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
 
-        subjects: list[Role] = await self.get_possible_subjects(ctx, member, roles)
+        subjects: list[Role] = await self.get_possible_subjects(roles)
 
-        if not subjects:
-            return
+        subject = subject.lower()
 
-        if subject not in [subject.name for subject in subjects]:
-            embed = Embed(title="No permission",
-                          description=f"You can't be assigned to this subject.\n"
-                                      f"Please contact an admin if you think this is a mistake")
-            await ctx.reply(content=f"<@{member.id}>", embed=embed)
-            return
+        if subject not in [subject.name.lower() for subject in subjects]:
+            raise CantAssignToSubject
 
-        if subject not in [subject.name for subject in subjects if subject not in roles]:
-            embed = Embed(title="Already assigned",
-                          description=f"You are already assigned to this subject")
-            await ctx.reply(content=f"<@{member.id}>", embed=embed)
-            return
+        if subject not in [subject.name.lower() for subject in subjects if subject not in roles]:
+            raise YouAlreadyHaveThisRoleError
 
-        role: Role = [role for role in subjects if role.name == subject][0]
+        role: Role = [role for role in subjects if role.name.lower() == subject][0]
         await member.add_roles(role)
         embed = Embed(title="successfully assigned",
-                      description=f"Assigned you to <@&{role.id}>")
+                      description=f"Assigned you to {role.mention}")
         await ctx.reply(content=f"<@{member.id}>", embed=embed)
         return
 
@@ -156,16 +147,10 @@ class Subjects(Cog):
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
 
-        subjects: list[Role] = await self.get_possible_subjects(ctx, member, roles)
-
-        if not subjects:
-            return
+        subjects: list[Role] = await self.get_possible_subjects(roles)
 
         if subject not in [subject.name for subject in subjects if subject in roles]:
-            embed = Embed(title="Not assigned",
-                          description=f"You are not assigned to this subject")
-            await ctx.reply(content=f"<@{member.id}>", embed=embed)
-            return
+            raise CantRemoveSubject
 
         role: Role = [role for role in subjects if role.name == subject][0]
         await member.add_roles(role)
@@ -245,17 +230,11 @@ class Subjects(Cog):
         msg = "separator"
         await StudySubjectUtil.update_category_and_separator(role.id, ctx, db, key, msg)
 
-    async def get_possible_subjects(self, ctx: Context,
-                                    member: Union[Member, User],
-                                    roles: list[Role]) -> list[Role]:
+    async def get_possible_subjects(self, roles: list[Role]) -> list[Role]:
         all_study_groups = await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({})
         study_group: list[Role] = [document.role for document in all_study_groups if document.role in roles]
         if not study_group:
-            embed = Embed(title="No Study group assigned",
-                          description=f"You have no study group assigned to yourself.\n"
-                                      f"Please assign yourself to a study group with `!study`")
-            await ctx.reply(content=f"<@{member.id}>", embed=embed)
-            return []
+            raise NoStudyGroupAssigned
         study_group: Role = study_group[0]
         study_master, study_semester = re.match(self.match, study_group.name).groups()
         study_semester = int(study_semester)
