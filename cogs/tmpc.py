@@ -121,6 +121,54 @@ class Tmpc(Cog):
                       description=f"Unlocked this channel. Now every Student can join the vc.")
         await ctx.reply(embed=embed)
 
+    @tmpc.command(pass_context=True)
+    async def token(self, ctx: Context, mode: str, user=None):
+        """
+        Manage token
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            mode: One of the following: show: show the current token; gen: generate a new token;
+                    send <@user>: sends the token to a user.
+
+            user: The user if you want to send the token directly to a user
+        """
+        document = await self.check_tmpc_channel(ctx)
+        guild: Guild = ctx.guild
+
+        if mode.lower() == "show":
+            embed: Embed = Embed(title="Token",
+                                 description=f"`!tmpc join {document.token}`")
+        elif mode.lower() == "gen":
+            new_token = TmpChannelUtil.create_token()
+            new_document = {
+                DBKeyWrapperEnum.OWNER.value: document.owner_id,
+                DBKeyWrapperEnum.CHAT.value: document.channel_id,
+                DBKeyWrapperEnum.VOICE.value: document.voice_id,
+                DBKeyWrapperEnum.TOKEN.value: new_token,
+            }
+            if type(document) == StudyChannel:
+                new_document.update({DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt})
+                await self.study_db.update_one(document.document, new_document)
+            else:
+                await self.gaming_db.update_one(document.document, new_document)
+            embed: Embed = Embed(title="Token",
+                                 description=f"`!tmpc join {new_token}`")
+        elif mode.lower() == "send":
+            if not ctx.message.mentions:
+                raise BadArgument
+            member: Union[Member, User] = ctx.message.mentions[0]
+            embed: Embed = Embed(title="Token",
+                                 description=f"`!tmpc join {document.token}`")
+            await member.send(embed=embed)
+            embed: Embed = Embed(title="Send token",
+                                 description=f"Send token as a private message to {member.mention}")
+        else:
+            raise BadArgument
+
+        await ctx.reply(embed=embed)
+
     async def check_tmpc_channel(self, ctx: Context) -> Union[GamingChannel, StudyChannel]:
         key = DBKeyWrapperEnum.CHAT.value
         document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: ctx.channel.id})
