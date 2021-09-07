@@ -41,7 +41,7 @@ class StudyTmpChannels(Cog):
         """
         Loads the configuration for the module.
         """
-        global study_join_voice_channel, study_channels, default_study_channel_name
+        global study_join_voice_channel, study_channels, default_study_channel_name, bot_channels
         # noinspection PyTypeChecker
         async with AinitManager(bot=self.bot, loop=self.ainit, need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:

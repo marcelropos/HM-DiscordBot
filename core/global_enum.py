@@ -34,6 +34,7 @@ class ConfigurationNameEnum(Enum):
     GAMING_CATEGORY = "gamingCategory"
     STUDY_JOIN_VOICE_CHANNEL = "studyVoiceChannel"
     GAMING_JOIN_VOICE_CHANNEL = "gamingVoiceChannel"
+    NERD_VOICE_CHANNEL = "NerdVoiceChannel"
     ENABLED = "enabled"
     DEADLINE = "deadline"
     WARNING = "warning"
