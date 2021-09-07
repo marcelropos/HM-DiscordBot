@@ -62,8 +62,9 @@ class TmpChannelUtil:
         moderator = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
+        is_moderator = moderator in member.roles
         overwrites = {member: PermissionOverwrite(view_channel=True),
-                      moderator: PermissionOverwrite(view_channel=True),
+                      moderator: PermissionOverwrite(view_channel=not is_moderator),
                       guild.default_role: PermissionOverwrite(view_channel=False)}
 
         text_channel: TextChannel = await guild.create_text_channel(name=name,
@@ -74,7 +75,7 @@ class TmpChannelUtil:
 
         overwrites = {member: PermissionOverwrite(view_channel=True),
                       verified: PermissionOverwrite(view_channel=True),
-                      moderator: PermissionOverwrite(view_channel=True),
+                      moderator: PermissionOverwrite(view_channel=not is_moderator),
                       guild.default_role: PermissionOverwrite(view_channel=False)}
 
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
