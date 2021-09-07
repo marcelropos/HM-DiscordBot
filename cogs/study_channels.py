@@ -81,18 +81,18 @@ class StudyTmpChannels(Cog):
 
         event_type: EventType = EventType.status(before, after)
 
-        if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
-            await TmpChannelUtil.joined_voice_channel(self.db, study_channels, after.channel,
-                                                      study_join_voice_channel.item, guild,
-                                                      default_study_channel_name, member,
-                                                      ConfigurationNameEnum.STUDY_CATEGORY, logger)
-
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
             if voice_channel in study_channels:
                 if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger,
                                                              reset_delete_at=(True, self.config_db)):
                     study_channels.remove(voice_channel)
+
+        if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
+            await TmpChannelUtil.joined_voice_channel(self.db, study_channels, after.channel,
+                                                      study_join_voice_channel.item, guild,
+                                                      default_study_channel_name, member,
+                                                      ConfigurationNameEnum.STUDY_CATEGORY, logger)
 
     @group(pass_context=True,
            name="studyChannel")

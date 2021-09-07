@@ -75,17 +75,17 @@ class GamingTmpChannels(Cog):
 
         event_type: EventType = EventType.status(before, after)
 
-        if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
-            await TmpChannelUtil.joined_voice_channel(self.db, gaming_channels, after.channel,
-                                                      gaming_join_voice_channel.item, guild,
-                                                      default_gaming_channel_name, member,
-                                                      ConfigurationNameEnum.GAMING_CATEGORY, logger)
-
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
             if voice_channel in gaming_channels:
                 if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
                     gaming_channels.remove(voice_channel)
+
+        if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
+            await TmpChannelUtil.joined_voice_channel(self.db, gaming_channels, after.channel,
+                                                      gaming_join_voice_channel.item, guild,
+                                                      default_gaming_channel_name, member,
+                                                      ConfigurationNameEnum.GAMING_CATEGORY, logger)
 
     @group(pass_context=True,
            name="gamingChannel")
