@@ -70,7 +70,7 @@ class StudyTmpChannels(Cog):
                     await self.db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
 
                 guild: Guild = self.bot.guilds[0]
-                study_channels = {guild.get_channel(document.voice_id) for document in await self.db.find({})}
+                study_channels = {document.voice for document in await self.db.find({})}
 
     @listener()
     async def on_ready(self):
