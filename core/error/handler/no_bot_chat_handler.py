@@ -21,7 +21,7 @@ class BadArgumentHandler(BaseHandler):
     async def solution(self) -> str:
         channels = ""
         for channel in self.error.channels:
-            channels += f"<#{channel.id}>\n"
+            channels += f"{channel.mention}\n"
         return f"This command may only be used in the following chats:\n" \
                f"{channels}" \
                f"If you do not have access to any of these chats, please ask for support."

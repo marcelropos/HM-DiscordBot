@@ -201,9 +201,9 @@ class StudyGroups(Cog):
             {DBKeyWrapperEnum.GROUP.value: role.id, DBKeyWrapperEnum.DEFAULT.value: True})]
         await member.add_roles(role, *subjects)
         embed = Embed(title="Grant new role",
-                      description=f"Congratulations, you have received the <@&{role.id}> role.\n"
+                      description=f"Congratulations, you have received the {role.mention} role.\n"
                                   f"You also received the appropriate subjects for this study group.")
-        await ctx.reply(content=f"<@{member.id}>", embed=embed)
+        await ctx.reply(content=member.mention, embed=embed)
 
     async def get_role(self, author: Union[Member, User],
                        groups: list[Role],

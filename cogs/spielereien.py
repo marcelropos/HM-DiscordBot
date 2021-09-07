@@ -75,7 +75,7 @@ class Spielereien(Cog):
         for mention in mentions:
             if isinstance(mention, Member):
                 mention: Union[Member, User]
-                ping += f"<@{mention.id}> "
+                ping += mention.mention
 
         result: list = list(await asyncio.gather(
             self.get_page(f"https://man.openbsd.org/{cmd}", 1),
