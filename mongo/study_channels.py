@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from discord import Member, TextChannel, VoiceChannel, User, Guild
+from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound
 from discord.ext.commands import Bot
 
 from core.global_enum import CollectionEnum, DBKeyWrapperEnum
@@ -14,11 +14,18 @@ from mongo.mongo_collection import MongoCollection
 @dataclass
 class StudyChannel(GamingChannel):
     deleteAt: datetime
+    messages: list[Message]
+
+    @property
+    def message_ids(self) -> list[int]:
+        return [message.id for message in self.messages]
 
     @property
     def document(self) -> dict[str: typing.Any]:
         document = super(StudyChannel, self).document
-        document.update({DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt})
+        document.update(
+            {DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt,
+             DBKeyWrapperEnum.MESSAGES.value: [(message.channel, message) for message in self.messages]})
         return document
 
 
@@ -30,12 +37,19 @@ class StudyChannels(MongoCollection):
     async def _create_study_channel(self, result):
         if result:
             guild: Guild = self.bot.guilds[0]
+            messages = []
+            for channel, message in result[DBKeyWrapperEnum.MESSAGES.value]:
+                try:
+                    messages.append(await guild.get_channel(channel).fetch_message(message))
+                except (NotFound, AttributeError):
+                    pass
             return StudyChannel(result[DBKeyWrapperEnum.ID.value],
                                 await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
                                 guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
                                 guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
                                 result[DBKeyWrapperEnum.TOKEN.value],
-                                result[DBKeyWrapperEnum.DELETE_AT.value])
+                                result[DBKeyWrapperEnum.DELETE_AT.value],
+                                messages)
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
@@ -48,7 +62,8 @@ class StudyChannels(MongoCollection):
             DBKeyWrapperEnum.CHAT.value: chat.id,
             DBKeyWrapperEnum.VOICE.value: voice.id,
             DBKeyWrapperEnum.TOKEN.value: token,
-            DBKeyWrapperEnum.DELETE_AT.value: delete_at
+            DBKeyWrapperEnum.DELETE_AT.value: delete_at,
+            DBKeyWrapperEnum.MESSAGES.value: list()
         }
 
         await self.collection.insert_one(document)
@@ -66,6 +81,8 @@ class StudyChannels(MongoCollection):
         return [await self._create_study_channel(document) for document in await cursor.to_list(limit)]
 
     async def update_one(self, find_params: dict, replace: dict) -> StudyChannel:
+        replace[DBKeyWrapperEnum.MESSAGES.value] = [(message.channel.id, message.id) for message in
+                                                    replace[DBKeyWrapperEnum.MESSAGES.value]]
         await self.collection.update_one(find_params, {"$set": replace})
         document = find_params.copy()
         document.update(replace)

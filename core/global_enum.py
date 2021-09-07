@@ -60,6 +60,7 @@ class DBKeyWrapperEnum(Enum):
     GROUP = "group"
     SUBJECT = "subject"
     DEFAULT = "default"
+    MESSAGES = "messages"
 
 
 class LoggingLevel(Enum):

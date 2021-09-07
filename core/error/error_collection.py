@@ -85,3 +85,7 @@ class NoStudyGroupAssigned(CommandError):
 
 class CouldNotFindToken(CommandError):
     pass
+
+
+class CanOnlyHaveOneChannel(CommandError):
+    pass

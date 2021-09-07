@@ -1,7 +1,7 @@
 from collections import namedtuple
 from typing import Union
 
-from discord import VoiceState, Member, User, VoiceChannel, Guild, TextChannel
+from discord import VoiceState, Member, User, VoiceChannel, Guild, TextChannel, RawReactionActionEvent
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
 
@@ -70,6 +70,26 @@ class StudyTmpChannels(Cog):
             first_init = False
             self.ainit.start()
             self.delete_old_channels.start()
+
+    @listener()
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+        member: Union[Member, User] = payload.member
+        if member.bot:
+            return
+        document = [document for document in await self.db.find({}) if payload.message_id in document.message_ids]
+
+        if not document:
+            return
+
+        document = document[0]
+
+        await document.voice.set_permissions(member, view_channel=True, connect=True)
+        await document.chat.set_permissions(member, view_channel=True)
+
+        try:
+            await member.move_to(document.voice, reason="Joined via Token")
+        except Exception:
+            pass
 
     @listener()
     async def on_voice_state_update(self, member: Union[Member, User], before: VoiceState, after: VoiceState):

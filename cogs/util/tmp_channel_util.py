@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 from typing import Union
 
 import pyotp
-from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed
+from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
+    NotFound
 from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
 from cogs.util.placeholder import Placeholder
-from core.error.error_collection import DatabaseIllegalState
+from core.error.error_collection import DatabaseIllegalState, CanOnlyHaveOneChannel
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -137,7 +138,14 @@ class TmpChannelUtil:
                 await document.voice.delete(reason="No longer used")
                 await document.chat.delete(reason="No longer used")
 
-                await db.delete_one(document.document)
+                if type(document) == StudyChannel:
+                    for message in document.messages:
+                        try:
+                            await message.delete()
+                        except NotFound:
+                            pass
+
+                await db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
 
                 logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
                 return True
@@ -159,6 +167,9 @@ class TmpChannelUtil:
                                    default_channel_name: str, member: Union[Member, User],
                                    category: ConfigurationNameEnum, logger: logging.Logger):
         if voice_channel is join_voice_channel:
+            if await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id}):
+                raise CanOnlyHaveOneChannel
+
             channels.add((await TmpChannelUtil.get_server_objects(category, guild,
                                                                   default_channel_name, member, db)).voice)
             logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")

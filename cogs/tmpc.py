@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Union
 
-from discord import Member, User, Embed, Guild, TextChannel
+from discord import Member, User, Embed, Guild, TextChannel, Message
 from discord.ext.commands import Bot, group, Cog, Context, BadArgument
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
@@ -136,10 +136,44 @@ class Tmpc(Cog):
             ctx: The command context provided by the discord.py wrapper.
 
             mode: One of the following: show: show the current token; gen: generate a new token;
-                    send <@user>: sends the token to a user.
+                    send <@user>: sends the token to a user; place: place an embed in the channel so that user can
+                    easily join the Study Channel. Attention the place Command only works for Study Channels.
 
             user: The user if you want to send the token directly to a user
         """
+        if mode.lower() == "place":
+            document: StudyChannel = await self.study_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
+            if not document:
+                embed: Embed = Embed(title="Could not find Channel",
+                                     description="I could not find any Study that you are the owner of")
+                await ctx.reply(embed=embed)
+                return
+            embed: Embed = Embed(title="Study Channel Invite",
+                                 description="")
+            embed.add_field(name="Creator",
+                            value=ctx.author.mention,
+                            inline=False)
+            embed.add_field(name="Token",
+                            value="The reaction with 🔓 is equivalent to token input.",
+                            inline=False)
+
+            embed.add_field(name="Token",
+                            value=f"`!tmpc join {document.token}`",
+                            inline=False)
+            message: Message = await ctx.send(embed=embed)
+            await ctx.message.delete()
+            await message.add_reaction(emoji="🔓")
+            new_document = {
+                DBKeyWrapperEnum.OWNER.value: document.owner_id,
+                DBKeyWrapperEnum.CHAT.value: document.channel_id,
+                DBKeyWrapperEnum.VOICE.value: document.voice_id,
+                DBKeyWrapperEnum.TOKEN.value: document.token,
+                DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt,
+                DBKeyWrapperEnum.MESSAGES.value: document.messages + [message]
+            }
+            await self.study_db.update_one(document.document, new_document)
+            return
+
         document = await self.check_tmpc_channel(ctx)
 
         if mode.lower() == "show":
