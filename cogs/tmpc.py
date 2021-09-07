@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Union
 
-from discord import Member, User, Embed, Guild, TextChannel, Message
+from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound
 from discord.ext.commands import Bot, group, Cog, Context, BadArgument
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
@@ -188,8 +188,14 @@ class Tmpc(Cog):
                 DBKeyWrapperEnum.TOKEN.value: new_token,
             }
             if type(document) == StudyChannel:
-                new_document.update({DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt})
-                await self.study_db.update_one(document.document, new_document)
+                new_document.update({DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt,
+                                     DBKeyWrapperEnum.MESSAGES.value: list()})
+                for message in document.messages:
+                    try:
+                        await message.delete()
+                    except NotFound:
+                        pass
+                await self.study_db.update_one({DBKeyWrapperEnum.ID.value: document._id}, new_document)
             else:
                 await self.gaming_db.update_one(document.document, new_document)
             embed: Embed = Embed(title="Token",
