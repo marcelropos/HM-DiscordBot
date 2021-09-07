@@ -61,3 +61,15 @@ class LinkingNotFoundError(CommandError):
 
 class HasNoHandlerException(Exception):
     pass
+
+
+class CantAssignToSubject(CommandError):
+    pass
+
+
+class CantRemoveSubject(CommandError):
+    pass
+
+
+class NoStudyGroupAssigned(CommandError):
+    pass
