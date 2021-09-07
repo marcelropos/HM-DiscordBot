@@ -3,7 +3,7 @@ from typing import Union
 from discord import TextChannel, Role, Member, User
 from discord.ext.commands import CommandError
 
-from core.globalEnum import CollectionEnum, SubjectsOrGroupsEnum
+from core.global_enum import CollectionEnum, SubjectsOrGroupsEnum
 
 
 class ManPageNotFound(Exception):

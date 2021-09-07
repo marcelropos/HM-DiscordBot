@@ -6,19 +6,19 @@ from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
-from cogs.botStatus import listener
+from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import CantAssignToSubject, YouAlreadyHaveThisRoleError, NoStudyGroupAssigned, \
     CantRemoveSubject
-from core.globalEnum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
+from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
-from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.study_subject_relation import StudySubjectRelations
-from mongo.subjectsorgroups import SubjectsOrGroups
+from mongo.subjects_or_groups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
 verified: Placeholder = Placeholder()
@@ -196,13 +196,13 @@ class Subjects(Cog):
                       name="category")
     async def subjects_category(self, ctx: Context, category: int):
         """
-                Saves the group separator role:
+        Saves the group separator role:
 
-                Args:
-                    ctx: The command context provided by the discord.py wrapper.
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
 
-                    category: The category id for the channels.
-                """
+            category: The category id for the channels.
+        """
 
         db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
         key = ConfigurationNameEnum.SUBJECTS_CATEGORY

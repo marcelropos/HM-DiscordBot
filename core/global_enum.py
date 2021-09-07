@@ -36,6 +36,7 @@ class ConfigurationNameEnum(Enum):
     HELP_CHAT = "help"
     ROLE_NOT_FOUND_MESSAGE = "roleNotFound"
     TIME = "time"
+    HOURS = "hours"
 
 
 class DBKeyWrapperEnum(Enum):

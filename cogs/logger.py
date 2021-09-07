@@ -4,14 +4,14 @@ from typing import Union
 from discord import Member, User, Embed
 from discord.ext.commands import Cog, Bot, command, bot_has_guild_permissions, Context
 
-from cogs.botStatus import listener
-from core.globalEnum import LoggingLevel, CollectionEnum, LoggerEnum
+from cogs.bot_status import listener
+from core.global_enum import LoggingLevel, CollectionEnum, LoggerEnum
 from core.logger import get_discord_child_logger, loggerInstance
-from mongo.primitiveMongoData import PrimitiveMongoData
+from mongo.primitive_mongo_data import PrimitiveMongoData
 
 logger = get_discord_child_logger("logger")
 
-pretty_logger_help = "You can assign one of these verbose levels:\n{}\n to on of these logger: \n{}"
+pretty_logger_help = "You can assign one of these verbose levels:\n{}\n to one of these logger: \n{}"
 
 
 class Logger(Cog):

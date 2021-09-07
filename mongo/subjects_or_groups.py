@@ -6,8 +6,8 @@ from discord import Role, Guild
 from discord import TextChannel
 from discord.ext.commands import Bot
 
-from core.globalEnum import DBKeyWrapperEnum, SubjectsOrGroupsEnum
-from mongo.mongoCollection import MongoCollection, MongoDocument
+from core.global_enum import DBKeyWrapperEnum, SubjectsOrGroupsEnum
+from mongo.mongo_collection import MongoCollection, MongoDocument
 
 
 @dataclass(frozen=True)

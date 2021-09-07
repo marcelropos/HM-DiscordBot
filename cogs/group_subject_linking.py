@@ -6,14 +6,14 @@ from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
-from cogs.botStatus import listener
+from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from core.error.error_collection import GroupOrSubjectNotFoundError, LinkingNotFoundError
-from core.globalEnum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
+from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat
 from mongo.study_subject_relation import StudySubjectRelations
-from mongo.subjectsorgroups import SubjectsOrGroups
+from mongo.subjects_or_groups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
 first_init = True
@@ -64,9 +64,9 @@ class Linking(Cog):
 
     @link.command(pass_context=True)
     async def add(self, ctx: Context,
-                  study_role: Role,
-                  subject_role: Role,
-                  default: bool):  # parameter only for pretty help.
+                  study_role: Role,  # parameter only for pretty help.
+                  subject_role: Role,  # parameter only for pretty help.
+                  default: bool):
         """
         Adds a new subject to study link
 
@@ -94,17 +94,19 @@ class Linking(Cog):
             }
             await self.db.update_one(existing_link, new_link)
             embed = Embed(title="Linking Add",
-                          description=f"Successfully updated <@&{study_role.id}> to <@&{subject_role.id}> with default={default}")
+                          description=f"Successfully updated <@&{study_role.id}> to <@&{subject_role.id}> "
+                                      f"with default={default}")
         else:
             await self.db.insert_one((study_role, subject_role, default))
             embed = Embed(title="Linking Add",
-                          description=f"Successfully linked <@&{study_role.id}> to <@&{subject_role.id}> with default={default}")
+                          description=f"Successfully linked <@&{study_role.id}> to <@&{subject_role.id}> "
+                                      f"with default={default}")
         await ctx.reply(embed=embed)
 
     @link.command(pass_context=True,
                   aliases=["rem", "rm"])
     async def remove(self, ctx: Context,
-                     study_role: Role,
+                     study_role: Role,  # parameter only for pretty help.
                      subject_role: Role):  # parameter only for pretty help.
         """
         Removes a link between study group and subject

@@ -3,7 +3,7 @@ from typing import Callable
 
 from core.error.error_collection import CouldNotEditEntryError
 from core.error.handler.base_handler import BaseHandler
-from core.globalEnum import CollectionEnum
+from core.global_enum import CollectionEnum
 from core.logger import get_mongo_child_logger
 
 

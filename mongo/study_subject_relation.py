@@ -4,9 +4,9 @@ from typing import Optional, Any
 from discord import Role, Guild
 from discord.ext.commands import Bot, BadArgument
 
-from core.globalEnum import DBKeyWrapperEnum, CollectionEnum, SubjectsOrGroupsEnum
-from mongo.mongoCollection import MongoDocument, MongoCollection
-from mongo.subjectsorgroups import SubjectsOrGroups
+from core.global_enum import DBKeyWrapperEnum, CollectionEnum, SubjectsOrGroupsEnum
+from mongo.mongo_collection import MongoDocument, MongoCollection
+from mongo.subjects_or_groups import SubjectsOrGroups
 
 
 @dataclass(frozen=True)

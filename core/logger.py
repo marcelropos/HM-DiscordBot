@@ -2,7 +2,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
-from core.globalEnum import LoggingLevel
+from core.global_enum import LoggingLevel
 
 
 class Logger:
