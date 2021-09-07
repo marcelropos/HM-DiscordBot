@@ -65,3 +65,7 @@ class HasNoHandlerException(Exception):
 
 class DatabaseIllegalState(Exception):
     pass
+
+
+class WrongChatForCommand(Exception):
+    pass
