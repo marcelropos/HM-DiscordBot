@@ -60,7 +60,7 @@ class YouAlreadyHaveThisRoleError(CommandError):
     pass
 
 
-class GroupOrSubjectNotFoundError(Exception):
+class GroupOrSubjectNotFoundError(CommandError):
     def __init__(self, group: str, _type: SubjectsOrGroupsEnum):
         self.group = group
         self.type = _type
@@ -78,7 +78,7 @@ class DatabaseIllegalState(Exception):
     pass
 
 
-class WrongChatForCommand(Exception):
+class WrongChatForCommand(CommandError):
     pass
 
 
