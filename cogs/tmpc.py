@@ -10,7 +10,7 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommand, CouldNotFindToken
+from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -266,7 +266,7 @@ class Tmpc(Cog):
             document = await self.gaming_db.find_one({key: ctx.channel.id})
 
         if not document:
-            raise WrongChatForCommand
+            raise WrongChatForCommandTmpc
         elif document.owner != ctx.author:
             raise BotMissingPermissions
         return document

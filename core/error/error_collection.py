@@ -75,7 +75,7 @@ class DatabaseIllegalState(Exception):
     pass
 
 
-class WrongChatForCommand(CommandError):
+class WrongChatForCommandTmpc(CommandError):
     pass
 
 
