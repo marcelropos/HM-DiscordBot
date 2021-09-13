@@ -92,7 +92,6 @@ class Spielereien(Cog):
 
                 if mentions:
                     embed: Embed = Embed(title="Manpage",
-                                         # TODO: This message should be stored into the database
                                          description=f"I was asked to show you this man page:\n"
                                                      f"It contains useful information that will hopefully help you.\n"
                                                      + answer)
