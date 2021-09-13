@@ -87,7 +87,7 @@ class Tmpc(Cog):
 
         await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
-        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
 
     @tmpc.command(pass_context=True)
     async def lock(self, ctx: Context):
