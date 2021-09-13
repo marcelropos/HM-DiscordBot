@@ -104,7 +104,7 @@ class StudyTmpChannels(Cog):
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
             if voice_channel in study_channels:
-                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger,
+                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger, self.bot,
                                                              reset_delete_at=(True, self.config_db)):
                     study_channels.remove(voice_channel)
 
@@ -112,7 +112,7 @@ class StudyTmpChannels(Cog):
             await TmpChannelUtil.joined_voice_channel(self.db, study_channels, after.channel,
                                                       study_join_voice_channel.item, guild,
                                                       default_study_channel_name, member,
-                                                      ConfigurationNameEnum.STUDY_CATEGORY, logger)
+                                                      ConfigurationNameEnum.STUDY_CATEGORY, logger, self.bot)
 
     @group(pass_context=True,
            name="studyChannel")
@@ -162,7 +162,7 @@ class StudyTmpChannels(Cog):
     async def delete_old_channels(self):
         to_delete = set()
         for voice_channel in study_channels:
-            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
+            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger, self.bot):
                 to_delete.add(voice_channel)
         for old in to_delete:
             study_channels.remove(old)

@@ -9,7 +9,6 @@ from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
 from cogs.util.placeholder import Placeholder
-from core.error.error_collection import DatabaseIllegalState, CanOnlyHaveOneChannel
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -121,14 +120,15 @@ class TmpChannelUtil:
 
     @staticmethod
     async def check_delete_channel(voice_channel: VoiceChannel, db: Union[GamingChannels, StudyChannels],
-                                   logger: logging.Logger,
+                                   logger: logging.Logger, bot: Bot,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
         if len({member for member in voice_channel.members if not member.bot}) == 0:
             document: list[Union[StudyChannel, GamingChannel]] = await db.find(
                 {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
             if not document:
-                raise DatabaseIllegalState
+                await TmpChannelUtil.database_illegal_state(bot, voice_channel, logger)
+                return False
 
             document: Union[StudyChannel, GamingChannel] = document[0]
 
@@ -164,10 +164,10 @@ class TmpChannelUtil:
     async def joined_voice_channel(db: Union[GamingChannels, StudyChannels], channels: set[VoiceChannel],
                                    voice_channel: VoiceChannel, join_voice_channel: VoiceChannel, guild: Guild,
                                    default_channel_name: str, member: Union[Member, User],
-                                   category: ConfigurationNameEnum, logger: logging.Logger):
+                                   category: ConfigurationNameEnum, logger: logging.Logger, bot: Bot):
         if voice_channel is join_voice_channel:
             if await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id}):
-                raise CanOnlyHaveOneChannel
+                return
 
             channels.add((await TmpChannelUtil.get_server_objects(category, guild,
                                                                   default_channel_name, member, db)).voice)
@@ -178,7 +178,8 @@ class TmpChannelUtil:
                 {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
             if not document:
-                raise DatabaseIllegalState
+                await TmpChannelUtil.database_illegal_state(bot, voice_channel, logger)
+                return
 
             document: Union[GamingChannel, StudyChannel] = document[0]
             await document.chat.set_permissions(member, view_channel=True)
@@ -205,3 +206,14 @@ class TmpChannelUtil:
             await db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
 
         return {document.voice for document in await db.find({})}, default_channel_name
+
+    @staticmethod
+    async def database_illegal_state(bot: Bot, wrong_voice_channel: VoiceChannel, logger: logging.Logger):
+        bot_channel = await assign_chat(bot, ConfigurationNameEnum.DEBUG_CHAT)
+        embed = Embed(title=f"Error occurred for {wrong_voice_channel.mention}")
+        embed.add_field(name="Cause", value="The database is in an illegal state", inline=False)
+        embed.add_field(name="Solution",
+                        value="This should never happen.",
+                        inline=False)
+        await bot_channel.send(embed=embed)
+        logger.error(f"The Database is in an Illegal State while checking voice channel {wrong_voice_channel.id}")

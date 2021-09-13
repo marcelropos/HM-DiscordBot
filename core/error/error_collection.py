@@ -71,10 +71,6 @@ class HasNoHandlerException(Exception):
     pass
 
 
-class DatabaseIllegalState(Exception):
-    pass
-
-
 class WrongChatForCommandTmpc(CommandError):
     pass
 
@@ -88,8 +84,4 @@ class CantRemoveSubject(CommandError):
 
 
 class CouldNotFindToken(CommandError):
-    pass
-
-
-class CanOnlyHaveOneChannel(CommandError):
     pass
