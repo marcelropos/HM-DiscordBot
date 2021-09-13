@@ -77,8 +77,8 @@ async def handle_db_connection(bot):
 
 
 async def handle_broken_config(bot, error: BrokenConfigurationError):
-    title = "Invalid command Chat configuration."
-    cause = "The bot chat configuration is broken."
+    title = "Invalid Database configuration."
+    cause = "The database configuration is broken."
     solution = f"Please check {error.key_representation()} in collection `{error.collection}` and reload all modules."
     get_discord_child_logger(__name__).error(f"{cause} {error_msg}")
     await startup_error_reply(bot=bot, title=title, cause=cause, solution=solution)
