@@ -55,7 +55,7 @@ class StudySubjectUtil:
             restricted_role = guild.get_role(role_id[ConfigurationNameEnum.RESTRICTED.value])
 
         if not restricted_role:
-            raise BrokenConfigurationError
+            raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.RESTRICTED.value)
 
         overwrites = {role: PermissionOverwrite(view_channel=True),
                       restricted_role: PermissionOverwrite(send_messages=False),

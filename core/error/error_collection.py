@@ -18,7 +18,18 @@ class CouldNotEditEntryError(Exception):
 
 
 class BrokenConfigurationError(Exception):
-    pass
+    def __init__(self, collection: str, keys: Union[str, list[str]]):
+        self.collection: str = collection
+        if keys is str:
+            self.keys: list[str] = [keys]
+        else:
+            self.keys: list[str] = keys
+
+    def key_representation(self) -> str:
+        output: str = str(self.keys).replace("'", "`")
+        if "`" not in output:
+            output = "`" + output + "`"
+        return output
 
 
 class NoBotChatError(CommandError):

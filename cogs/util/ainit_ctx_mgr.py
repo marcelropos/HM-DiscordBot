@@ -42,8 +42,8 @@ class AinitManager:
             self.verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
             self.moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
 
-        except (TypeError, BrokenConfigurationError):
-            await handle_broken_config(self.bot)
+        except BrokenConfigurationError as err:
+            await handle_broken_config(self.bot, err)
 
         except ServerSelectionTimeoutError:
             await handle_db_connection(self.bot)
@@ -55,10 +55,10 @@ class AinitManager:
         self.loop.stop()
         result = None
 
-        if exc_type in {TypeError, BrokenConfigurationError}:
-            await handle_broken_config(self.bot)
+        if exc_type is BrokenConfigurationError:
+            await handle_broken_config(self.bot, exc_val)
             result = exc_type
-        elif exc_type in {ServerSelectionTimeoutError}:
+        elif exc_type is ServerSelectionTimeoutError:
             await handle_db_connection(self.bot)
             result = exc_type
 
@@ -76,11 +76,9 @@ async def handle_db_connection(bot):
     await startup_error_reply(bot=bot, title=title, cause=cause, solution=solution)
 
 
-async def handle_broken_config(bot):
+async def handle_broken_config(bot, error: BrokenConfigurationError):
+    title = "Invalid command Chat configuration."
     cause = "The bot chat configuration is broken."
-    await startup_error_reply(bot=bot,
-                              title="Invalid command Chat configuration.",
-                              cause=cause,
-                              solution=f"Please check {ConfigurationNameEnum.BOT_COMMAND_CHAT} "
-                                       f"& {ConfigurationNameEnum.DEBUG_CHAT} and reload all modules.")
+    solution = f"Please check {error.key_representation()} in collection `{error.collection}` and reload all modules."
     get_discord_child_logger(__name__).error(f"{cause} {error_msg}")
+    await startup_error_reply(bot=bot, title=title, cause=cause, solution=solution)
