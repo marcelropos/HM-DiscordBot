@@ -124,7 +124,7 @@ class Linking(Cog):
                                        DBKeyWrapperEnum.SUBJECT.value: subject_role.id})
 
         if not link:
-            raise LinkingNotFoundError
+            raise LinkingNotFoundError(ctx)
 
         await self.db.delete_one(link.document)
         embed = Embed(title="Linking Remove",

@@ -19,7 +19,7 @@ class GroupOrSubjectNotFoundHandler(BaseHandler):
 
     @property
     async def solution(self) -> str:
-        return "You can find the known linking with `!link show`"
+        return f"You can find the known linking with `{self.error.prefix}link show`"
 
     @property
     def logger(self) -> Callable[[str], Logger]:

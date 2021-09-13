@@ -1,7 +1,7 @@
 from typing import Union
 
 from discord import TextChannel, Role, Member, User
-from discord.ext.commands import CommandError
+from discord.ext.commands import CommandError, Context
 
 from core.global_enum import CollectionEnum, SubjectsOrGroupsEnum
 
@@ -67,7 +67,8 @@ class GroupOrSubjectNotFoundError(CommandError):
 
 
 class LinkingNotFoundError(CommandError):
-    pass
+    def __init__(self, ctx: Context):
+        self.prefix = ctx.bot.command_prefix
 
 
 class HasNoHandlerException(Exception):
