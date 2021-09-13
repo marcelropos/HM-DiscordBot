@@ -1,6 +1,6 @@
 from typing import Union
 
-from discord import Member, User, VoiceState, TextChannel, Embed, Role, VoiceChannel, Guild
+from discord import Member, User, VoiceState, TextChannel, Embed, Role
 from discord.ext.commands import Cog, Bot, group, has_guild_permissions, Context, BadArgument
 from discord.ext.tasks import loop
 
