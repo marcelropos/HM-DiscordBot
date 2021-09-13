@@ -6,8 +6,9 @@ from discord.ext.commands import CommandError, Context
 from core.global_enum import CollectionEnum, SubjectsOrGroupsEnum
 
 
-class ManPageNotFound(Exception):
-    pass
+################
+# MONGO ERRORS #
+################
 
 
 class CouldNotEditEntryError(Exception):
@@ -32,24 +33,15 @@ class BrokenConfigurationError(Exception):
         return output
 
 
-class NoBotChatError(CommandError):
-    def __init__(self, channels: set[TextChannel]):
-        self.channels = channels
-
-
-class NoMultipleGroupsError(CommandError):
-    def __init__(self, role: Role):
-        self.role = role
+################
+# ROLES ERRORS #
+################
 
 
 class FailedToGrantRoleError(CommandError):
     def __init__(self, role: Role, member: Union[Member, User]):
         self.role = role
         self.member = member
-
-
-class NoRulesError(CommandError):
-    pass
 
 
 class YouAlreadyHaveThisSubjectError(CommandError):
@@ -62,19 +54,6 @@ class GroupOrSubjectNotFoundError(CommandError):
         self.type = _type
 
 
-class LinkingNotFoundError(CommandError):
-    def __init__(self, ctx: Context):
-        self.prefix = ctx.bot.command_prefix
-
-
-class HasNoHandlerException(Exception):
-    pass
-
-
-class WrongChatForCommandTmpc(CommandError):
-    pass
-
-
 class CantAssignToSubject(CommandError):
     pass
 
@@ -83,5 +62,51 @@ class CantRemoveSubject(CommandError):
     pass
 
 
+###############
+# TMPC ERRORS #
+###############
+
+
 class CouldNotFindToken(CommandError):
+    pass
+
+
+class WrongChatForCommandTmpc(CommandError):
+    pass
+
+
+####################
+# PREDICATE ERRORS #
+####################
+
+
+class NoMultipleGroupsError(CommandError):
+    def __init__(self, role: Role):
+        self.role = role
+
+
+class NoBotChatError(CommandError):
+    def __init__(self, channels: set[TextChannel]):
+        self.channels = channels
+
+
+class NoRulesError(CommandError):
+    pass
+
+
+##########
+# OTHERS #
+##########
+
+
+class ManPageNotFound(Exception):
+    pass
+
+
+class LinkingNotFoundError(CommandError):
+    def __init__(self, ctx: Context):
+        self.prefix = ctx.bot.command_prefix
+
+
+class HasNoHandlerException(Exception):
     pass
