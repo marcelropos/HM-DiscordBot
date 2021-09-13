@@ -137,7 +137,7 @@ class Subjects(Cog):
                      name="remove")
     async def subject_remove(self, ctx: Context, subject: str):
         """
-        opts-out a user into the specified subject
+        opts-out a user out of the specified subject
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
