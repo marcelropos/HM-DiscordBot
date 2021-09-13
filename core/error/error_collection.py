@@ -48,10 +48,6 @@ class FailedToGrantRoleError(CommandError):
         self.member = member
 
 
-class MayNotUseCommandError(CommandError):
-    pass
-
-
 class NoRulesError(CommandError):
     pass
 
@@ -88,10 +84,6 @@ class CantAssignToSubject(CommandError):
 
 
 class CantRemoveSubject(CommandError):
-    pass
-
-
-class NoStudyGroupAssigned(CommandError):
     pass
 
 
