@@ -11,7 +11,7 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
-from core.error.error_collection import CantAssignToSubject, YouAlreadyHaveThisRoleError, NoStudyGroupAssigned, \
+from core.error.error_collection import CantAssignToSubject, YouAlreadyHaveThisSubjectError, NoStudyGroupAssigned, \
     CantRemoveSubject
 from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
 from core.logger import get_discord_child_logger
@@ -123,7 +123,7 @@ class Subjects(Cog):
             raise CantAssignToSubject
 
         if subject not in [subject.name.lower() for subject in subjects if subject not in roles]:
-            raise YouAlreadyHaveThisRoleError
+            raise YouAlreadyHaveThisSubjectError
 
         role: Role = [role for role in subjects if role.name.lower() == subject][0]
         await member.add_roles(role)

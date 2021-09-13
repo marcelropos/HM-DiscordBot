@@ -56,7 +56,7 @@ class NoRulesError(CommandError):
     pass
 
 
-class YouAlreadyHaveThisRoleError(CommandError):
+class YouAlreadyHaveThisSubjectError(CommandError):
     pass
 
 
