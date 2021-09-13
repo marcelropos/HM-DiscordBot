@@ -127,7 +127,7 @@ class Subjects(Cog):
 
         role: Role = [role for role in subjects if role.name.lower() == subject][0]
         await member.add_roles(role)
-        embed = Embed(title="successfully assigned",
+        embed = Embed(title="Successfully assigned",
                       description=f"Assigned you to {role.mention}")
         await ctx.reply(content=member.mention, embed=embed)
         return
@@ -153,8 +153,8 @@ class Subjects(Cog):
             raise CantRemoveSubject
 
         role: Role = [role for role in subjects if role.name == subject][0]
-        await member.add_roles(role)
-        embed = Embed(title="successfully Opted out of subject",
+        await member.remove_roles(role)
+        embed = Embed(title="Successfully Opted out of subject",
                       description=f"Removed you from {role.mention}")
         await ctx.reply(content=member.mention, embed=embed)
         return
