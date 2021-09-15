@@ -90,6 +90,46 @@ class Tmpc(Cog):
         await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
 
     @tmpc.command(pass_context=True)
+    async def hide(self, ctx: Context):
+        """
+        Hides a Study or Gaming Channel.
+        """
+        document = await self.check_tmpc_channel(ctx)
+        guild: Guild = ctx.guild
+
+        key = ConfigurationNameEnum.STUDENTY.value
+        verified = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        await document.voice.set_permissions(verified, connect=document.voice.overwrites_for(verified).connect,
+                                             view_channel=False)
+
+        embed = Embed(title="Hidden",
+                      description=f"Hidden this channel. Now only the students that you can see on the "
+                                  f"right side can see the vc.\n"
+                                  f"If you are not a moderator, moderators can join and see this channel.")
+        await ctx.reply(embed=embed)
+
+    @tmpc.command(pass_context=True)
+    async def show(self, ctx: Context):
+        """
+        Shows (Unhides) a Study or Gaming Channel.
+        """
+        document = await self.check_tmpc_channel(ctx)
+        guild: Guild = ctx.guild
+
+        key = ConfigurationNameEnum.STUDENTY.value
+        verified = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        await document.voice.set_permissions(verified, connect=document.voice.overwrites_for(verified).connect,
+                                             view_channel=True)
+
+        embed = Embed(title="Unhidden",
+                      description=f"Made this channel visible. Now every Student can see the vc.")
+        await ctx.reply(embed=embed)
+
+    @tmpc.command(pass_context=True)
     async def lock(self, ctx: Context):
         """
         Locks a Study or Gaming Channel.
@@ -101,12 +141,13 @@ class Tmpc(Cog):
         verified = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, view_channel=False, connect=False)
+        await document.voice.set_permissions(verified, connect=False,
+                                             view_channel=document.voice.overwrites_for(verified).view_channel)
 
         embed = Embed(title="Locked",
                       description=f"Locked this channel. Now only the students that you can see on the "
-                                  f"right side can join and see the vc.\n"
-                                  f"If you are not a moderator, moderators can join and see this channel.")
+                                  f"right side can join the vc.\n"
+                                  f"If you are not a moderator, moderators can join this channel.")
         await ctx.reply(embed=embed)
 
     @tmpc.command(pass_context=True)
@@ -121,7 +162,8 @@ class Tmpc(Cog):
         verified = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, view_channel=True, connect=True)
+        await document.voice.set_permissions(verified, connect=True,
+                                             view_channel=document.voice.overwrites_for(verified).view_channel)
 
         embed = Embed(title="Unlocked",
                       description=f"Unlocked this channel. Now every Student can join the vc.")
