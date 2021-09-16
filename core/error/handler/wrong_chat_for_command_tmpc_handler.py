@@ -1,25 +1,25 @@
 from logging import Logger
 from typing import Callable
 
-from core.error.error_collection import LinkingNotFoundError
+from core.error.error_collection import WrongChatForCommandTmpc
 from core.error.handler.base_handler import BaseHandler
 from core.logger import get_discord_child_logger
 
 
-class GroupOrSubjectNotFoundHandler(BaseHandler):
-    error: LinkingNotFoundError
+class WrongChatForCommandTmpcHandler(BaseHandler):
+    error: WrongChatForCommandTmpc
 
     @staticmethod
     def handles_type():
-        return LinkingNotFoundError
+        return WrongChatForCommandTmpc
 
     @property
     def cause(self) -> str:
-        return "Did not find the linking specified."
+        return "Can't use this tmpc command outside of the tmpc chat"
 
     @property
     async def solution(self) -> str:
-        return f"You can find the known linking with `{self.error.prefix}link show`"
+        return f"You can only use this command inside the text chat created with the study or gaming voice chat"
 
     @property
     def logger(self) -> Callable[[str], Logger]:

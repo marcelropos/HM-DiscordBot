@@ -1,25 +1,25 @@
 from logging import Logger
 from typing import Callable
 
-from core.error.error_collection import LinkingNotFoundError
+from core.error.error_collection import YouAlreadyHaveThisSubjectError
 from core.error.handler.base_handler import BaseHandler
 from core.logger import get_discord_child_logger
 
 
-class GroupOrSubjectNotFoundHandler(BaseHandler):
-    error: LinkingNotFoundError
+class YouAlreadyHaveThisSubjectHandler(BaseHandler):
+    error: YouAlreadyHaveThisSubjectError
 
     @staticmethod
     def handles_type():
-        return LinkingNotFoundError
+        return YouAlreadyHaveThisSubjectError
 
     @property
     def cause(self) -> str:
-        return "Did not find the linking specified."
+        return "You are already assigned to this subject."
 
     @property
     async def solution(self) -> str:
-        return f"You can find the known linking with `{self.error.prefix}link show`"
+        return "Did you maybe mean another subject? Or maybe you wanted to remove this subject?"
 
     @property
     def logger(self) -> Callable[[str], Logger]:

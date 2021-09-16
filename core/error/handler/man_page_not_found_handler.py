@@ -14,7 +14,7 @@ class ManPageNotFoundHandler(BaseHandler):
 
     @property
     def cause(self) -> str:
-        return "The Manpage you requested could not found"
+        return "The Manpage you requested could not be found"
 
     @property
     async def solution(self) -> str:

@@ -1,25 +1,26 @@
 from logging import Logger
 from typing import Callable
 
-from core.error.error_collection import LinkingNotFoundError
+from core.error.error_collection import CantAssignToSubject
 from core.error.handler.base_handler import BaseHandler
 from core.logger import get_discord_child_logger
 
 
-class GroupOrSubjectNotFoundHandler(BaseHandler):
-    error: LinkingNotFoundError
+class CantAssignToSubjectHandler(BaseHandler):
+    error: CantAssignToSubject
 
     @staticmethod
     def handles_type():
-        return LinkingNotFoundError
+        return CantAssignToSubject
 
     @property
     def cause(self) -> str:
-        return "Did not find the linking specified."
+        return "Didn't find wanted Subject"
 
     @property
     async def solution(self) -> str:
-        return f"You can find the known linking with `{self.error.prefix}link show`"
+        return "If you think this subject should exist or you should be able to assign yourself to it " \
+               "please contact an admin."
 
     @property
     def logger(self) -> Callable[[str], Logger]:

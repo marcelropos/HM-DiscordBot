@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound
-from discord.ext.commands import Bot, group, Cog, Context, BadArgument
+from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
@@ -10,7 +10,7 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommand, MayNotUseCommandError, CouldNotFindToken
+from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -72,7 +72,7 @@ class Tmpc(Cog):
         """
         document = await self.check_tmpc_channel(ctx)
         if type(document) == GamingChannel:
-            raise MayNotUseCommandError
+            raise BotMissingPermissions
         if document.deleteAt:
             document.deleteAt = None
             embed = Embed(title="Turned off keep",
@@ -87,7 +87,7 @@ class Tmpc(Cog):
 
         await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
-        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
 
     @tmpc.command(pass_context=True)
     async def hide(self, ctx: Context):
@@ -313,9 +313,9 @@ class Tmpc(Cog):
             document = await self.gaming_db.find_one({key: ctx.channel.id})
 
         if not document:
-            raise WrongChatForCommand
+            raise WrongChatForCommandTmpc
         elif document.owner != ctx.author:
-            raise MayNotUseCommandError
+            raise BotMissingPermissions
         return document
 
 

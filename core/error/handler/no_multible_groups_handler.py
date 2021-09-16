@@ -15,7 +15,7 @@ class NoMultipleGroupsHandler(BaseHandler):
 
     @property
     def cause(self) -> str:
-        return f'You may only belong to one group, but you already assigned to {self.error.role.mention}.'
+        return f'You may only belong to one group, but you already are assigned to {self.error.role.mention}.'
 
     @property
     async def solution(self) -> str:

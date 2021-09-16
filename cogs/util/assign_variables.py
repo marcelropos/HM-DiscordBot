@@ -22,18 +22,18 @@ async def assign_accepted_chats(bot: Bot, channels: set[TextChannel]):
     channels.clear()
     db = PrimitiveMongoData(CollectionEnum.CHANNELS)
 
-    command_key = ConfigurationNameEnum.BOT_COMMAND_CHAT.value
+    command_key: str = ConfigurationNameEnum.BOT_COMMAND_CHAT.value
     command: Optional[dict] = await db.find_one({command_key: {"$exists": True}})
-    debug_key = ConfigurationNameEnum.DEBUG_CHAT.value
+    debug_key: str = ConfigurationNameEnum.DEBUG_CHAT.value
     debug: Optional[dict] = await db.find_one({debug_key: {"$exists": True}})
 
     if command and debug:
         channels.add(bot.get_channel(command[command_key]))
         channels.add(bot.get_channel(debug[debug_key]))
     else:
-        raise BrokenConfigurationError
+        raise BrokenConfigurationError(db.collection.name, [command_key, debug_key])
     if None in channels:
-        raise BrokenConfigurationError
+        raise BrokenConfigurationError(db.collection.name, [command_key, debug_key])
 
 
 async def assign_role(bot: Bot, role_name: ConfigurationNameEnum) -> Optional[Role]:
@@ -61,7 +61,7 @@ async def assign_role(bot: Bot, role_name: ConfigurationNameEnum) -> Optional[Ro
         role = None
 
     if not role:
-        raise BrokenConfigurationError
+        raise BrokenConfigurationError(db.collection.name, role_key)
 
     return role
 
@@ -91,7 +91,7 @@ async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional
         channel = None
 
     if not channel:
-        raise BrokenConfigurationError
+        raise BrokenConfigurationError(db.collection.name, role_key)
 
     return channel
 
@@ -121,7 +121,7 @@ async def assign_category(bot: Bot, category_name: ConfigurationNameEnum) -> Opt
         category = None
 
     if not category:
-        raise BrokenConfigurationError
+        raise BrokenConfigurationError(db.collection.name, category_key)
 
     return category
 

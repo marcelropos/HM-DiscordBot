@@ -371,7 +371,7 @@ class KickGhosts(Cog):
         if None in safe_roles:
             logger.error("A non-existent role id was loaded. For security reasons, "
                          "the execution of the member kick was aborted.")
-            raise BrokenConfigurationError
+            raise BrokenConfigurationError(self.db.collection.name, key)
 
         deadline = self.config[ConfigurationNameEnum.DEADLINE]
         warning = self.config[ConfigurationNameEnum.WARNING]
