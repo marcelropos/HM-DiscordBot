@@ -213,6 +213,8 @@ class Tmpc(Cog):
                 DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt,
                 DBKeyWrapperEnum.MESSAGES.value: document.messages + [message]
             }
+            new_document[DBKeyWrapperEnum.MESSAGES.value] = [(message.channel.id, message.id) for message in
+                                                             new_document[DBKeyWrapperEnum.MESSAGES.value]]
             await self.study_db.update_one(document.document, new_document)
             return
 
