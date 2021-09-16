@@ -15,11 +15,11 @@ class NoMultipleGroupsHandler(BaseHandler):
 
     @property
     def cause(self) -> str:
-        return f'<@{self.error.member.id}> is already assigned to role <@&{self.error.role.id}>.'
+        return f'{self.error.member.mention} is already assigned to role {self.error.role.mention}.'
 
     @property
     async def solution(self) -> str:
-        return f"Ask an Admin to reassign <@{self.error.member.id}>."
+        return f"Ask an Admin to reassign {self.error.member.mention}."
 
     @property
     def logger(self) -> Callable[[str], Logger]:

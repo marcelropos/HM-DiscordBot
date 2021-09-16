@@ -128,4 +128,4 @@ async def assign_category(bot: Bot, category_name: ConfigurationNameEnum) -> Opt
 
 async def assign_set_of_roles(guild: Guild, db: SubjectsOrGroups, roles: set[Role]):
     roles.clear()
-    roles.update({guild.get_role(document.role_id) for document in await db.find({})})
+    roles.update(document.role for document in await db.find({}))

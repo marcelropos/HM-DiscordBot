@@ -56,7 +56,7 @@ class Roles(Cog):
     async def nsfw_add(self, ctx: Context):
         global nsfw
         await ctx.author.add_roles(nsfw.item, reason="request by user")
-        await ctx.reply(content=f"<@{ctx.author.id}> added you to the <@&{nsfw.item.id}> role")
+        await ctx.reply(content=f"{ctx.author.mention} added you to the {nsfw.item.mention} role")
 
     @command(name="nsfw-rem",
              help="Remove nsfw role")
@@ -65,7 +65,7 @@ class Roles(Cog):
     async def nsfw_rem(self, ctx: Context):
         global nsfw
         await ctx.author.remove_roles(nsfw.item, reason="request by user")
-        await ctx.reply(content=f"<@{ctx.author.id}> removed you from the <@&{nsfw.item.id}> role")
+        await ctx.reply(content=f"{ctx.author.mention} removed you from the {nsfw.item.mention} role")
 
     # News
 
@@ -77,7 +77,7 @@ class Roles(Cog):
     async def news_add(self, ctx: Context):
         global news
         await ctx.author.add_roles(news.item, reason="request by user")
-        await ctx.reply(content=f"<@{ctx.author.id}> added you to the <@&{news.item.id}> role")
+        await ctx.reply(content=f"{ctx.author.mention} added you to the {news.item.mention} role")
 
     @command(name="news-rem",
              help="Remove news role")
@@ -86,7 +86,7 @@ class Roles(Cog):
     async def news_rem(self, ctx: Context):
         global news
         await ctx.author.remove_roles(news.item, reason="request by user")
-        await ctx.reply(content=f"<@{ctx.author.id}> removed you from the <@&{news.item.id}> role")
+        await ctx.reply(content=f"{ctx.author.mention} removed you from the {news.item.mention} role")
 
 
 def setup(bot: Bot):

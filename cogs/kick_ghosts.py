@@ -268,7 +268,7 @@ class KickGhosts(Cog):
             safe_roles: list[Role] = [role for role in ctx.guild.roles if role.id in safe_roles_ids]
             safe_roles_names = ""
             for safe_role in safe_roles:
-                safe_roles_names += f"<@&{safe_role.id}> "
+                safe_roles_names += safe_role.mention
 
             embed = Embed(title="Safe Roles:",
                           description=f"At the moment there are the following Roles selected as 'Safe Roles'\n"
@@ -312,19 +312,19 @@ class KickGhosts(Cog):
                                   f"{safe_roles_names}\n"
                                   f"within the next **{left}** days.",
                             inline=False)
-            await help_chat.send(embed=embed)  # , content=f"<@{member.id}>")
+            await help_chat.send(embed=embed)  # , content=member.mention")
 
         for member in kick_member:
             try:
                 await member.kick(reason="Too long without verification")
                 logger.info('Kicked user: User="{member.name}#{member.discriminator}({member.id})" ')
                 embed = Embed(title="Kick Ghosts",
-                              description=f"Kicked <@{member.id}>.")
+                              description=f"Kicked {member.mention}.")
             except Forbidden:
                 logger.error(f'Tried to kick User="{member.name}#{member.discriminator}({member.id})" '
                              f'but failed due missing permissions.')
                 embed = Embed(title="Kick Ghosts",
-                              description=f"Tried to kick <@{member.id}> but failed due missing permissions.")
+                              description=f"Tried to kick {member.mention} but failed due missing permissions.")
             await debug_chat.send(embed=embed)
 
     # Helper methods
@@ -386,7 +386,7 @@ class KickGhosts(Cog):
 
         safe_roles_names = ""
         for safe_role in safe_roles:
-            safe_roles_names += f"<@&{safe_role.id}> "
+            safe_roles_names += safe_role.mention
         return deadline, debug_chat, guild, help_chat, safe_roles, safe_roles_names, warning
 
     @staticmethod

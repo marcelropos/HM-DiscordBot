@@ -82,25 +82,24 @@ class Linking(Cog):
 
         study_role, subject_role = await self.check_mentions(ctx)
 
-        existing_link = [document for document in await self.db.find({}) if
-                         document.group == study_role and document.subject == subject_role]
+        existing_link = await self.db.find_one({DBKeyWrapperEnum.GROUP.value: study_role.id,
+                                                DBKeyWrapperEnum.SUBJECT.value: subject_role.id})
 
         if existing_link:
-            existing_link = existing_link[0].document
+            existing_link = existing_link.document
             new_link = {
                 DBKeyWrapperEnum.GROUP.value: study_role.id,
                 DBKeyWrapperEnum.SUBJECT.value: subject_role.id,
                 DBKeyWrapperEnum.DEFAULT.value: default
             }
             await self.db.update_one(existing_link, new_link)
-            embed = Embed(title="Linking Add",
-                          description=f"Successfully updated <@&{study_role.id}> to <@&{subject_role.id}> "
-                                      f"with default={default}")
+            verb = "updated"
         else:
             await self.db.insert_one((study_role, subject_role, default))
-            embed = Embed(title="Linking Add",
-                          description=f"Successfully linked <@&{study_role.id}> to <@&{subject_role.id}> "
-                                      f"with default={default}")
+            study_role = "linked"
+        embed = Embed(title="Linking Add",
+                      description=f"Successfully {study_role} {study_role.mention} to {subject_role.mention} "
+                                  f"with default={default}")
         await ctx.reply(embed=embed)
 
     @link.command(pass_context=True,
@@ -121,16 +120,16 @@ class Linking(Cog):
 
         study_role, subject_role = await self.check_mentions(ctx)
 
-        link = [document for document in await self.db.find({}) if
-                document.group == study_role and document.subject == subject_role]
+        link = await self.db.find_one({DBKeyWrapperEnum.GROUP.value: study_role.id,
+                                       DBKeyWrapperEnum.SUBJECT.value: subject_role.id})
 
         if not link:
             raise LinkingNotFoundError
 
-        await self.db.delete_one(link[0].document)
+        await self.db.delete_one(link.document)
         embed = Embed(title="Linking Remove",
-                      description=f"Successfully deleted link <@&{study_role.id}> to <@&{subject_role.id}> "
-                                  f"with default={link[0].default}")
+                      description=f"Successfully deleted link {link.group.mention} to {link.subject.mention} "
+                                  f"with default={link.default}")
         await ctx.reply(embed=embed)
 
     @link.command(pass_context=True)
@@ -146,7 +145,7 @@ class Linking(Cog):
         if links:
             default_links: dict[str, list[str]] = dict()
             non_default_links: dict[str, list[str]] = dict()
-            links = [(f"<@&{link.group.id}>", f"<@&{link.subject.id}>", link.default) for link in links]
+            links = [(link.group.mention, link.subject.mention, link.default) for link in links]
             for study, subject, default in links:
                 if default:
                     if study in default_links:
@@ -195,9 +194,9 @@ class Linking(Cog):
                 study_role = subject_role
                 subject_role = tmp
             else:
-                raise GroupOrSubjectNotFoundError(f"<@&{subject_role.name}>", SubjectsOrGroupsEnum.GROUP)
+                raise GroupOrSubjectNotFoundError(subject_role.mention, SubjectsOrGroupsEnum.GROUP)
         if subject_role not in subjects:
-            raise GroupOrSubjectNotFoundError(f"<@&{subject_role.name}>", SubjectsOrGroupsEnum.SUBJECT)
+            raise GroupOrSubjectNotFoundError(subject_role.mention, SubjectsOrGroupsEnum.SUBJECT)
 
         return study_role, subject_role
 

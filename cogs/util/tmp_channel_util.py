@@ -128,7 +128,6 @@ class TmpChannelUtil:
                 {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
             if not document:
-                logger.error(voice_channel.name)
                 raise DatabaseIllegalState
 
             document: Union[StudyChannel, GamingChannel] = document[0]
