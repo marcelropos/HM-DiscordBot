@@ -81,7 +81,7 @@ class StudyChannels(MongoCollection):
         return [await self._create_study_channel(document) for document in await cursor.to_list(limit)]
 
     async def update_one(self, find_params: dict, replace: dict) -> StudyChannel:
-        replace[DBKeyWrapperEnum.MESSAGES.value] = [(message.channel.id, message.id) for message in
+        replace[DBKeyWrapperEnum.MESSAGES.value] = [(message[0].id, message[0].id) for message in
                                                     replace[DBKeyWrapperEnum.MESSAGES.value]]
         await self.collection.update_one(find_params, {"$set": replace})
         document = find_params.copy()
