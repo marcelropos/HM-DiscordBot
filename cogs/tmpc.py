@@ -135,9 +135,12 @@ class Tmpc(Cog):
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            mode: One of the following: show: show the current token; gen: generate a new token;
-                    send <@user>: sends the token to a user; place: place an embed in the channel so that user can
-                    easily join the Study Channel. Attention the place Command only works for Study Channels.
+            mode: One of the following:
+                    show: show the current token;
+                    gen: generate a new token;
+                    send <@user>: sends the token to a user;
+                    place: place an embed in the channel so that user can easily join the Study Channel.
+                        Attention the place Command only works for Study Channels.
 
             user: The user if you want to send the token directly to a user
         """
