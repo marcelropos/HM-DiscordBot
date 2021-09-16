@@ -4,7 +4,7 @@ from typing import Union
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
-    NotFound
+    NotFound, Forbidden
 from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
@@ -135,8 +135,14 @@ class TmpChannelUtil:
 
             if type(document) == GamingChannel or not document.deleteAt or (
                     not reset_delete_at[0] and datetime.now() > document.deleteAt):
-                await document.voice.delete(reason="No longer used")
-                await document.chat.delete(reason="No longer used")
+                try:
+                    await document.voice.delete(reason="No longer used")
+                except NotFound:
+                    pass
+                try:
+                    await document.chat.delete(reason="No longer used")
+                except NotFound:
+                    pass
 
                 if type(document) == StudyChannel:
                     for message in document.messages:
