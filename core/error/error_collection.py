@@ -63,6 +63,14 @@ class HasNoHandlerException(Exception):
     pass
 
 
+class DatabaseIllegalState(Exception):
+    pass
+
+
+class WrongChatForCommand(Exception):
+    pass
+
+
 class CantAssignToSubject(CommandError):
     pass
 
@@ -72,4 +80,12 @@ class CantRemoveSubject(CommandError):
 
 
 class NoStudyGroupAssigned(CommandError):
+    pass
+
+
+class CouldNotFindToken(CommandError):
+    pass
+
+
+class CanOnlyHaveOneChannel(CommandError):
     pass

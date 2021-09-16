@@ -13,6 +13,9 @@ class CollectionEnum(Enum):
     LOGGER = "logger"
     COOLDOWN = "cooldown"
     GROUP_SUBJECT_RELATION = "groupSubjectRelation"
+    STUDY_CHANNELS = "studyChannels"
+    GAMING_CHANNELS = "gamingChannels"
+    TEMP_CHANNELS_CONFIGURATION = "channelConfiguration"
 
 
 class ConfigurationNameEnum(Enum):
@@ -25,8 +28,12 @@ class ConfigurationNameEnum(Enum):
     RESTRICTED = "restricted"
     STUDY_SEPARATOR_ROLE = "studySeparator"
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
-    STUDY_CATEGORY = "studyCategory"
+    GROUP_CATEGORY = "groupCategory"
     SUBJECTS_CATEGORY = "subjectsCategory"
+    STUDY_CATEGORY = "studyCategory"
+    GAMING_CATEGORY = "gamingCategory"
+    STUDY_JOIN_VOICE_CHANNEL = "studyVoiceChannel"
+    GAMING_JOIN_VOICE_CHANNEL = "gamingVoiceChannel"
     ENABLED = "enabled"
     DEADLINE = "deadline"
     WARNING = "warning"
@@ -37,6 +44,9 @@ class ConfigurationNameEnum(Enum):
     ROLE_NOT_FOUND_MESSAGE = "roleNotFound"
     TIME = "time"
     HOURS = "hours"
+    DEFAULT_KEEP_TIME = "defaultTime"
+    DEFAULT_STUDY_NAME = "studyDefaultName"
+    DEFAULT_GAMING_NAME = "gamingDefaultName"
 
 
 class DBKeyWrapperEnum(Enum):
@@ -50,6 +60,7 @@ class DBKeyWrapperEnum(Enum):
     GROUP = "group"
     SUBJECT = "subject"
     DEFAULT = "default"
+    MESSAGES = "messages"
 
 
 class LoggingLevel(Enum):

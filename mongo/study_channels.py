@@ -3,64 +3,53 @@ import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from discord import Member, TextChannel, VoiceChannel, User, Guild
+from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound
 from discord.ext.commands import Bot
 
-from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
-from mongo.mongo_collection import MongoCollection, MongoDocument
-from mongo.primitive_mongo_data import PrimitiveMongoData
+from core.global_enum import CollectionEnum, DBKeyWrapperEnum
+from mongo.gaming_channels import GamingChannel
+from mongo.mongo_collection import MongoCollection
 
 
 @dataclass
-class StudyChannel(MongoDocument):
-    _id: int
-    owner: Union[Member, User]
-    chat: TextChannel
-    voice: VoiceChannel
-    token: int
+class StudyChannel(GamingChannel):
     deleteAt: datetime
+    messages: list[Message]
 
     @property
-    def owner_id(self) -> int:
-        return self.owner.id
-
-    @property
-    def voice_id(self) -> int:
-        return self.voice.id
-
-    @property
-    def channel_id(self) -> int:
-        return self.chat.id
-
-    @property
-    def voice_member(self) -> set[Union[Member, User]]:
-        return {member for member in self.voice.members if not member.bot}
+    def message_ids(self) -> list[int]:
+        return [message.id for message in self.messages]
 
     @property
     def document(self) -> dict[str: typing.Any]:
-        return {
-            DBKeyWrapperEnum.ID.value: self._id,
-            DBKeyWrapperEnum.OWNER.value: self.owner.id,
-            DBKeyWrapperEnum.CHAT.value: self.chat.id,
-            DBKeyWrapperEnum.VOICE.value: self.voice.id,
-            DBKeyWrapperEnum.TOKEN.value: self.token,
-            DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt
-        }
+        document = super(StudyChannel, self).document
+        document.update(
+            {DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt,
+             DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in self.messages]})
+        return document
 
 
 class StudyChannels(MongoCollection):
     def __init__(self, bot: Bot):
-        super().__init__(self.__class__.__name__)
+        super().__init__(CollectionEnum.STUDY_CHANNELS.value)
         self.bot = bot
 
     async def _create_study_channel(self, result):
-        _id, owner_id, chat_id, voice_id, token, delete_at = result
-        guild: Guild = self.bot.guilds[0]
-        chat: TextChannel = guild.get_channel(chat_id)
-        voice: VoiceChannel = guild.get_channel(voice_id)
-        owner: Union[Member, User] = await guild.fetch_member(owner_id)
-
-        return StudyChannel(_id, owner, chat, voice, token, delete_at)
+        if result:
+            guild: Guild = self.bot.guilds[0]
+            messages = []
+            for channel, message in result[DBKeyWrapperEnum.MESSAGES.value]:
+                try:
+                    messages.append(await guild.get_channel(channel).fetch_message(message))
+                except (NotFound, AttributeError):
+                    pass
+            return StudyChannel(result[DBKeyWrapperEnum.ID.value],
+                                await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
+                                guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
+                                guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
+                                result[DBKeyWrapperEnum.TOKEN.value],
+                                result[DBKeyWrapperEnum.DELETE_AT.value],
+                                messages)
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
@@ -68,17 +57,13 @@ class StudyChannels(MongoCollection):
                                             Optional[datetime.datetime]]) -> StudyChannel:
         owner, chat, voice, token, delete_at = entry
 
-        hours = await PrimitiveMongoData.find_configuration(CollectionEnum.ROLES_SETTINGS,
-                                                            ConfigurationNameEnum.DELETE_AFTER,
-                                                            ConfigurationNameEnum.HOURS)
-
         document = {
             DBKeyWrapperEnum.OWNER.value: owner.id,
             DBKeyWrapperEnum.CHAT.value: chat.id,
             DBKeyWrapperEnum.VOICE.value: voice.id,
             DBKeyWrapperEnum.TOKEN.value: token,
-            DBKeyWrapperEnum.DELETE_AT.value:
-                delete_at if delete_at else datetime.datetime.now() + datetime.timedelta(hours=hours)
+            DBKeyWrapperEnum.DELETE_AT.value: delete_at,
+            DBKeyWrapperEnum.MESSAGES.value: list()
         }
 
         await self.collection.insert_one(document)

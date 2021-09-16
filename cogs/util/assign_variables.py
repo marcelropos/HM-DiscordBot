@@ -1,6 +1,6 @@
 from typing import Optional
 
-from discord import TextChannel, Role, Guild
+from discord import TextChannel, Role, Guild, CategoryChannel
 from discord.ext.commands import Bot
 
 from core.error.error_collection import BrokenConfigurationError
@@ -94,6 +94,36 @@ async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional
         raise BrokenConfigurationError
 
     return channel
+
+
+async def assign_category(bot: Bot, category_name: ConfigurationNameEnum) -> Optional[CategoryChannel]:
+    """
+    Loads the verified category and takes care of possible errors.
+
+    Args:
+         bot: The bot class.
+
+         category_name: The configured category.
+
+    Return:
+        If success verified category, otherwise none.
+    """
+
+    db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
+
+    category_key = category_name.value
+    category_id: Optional[dict] = await db.find_one({category_key: {"$exists": True}})
+
+    category: Optional[CategoryChannel]
+    if category_id:
+        category = bot.guilds[0].get_channel(category_id[category_key])
+    else:
+        category = None
+
+    if not category:
+        raise BrokenConfigurationError
+
+    return category
 
 
 async def assign_set_of_roles(guild: Guild, db: SubjectsOrGroups, roles: set[Role]):

@@ -6,7 +6,7 @@ from typing import Optional, Union
 from discord import Member, TextChannel, VoiceChannel, User, Guild
 from discord.ext.commands import Bot
 
-from core.global_enum import DBKeyWrapperEnum
+from core.global_enum import DBKeyWrapperEnum, CollectionEnum
 from mongo.mongo_collection import MongoCollection, MongoDocument
 
 
@@ -31,34 +31,29 @@ class GamingChannel(MongoDocument):
         return self.chat.id
 
     @property
-    def voice_member(self) -> set[Union[Member, User]]:
-        return {member for member in self.voice.members if not member.bot}
-
-    @property
     def document(self) -> dict[str: typing.Any]:
         return {
             DBKeyWrapperEnum.ID.value: self._id,
             DBKeyWrapperEnum.OWNER.value: self.owner.id,
-            DBKeyWrapperEnum.CHAT.value: self.chat.id,
-            DBKeyWrapperEnum.VOICE.value: self.voice.id,
+            DBKeyWrapperEnum.CHAT.value: self.chat.id if self.chat else None,
+            DBKeyWrapperEnum.VOICE.value: self.voice.id if self.voice else None,
             DBKeyWrapperEnum.TOKEN.value: self.token,
         }
 
 
 class GamingChannels(MongoCollection):
     def __init__(self, bot: Bot):
-        super().__init__(self.__class__.__name__)
+        super().__init__(CollectionEnum.GAMING_CHANNELS.value)
         self.bot = bot
 
-    async def _create_study_channel(self, result):
-        _id, owner_id, chat_id, voice_id, token = result
-        guild: Guild = self.bot.guilds[0]
-
-        chat: TextChannel = guild.get_channel(chat_id)
-        voice: VoiceChannel = guild.get_channel(voice_id)
-        owner: Union[Member, User] = await guild.fetch_member(owner_id)
-
-        return GamingChannel(_id, owner, chat, voice, token)
+    async def _create_gaming_channel(self, result):
+        if result:
+            guild: Guild = self.bot.guilds[0]
+            return GamingChannel(result[DBKeyWrapperEnum.ID.value],
+                                 await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
+                                 guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
+                                 guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
+                                 result[DBKeyWrapperEnum.TOKEN.value])
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
@@ -78,14 +73,14 @@ class GamingChannels(MongoCollection):
 
     async def find_one(self, find_params: dict) -> GamingChannel:
         result = await self.collection.find_one(find_params)
-        return await self._create_study_channel(result)
+        return await self._create_gaming_channel(result)
 
     async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[GamingChannel]:
         cursor = self.collection.find(find_params)
         if sort:
             cursor = cursor.sort(self)
 
-        return [await self._create_study_channel(entry) for entry in await cursor.to_list(limit)]
+        return [await self._create_gaming_channel(entry) for entry in await cursor.to_list(limit)]
 
     async def update_one(self, find_params: dict, replace: dict) -> GamingChannel:
         await self.collection.update_one(find_params, {"$set": replace})
