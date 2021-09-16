@@ -1,7 +1,7 @@
 from logging import Logger
 from typing import Optional, Union
 
-from discord import Embed, User, Member, Guild, TextChannel, Permissions
+from discord import Embed, User, Member, Guild, TextChannel, Permissions, HTTPException
 from discord.ext.commands import Context, Bot
 
 
@@ -17,7 +17,13 @@ async def error_reply(ctx: Context,
     embed.add_field(name="Cause", value=cause, inline=False)
     embed.add_field(name="Solution", value=solution, inline=False)
     user: Union[Member, User] = ctx.author
-    await ctx.reply(embed=embed, content=content, delete_after=delete_after)
+    try:
+        await ctx.reply(embed=embed, content=content, delete_after=delete_after)
+    except HTTPException as err:
+        if "Unknown message" in err.args[0]:
+            await ctx.send(embed=embed, content=content, delete_after=delete_after)
+        else:
+            raise err
     logger.error(f'User="{user.name}#{user.discriminator}({user.id})", Command="{command}", Cause="{cause}"')
 
 
