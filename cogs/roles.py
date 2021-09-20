@@ -1,4 +1,4 @@
-from discord import TextChannel
+from discord import TextChannel, Role
 from discord.ext.commands import Cog, Bot, Context, command
 from discord.ext.tasks import loop
 
@@ -7,12 +7,12 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role
 from cogs.util.placeholder import Placeholder
 from core.global_enum import ConfigurationNameEnum
-from core.predicates import has_not_role, has_role_plus, bot_chat
+from core.predicates import has_role_plus, bot_chat
 
 first_init = True
 news = Placeholder()
 nsfw = Placeholder()
-verified = Placeholder()
+verified: set[Role] = set()
 bot_channels: set[TextChannel] = set()
 
 
@@ -51,7 +51,6 @@ class Roles(Cog):
     @command(name="nsfw-add",
              help="Add nsfw role")
     @has_role_plus(verified)
-    @has_not_role(nsfw)
     @bot_chat(bot_channels)
     async def nsfw_add(self, ctx: Context):
         global nsfw
@@ -60,7 +59,6 @@ class Roles(Cog):
 
     @command(name="nsfw-rem",
              help="Remove nsfw role")
-    @has_role_plus(nsfw)
     @bot_chat(bot_channels)
     async def nsfw_rem(self, ctx: Context):
         global nsfw
@@ -72,7 +70,6 @@ class Roles(Cog):
     @command(name="news-add",
              help="Add news role")
     @has_role_plus(verified)
-    @has_not_role(news)
     @bot_chat(bot_channels)
     async def news_add(self, ctx: Context):
         global news
@@ -81,7 +78,6 @@ class Roles(Cog):
 
     @command(name="news-rem",
              help="Remove news role")
-    @has_role_plus(news)
     @bot_chat(bot_channels)
     async def news_rem(self, ctx: Context):
         global news

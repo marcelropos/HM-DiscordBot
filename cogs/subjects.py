@@ -2,7 +2,7 @@ import re
 from typing import Union
 
 from discord import Role, TextChannel, Member, User, Guild, Embed
-from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument, BotMissingPermissions
+from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument, BotMissingRole
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
@@ -20,7 +20,7 @@ from mongo.study_subject_relation import StudySubjectRelations
 from mongo.subjects_or_groups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
-verified: Placeholder = Placeholder()
+verified: set[Role] = set()
 moderator: Placeholder = Placeholder()
 subjects_roles: set[Role] = set()
 first_init = True
@@ -233,7 +233,7 @@ class Subjects(Cog):
         all_study_groups = await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({})
         study_group: list[Role] = [document.role for document in all_study_groups if document.role in roles]
         if not study_group:
-            raise BotMissingPermissions
+            raise BotMissingRole
         study_group: Role = study_group[0]
         study_master, study_semester = re.match(self.match, study_group.name).groups()
         study_semester = int(study_semester)

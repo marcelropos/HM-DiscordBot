@@ -1,4 +1,6 @@
-from discord import TextChannel
+from typing import Optional
+
+from discord import TextChannel, Role
 from discord.ext.commands import Bot
 from discord.ext.tasks import Loop
 from pymongo.errors import ServerSelectionTimeoutError
@@ -21,12 +23,13 @@ class AinitManager:
     Defined errors are handled.
     """
 
+    # noinspection PyDefaultArgument
     def __init__(self,
                  bot: Bot,
                  loop: Loop,
                  need_init: bool,
                  bot_channels: set[TextChannel] = None,
-                 verified: Placeholder = Placeholder(),
+                 verified: set[Role] = set(),
                  moderator: Placeholder = Placeholder()):
         self.bot = bot
         self.loop = loop
@@ -36,10 +39,17 @@ class AinitManager:
         self.moderator = moderator
 
     async def __aenter__(self):
-
         try:
             await assign_accepted_chats(self.bot, self.bot_channels)
-            self.verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
+            verified: Optional[Role] = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
+            if verified:
+                self.verified.add(verified)
+            try:
+                tmp_verified: Optional[Role] = await assign_role(self.bot, ConfigurationNameEnum.TMP_STUDENTY)
+                if tmp_verified:
+                    self.verified.add(tmp_verified)
+            except BrokenConfigurationError:
+                pass
             self.moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
 
         except BrokenConfigurationError as err:

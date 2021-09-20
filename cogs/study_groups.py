@@ -22,7 +22,7 @@ from mongo.study_subject_relation import StudySubjectRelations
 from mongo.subjects_or_groups import SubjectsOrGroups
 
 bot_channels: set[TextChannel] = set()
-verified: Placeholder = Placeholder()
+verified: set[Role] = set()
 moderator: Placeholder = Placeholder()
 study_groups: set[Role] = set()
 first_init = True

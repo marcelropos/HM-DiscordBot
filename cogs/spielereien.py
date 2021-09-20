@@ -6,6 +6,7 @@ from typing import Union, Optional
 import aiohttp
 from aiohttp import ClientResponse
 from discord import Message, MessageReference, TextChannel, Member, User, Embed, File
+from discord.ext import commands
 from discord.ext.commands import Bot, Cog
 from discord.ext.commands import command, Context
 from prettytable import PrettyTable
@@ -106,6 +107,7 @@ class Spielereien(Cog):
 
     @command(name="list-guild-member",
              aliases=["lgm"])
+    @commands.bot_has_guild_permissions(administrator=True)
     async def list_guild_member(self, ctx: Context):
         """
         Replies a list of all member in the guild with additional information.
