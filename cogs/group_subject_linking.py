@@ -22,6 +22,10 @@ logger = get_discord_child_logger("Linking")
 
 
 class Linking(Cog):
+    """
+    Links group and subjects.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.db = StudySubjectRelations(self.bot)
@@ -53,7 +57,8 @@ class Linking(Cog):
     # link group
 
     @group(pass_context=True,
-           name="link")
+           name="link",
+           help="Links group and subjects.")
     @bot_chat(bot_channels)
     @has_guild_permissions(administrator=True)
     async def link(self, ctx: Context):
@@ -62,7 +67,11 @@ class Linking(Cog):
         member: Union[Member, User] = ctx.author
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
-    @link.command(pass_context=True)
+    @link.command(pass_context=True,
+                  brief="Create a new link.",
+                  help="The link makes a subject available for certain study groups.\n"
+                       "'study_role' and 'subject_role' must be mentioned.\n"
+                       "The default value indicates whether the subject shall be added by default.")
     async def add(self, ctx: Context,
                   study_role: Role,  # parameter only for pretty help.
                   subject_role: Role,  # parameter only for pretty help.
@@ -103,7 +112,10 @@ class Linking(Cog):
         await ctx.reply(embed=embed)
 
     @link.command(pass_context=True,
-                  aliases=["rem", "rm"])
+                  aliases=["rem", "rm"],
+                  brief="Remove a link",
+                  help="A subject can not be chosen any longer.\n"
+                       "'study_role' and 'subject_role' must be mentioned.")
     async def remove(self, ctx: Context,
                      study_role: Role,  # parameter only for pretty help.
                      subject_role: Role):  # parameter only for pretty help.
@@ -132,7 +144,9 @@ class Linking(Cog):
                                   f"with default={link.default}")
         await ctx.reply(embed=embed)
 
-    @link.command(pass_context=True)
+    @link.command(pass_context=True,
+                  brief="Shows all links",
+                  help="List all links between subjects and study groups.")
     async def show(self, ctx: Context):
         """
         Shows all saved linking

@@ -31,6 +31,10 @@ logger = get_discord_child_logger("StudyGroups")
 
 
 class StudyGroups(Cog):
+    """
+    StudyGroup commands.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.match = re.compile(r"([a-z]+)([0-9]+)", re.I)
@@ -65,13 +69,15 @@ class StudyGroups(Cog):
 
     # commands
 
-    @command()
+    @command(brief="Gain a study role.",
+             help="This Interactive Command will help you select your course and semester.\n"
+                  "**CAUTION** Higher semesters can only be assigned by mods.")
     @bot_chat(bot_channels)
     @is_not_in_group(study_groups)
     @has_role_plus(verified)
     async def study(self, ctx: Context):
         """
-        Assigns a role to the user of the command.
+        Assigns a study role to the user of the command.
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
@@ -84,12 +90,13 @@ class StudyGroups(Cog):
         groups = [_group for _group in groups if (int((re.match(self.match, _group.name).groups())[1]) < 3)]
         await self.assign_role(ctx, groups, member)
 
-    @command()
+    @command(brief="Grant someone a study role.",
+             help="Select the member and choose the appropriate subject and semester in the interactive menu.")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
     async def grant(self, ctx: Context, member):  # parameter only for pretty help.
         """
-        Assigns a role to the mentioned member.
+        Assigns a study role to the mentioned member.
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
@@ -113,7 +120,8 @@ class StudyGroups(Cog):
     # group group
 
     @group(pass_context=True,
-           name="group")
+           name="group",
+           help="Manages the study groups.")
     @bot_chat(bot_channels)
     @has_guild_permissions(administrator=True)
     async def _group(self, ctx: Context):
@@ -123,7 +131,9 @@ class StudyGroups(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @_group.command(pass_context=True,
-                    name="add")
+                    name="add",
+                    brief="Creates a Study group.",
+                    help="The name must contain the tag and the semester number.")
     async def group_add(self, ctx: Context, name: str):
         """
         Adds a new role-channel pair as a group.
@@ -144,7 +154,9 @@ class StudyGroups(Cog):
                                                                     self.db)).role)
 
     @_group.command(pass_context=True,
-                    name="category")
+                    name="category",
+                    brief="Sets the category",
+                    help="The category must be given as an int value.")
     async def group_category(self, ctx: Context, category: int):
         """
         Saves the group separator role:
@@ -161,7 +173,9 @@ class StudyGroups(Cog):
         await StudySubjectUtil.update_category_and_separator(category, ctx, db, key, msg)
 
     @_group.command(pass_context=True,
-                    name="separator")
+                    name="separator",
+                    brief="Sets the separator role.",
+                    help="The separator must be mentioned.")
     async def group_separator(self, ctx: Context, role):  # parameter only for pretty help.
         """
         Saves the group separator role:

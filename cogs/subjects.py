@@ -29,6 +29,10 @@ logger = get_discord_child_logger("Subjects")
 
 
 class Subjects(Cog):
+    """
+    Subject commands.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.match = re.compile(r"([a-z]+)([0-9]+)", re.I)
@@ -74,7 +78,9 @@ class Subjects(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @subject.command(pass_context=True,
-                     name="show")
+                     name="Displays all accessible subjects.",
+                     help="All topics available for you will be listed.\n"
+                          "If something is missing, please report it to an admin.")
     async def subject_show(self, ctx: Context):
         """
         Shows all possible opt-in and opt-out subjects of the user
@@ -101,7 +107,8 @@ class Subjects(Cog):
         await ctx.reply(embed=embed)
 
     @subject.command(pass_context=True,
-                     name="add")
+                     name="add",
+                     help="Adds a available subject.")
     async def subject_add(self, ctx: Context, subject: str):
         """
         opts-in a user into the specified subject
@@ -133,7 +140,8 @@ class Subjects(Cog):
 
     @subject.command(pass_context=True,
                      aliases=["rem", "rm"],
-                     name="remove")
+                     name="remove",
+                     help="Removes a subject.")
     async def subject_remove(self, ctx: Context, subject: str):
         """
         opts-out a user out of the specified subject
@@ -161,7 +169,8 @@ class Subjects(Cog):
     # subjects group
 
     @group(pass_context=True,
-           name="subjects")
+           name="subjects",
+           help="Manages subjects.")
     @bot_chat(bot_channels)
     @has_guild_permissions(administrator=True)
     async def subjects(self, ctx: Context):
@@ -171,7 +180,9 @@ class Subjects(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @subjects.command(pass_context=True,
-                      name="add")
+                      name="add",
+                      brief="Creates a subject.",
+                      help="Just try to give it a valid name.")
     async def subjects_add(self, ctx: Context, name: str):
         """
         Adds a new role-channel pair as a group.
@@ -192,7 +203,9 @@ class Subjects(Cog):
                                                   self.db)
 
     @subjects.command(pass_context=True,
-                      name="category")
+                      name="category",
+                      brief="Sets the category",
+                      help="The category must be given as an int value.")
     async def subjects_category(self, ctx: Context, category: int):
         """
         Saves the group separator role:
@@ -209,7 +222,9 @@ class Subjects(Cog):
         await StudySubjectUtil.update_category_and_separator(category, ctx, db, key, msg)
 
     @subjects.command(pass_context=True,
-                      name="separator")
+                      name="separator",
+                      brief="Sets the separator role.",
+                      help="The separator must be mentioned.")
     async def subjects_separator(self, ctx: Context, role):  # parameter only for pretty help.
         """
         Saves the group separator role:

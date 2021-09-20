@@ -26,6 +26,10 @@ logger = get_discord_child_logger("Subjects")
 
 
 class Tmpc(Cog):
+    """
+    Manages the gaming/study tmp channels.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.config_db: PrimitiveMongoData = PrimitiveMongoData(CollectionEnum.TEMP_CHANNELS_CONFIGURATION)
@@ -58,14 +62,16 @@ class Tmpc(Cog):
                 DiscordComponents(self.bot)
 
     @group(pass_context=True,
-           name="tmpc")
+           name="tmpc",
+           help="Manages the gaming/study tmp channels.")
     async def tmpc(self, ctx: Context):
         if not ctx.invoked_subcommand:
             raise BadArgument
         member: Union[Member, User] = ctx.author
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  help="Keeps the channel after leaving.")
     async def keep(self, ctx: Context):
         """
         Makes a Study Channel stay for a longer time.
@@ -89,7 +95,9 @@ class Tmpc(Cog):
         await ctx.reply(embed=embed)
         await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  brief="Hides the channel",
+                  help="Not invited or not joined member will not recognize your tmp channel.")
     async def hide(self, ctx: Context):
         """
         Hides a Study or Gaming Channel.
@@ -110,7 +118,9 @@ class Tmpc(Cog):
                                   f"If you are not a moderator, moderators can join and see this channel.")
         await ctx.reply(embed=embed)
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  brief="Shows the channel",
+                  help="All member will recognize your tmp channel again.")
     async def show(self, ctx: Context):
         """
         Shows (Unhides) a Study or Gaming Channel.
@@ -129,7 +139,9 @@ class Tmpc(Cog):
                       description=f"Made this channel visible. Now every Student can see the vc.")
         await ctx.reply(embed=embed)
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  brief="Locks the channel",
+                  help="Not invited or not joined member will not access your tmp channel.")
     async def lock(self, ctx: Context):
         """
         Locks a Study or Gaming Channel.
@@ -150,7 +162,9 @@ class Tmpc(Cog):
                                   f"If you are not a moderator, moderators can join this channel.")
         await ctx.reply(embed=embed)
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  brief="Locks the channel",
+                  help="Not invited or not joined member will access your tmp channel again.")
     async def unlock(self, ctx: Context):
         """
         Unlocks a Study or Gaming Channel.
