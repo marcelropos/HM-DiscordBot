@@ -96,9 +96,9 @@ class Linking(Cog):
             verb = "updated"
         else:
             await self.db.insert_one((study_role, subject_role, default))
-            study_role = "linked"
+            verb = "linked"
         embed = Embed(title="Linking Add",
-                      description=f"Successfully {study_role} {study_role.mention} to {subject_role.mention} "
+                      description=f"Successfully {verb} {study_role} {study_role.mention} to {subject_role.mention} "
                                   f"with default={default}")
         await ctx.reply(embed=embed)
 
