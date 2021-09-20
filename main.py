@@ -11,7 +11,7 @@ from core.error.error_handlers import error_handler
 
 intents = discord.Intents.all()
 
-bot = commands.Bot(command_prefix="?", case_insensitive=True, intents=intents)
+bot = commands.Bot(command_prefix="!", case_insensitive=True, intents=intents)
 bot.help_command = PrettyHelp(show_index=True, sort_commands=True, no_category=True, color=0x00f2ff)
 
 for filename in os.listdir("./cogs"):
