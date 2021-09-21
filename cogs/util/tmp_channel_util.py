@@ -4,7 +4,7 @@ from typing import Union
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
-    NotFound, Forbidden
+    NotFound
 from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
@@ -62,9 +62,8 @@ class TmpChannelUtil:
         moderator = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        is_moderator = moderator in member.roles
         overwrites = {member: PermissionOverwrite(view_channel=True),
-                      moderator: PermissionOverwrite(view_channel=not is_moderator),
+                      moderator: PermissionOverwrite(view_channel=True),
                       guild.default_role: PermissionOverwrite(view_channel=False)}
 
         text_channel: TextChannel = await guild.create_text_channel(name=name,
@@ -75,7 +74,7 @@ class TmpChannelUtil:
 
         overwrites = {member: PermissionOverwrite(view_channel=True, connect=True),
                       verified: PermissionOverwrite(view_channel=True, connect=True),
-                      moderator: PermissionOverwrite(view_channel=not is_moderator, connect=not is_moderator),
+                      moderator: PermissionOverwrite(view_channel=True, connect=True),
                       guild.default_role: PermissionOverwrite(view_channel=False, connect=False)}
 
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
