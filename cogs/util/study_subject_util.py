@@ -44,8 +44,7 @@ class StudySubjectUtil:
             (await PrimitiveMongoData(CollectionEnum.ROLES)
              .find_one({separator_key.value: {"$exists": True}}))[separator_key.value])
 
-        role: Role = await guild.create_role(name=name,
-                                             reason="")
+        role: Role = await guild.create_role(name=name, reason="")
 
         role_id: Optional[dict] = await PrimitiveMongoData(CollectionEnum.ROLES).find_one(
             {ConfigurationNameEnum.RESTRICTED.value: {"$exists": True}})
