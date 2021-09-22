@@ -23,7 +23,7 @@ logger = get_discord_child_logger("Linking")
 
 class Linking(Cog):
     """
-    Links group and subjects.
+    Links groups and subjects.
     """
 
     def __init__(self, bot: Bot):
@@ -58,7 +58,7 @@ class Linking(Cog):
 
     @group(pass_context=True,
            name="link",
-           help="Links group and subjects.")
+           help="Links groups and subjects.")
     @bot_chat(bot_channels)
     @has_guild_permissions(administrator=True)
     async def link(self, ctx: Context):
@@ -68,7 +68,7 @@ class Linking(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @link.command(pass_context=True,
-                  brief="Create a new link.",
+                  brief="Creates a new link.",
                   help="The link makes a subject available for certain study groups.\n"
                        "'study_role' and 'subject_role' must be mentioned.\n"
                        "The default value indicates whether the subject shall be added by default.")

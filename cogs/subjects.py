@@ -108,7 +108,7 @@ class Subjects(Cog):
 
     @subject.command(pass_context=True,
                      name="add",
-                     help="Adds a available subject.")
+                     help="Adds an available subject.")
     async def subject_add(self, ctx: Context, subject: str):
         """
         opts-in a user into the specified subject

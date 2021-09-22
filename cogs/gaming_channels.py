@@ -92,7 +92,7 @@ class GamingTmpChannels(Cog):
 
     @group(pass_context=True,
            name="gamingChannel",
-           help="Configure gaming settings.")
+           help="Configure gaming channel settings.")
     @bot_chat(bot_channels)
     @has_guild_permissions(administrator=True)
     async def gaming_channel(self, ctx: Context):
@@ -104,7 +104,7 @@ class GamingTmpChannels(Cog):
     @gaming_channel.command(pass_context=True,
                             name="category",
                             brief="Sets the category.",
-                            help="The tmp channels will be found by this category.\n"
+                            help="The tmp channels will be found under this category.\n"
                                  "The category must be given as an int value.")
     async def gaming_channel_category(self, ctx: Context, category: int):
         """

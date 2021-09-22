@@ -97,7 +97,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   brief="Hides the channel",
-                  help="Not invited or not joined member will not recognize your tmp channel.")
+                  help="Not invited or not joined member will not see your tmp channel.")
     async def hide(self, ctx: Context):
         """
         Hides a Study or Gaming Channel.
@@ -120,7 +120,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   brief="Shows the channel",
-                  help="All member will recognize your tmp channel again.")
+                  help="All member will see your tmp channel again.")
     async def show(self, ctx: Context):
         """
         Shows (Unhides) a Study or Gaming Channel.
@@ -141,7 +141,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
-                  help="Not invited or not joined member will not access your tmp channel.")
+                  help="Not invited or not joined member will not be able to access your tmp channel.")
     async def lock(self, ctx: Context):
         """
         Locks a Study or Gaming Channel.
@@ -164,7 +164,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
-                  help="Not invited or not joined member will access your tmp channel again.")
+                  help="Not invited or not joined member will be able to access your tmp channel again.")
     async def unlock(self, ctx: Context):
         """
         Unlocks a Study or Gaming Channel.
