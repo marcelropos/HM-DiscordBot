@@ -183,7 +183,14 @@ class Tmpc(Cog):
                       description=f"Unlocked this channel. Now every Student can join the vc.")
         await ctx.reply(embed=embed)
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  brief="Manages the token for your tmp channel",
+                  help="mode:\n"
+                       "- show: show the current token.\n"
+                       "- gen: generate a new token.\n"
+                       "- send <@user>: sends the token to a user.\n"
+                       "- place: place an embed in the channel so that user can easily join the Study Channel.\n"
+                       "\tAttention the place Command only works for Study Channels.")
     async def token(self, ctx: Context, mode: str, user=None):
         """
         Manage token
@@ -275,7 +282,9 @@ class Tmpc(Cog):
 
         await ctx.reply(embed=embed)
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  brief="Join a tmp channel.",
+                  help="By submitting the token, you can join a tmp channel if the token is valid.")
     @bot_chat(bot_channels)
     async def join(self, ctx: Context, token: int):
         """
@@ -302,7 +311,10 @@ class Tmpc(Cog):
         except Exception:
             pass
 
-    @tmpc.command(pass_context=True)
+    @tmpc.command(pass_context=True,
+                  brief="Removes mod rights.",
+                  help="Mods have special rights. Lock and hide commands are ineffective against moderators."
+                       "This command removes these special rights.")
     @has_role_plus(moderator)
     async def nomod(self, ctx: Context):
         """
