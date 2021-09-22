@@ -78,7 +78,7 @@ class Tmpc(Cog):
         """
         document = await self.check_tmpc_channel(ctx)
         if type(document) == GamingChannel:
-            raise BotMissingPermissions
+            raise BotMissingPermissions(["Channel needs to be Study Channel"])
         if document.deleteAt:
             document.deleteAt = None
             embed = Embed(title="Turned off keep",

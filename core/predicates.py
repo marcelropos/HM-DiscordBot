@@ -1,5 +1,7 @@
+from typing import Union
+
 from discord import TextChannel, Role
-from discord.ext.commands import Context, check, NoPrivateMessage
+from discord.ext.commands import Context, check, NoPrivateMessage, BotMissingRole
 
 from cogs.util.placeholder import Placeholder
 from core.error.error_collection import NoBotChatError, NoMultipleGroupsError, NoRulesError
@@ -36,7 +38,7 @@ def is_not_in_group(check_roles: set[Role]):
     return check(predicate)
 
 
-def has_role_plus(item: Placeholder):
+def has_role_plus(item: Union[Placeholder, set[Role]]):
     def predicate(ctx):
         if ctx.guild is None:
             raise NoPrivateMessage()
@@ -44,25 +46,9 @@ def has_role_plus(item: Placeholder):
         if not item:
             raise NoRulesError
 
-        if {_ for _ in set(ctx.author.roles) if _ is item.item}:
+        if {_ for _ in set(ctx.author.roles) if _ in item}:
             return True
         else:
-            return False
-
-    return check(predicate)
-
-
-def has_not_role(item: Placeholder):
-    def predicate(ctx):
-        if ctx.guild is None:
-            raise NoPrivateMessage()
-
-        if not item:
-            raise NoRulesError
-
-        if {_ for _ in set(ctx.author.roles) if _ is item.item}:
-            return False
-        else:
-            return True
+            raise BotMissingRole([role.name for role in item])
 
     return check(predicate)

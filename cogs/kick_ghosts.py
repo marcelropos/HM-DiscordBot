@@ -32,7 +32,7 @@ class KickGhosts(Cog):
         # The actual values will be set at the on_ready method.
         self.config: dict[ConfigurationNameEnum: Union[bool, int, event]] = {
             ConfigurationNameEnum.ENABLED: False,
-            ConfigurationNameEnum.DEADLINE: 30,
+            ConfigurationNameEnum.DEADLINE: 14,
             ConfigurationNameEnum.WARNING: 7,
             ConfigurationNameEnum.TIME: event(hour=8, min=0)
         }
