@@ -67,7 +67,7 @@ class Logger(Cog):
         _level = level_enum[level]
         member: Union[Member, User] = ctx.author
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
-        await self.db.update_one({_logger.value: {"$exists": True}}, {_logger.value: _level})
+        await self.db.update_one({_logger.value: {"$exists": True}}, {_logger.value: _level.value})
         self.set_level(_level, _logger)
         embed = Embed(title="Logging",
                       description=f"The `{_logger.value}` logger is now on `{level.upper()}` level.")
