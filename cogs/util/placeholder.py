@@ -23,3 +23,6 @@ class Placeholder:
     @item.setter
     def item(self, item: Any):
         self.__item[0] = item
+
+    def __contains__(self, item):
+        return item is self.item

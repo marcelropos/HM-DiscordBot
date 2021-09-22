@@ -1,6 +1,6 @@
 from typing import Union
 
-from discord import TextChannel, User, Member, Embed
+from discord import TextChannel, User, Member, Embed, Role
 from discord.ext.commands import Cog, Bot, command, Context, cooldown, BucketType
 from discord.ext.tasks import loop
 
@@ -13,7 +13,7 @@ from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
 
 bot_channels: set[TextChannel] = set()
-verified = Placeholder()
+verified: set[Role] = set()
 moderator = Placeholder()
 restricted = Placeholder()
 mod_chat = Placeholder()
@@ -43,14 +43,14 @@ class Moderator(Cog):
         """
         global bot_channels, verified, moderator, restricted
         # noinspection PyTypeChecker
-        async with AinitManager(self.bot, self.ainit, self.need_init) as need_init:
+        async with AinitManager(bot=self.bot,
+                                loop=self.ainit,
+                                need_init=self.need_init,
+                                bot_channels=bot_channels,
+                                verified=verified,
+                                moderator=moderator) as need_init:
             if need_init:
-                await assign_accepted_chats(self.bot, bot_channels)
-
-                verified.item = await assign_role(self.bot, ConfigurationNameEnum.STUDENTY)
-                moderator.item = await assign_role(self.bot, ConfigurationNameEnum.MODERATOR_ROLE)
                 restricted.item = await assign_role(self.bot, ConfigurationNameEnum.RESTRICTED)
-                mod_chat.item = await assign_chat(self.bot, ConfigurationNameEnum.MOD_CHAT)
 
     # commands
 

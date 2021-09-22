@@ -23,6 +23,7 @@ class ConfigurationNameEnum(Enum):
     MODERATOR_ROLE = "moderator"
     MOD_CHAT = "modChat"
     STUDENTY = "studenty"
+    TMP_STUDENTY = "tmp_studenty"
     NSFW = "nsfw"
     NEWSLETTER = "newsletter"
     RESTRICTED = "restricted"
