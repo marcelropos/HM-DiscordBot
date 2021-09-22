@@ -74,9 +74,6 @@ class Upgrade(Cog):
             await subject_db.update_one(document.document, new_document)
         logger.info("Finished to recreate the subject text channels")
 
-        # update the documents with the new ones
-        subjects_documents: list[SubjectOrGroup] = await subject_db.find({})
-
         # rename the study groups to one semester up
         logger.info("Starting to rename study groups")
         for document in study_groups_documents:
