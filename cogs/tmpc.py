@@ -313,14 +313,14 @@ class Tmpc(Cog):
         """
         global moderator
 
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx, is_mod=True)
         await document.voice.set_permissions(moderator.item, view_channel=False, connect=False)
         await document.chat.set_permissions(moderator.item, view_channel=False)
         embed: Embed = Embed(title="No Mod",
                              description=f"Mods can't see or join this channel anymore")
         await ctx.reply(embed=embed)
 
-    async def check_tmpc_channel(self, ctx: Context) -> Union[GamingChannel, StudyChannel]:
+    async def check_tmpc_channel(self, ctx: Context, is_mod: bool = False) -> Union[GamingChannel, StudyChannel]:
         key = DBKeyWrapperEnum.CHAT.value
         document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: ctx.channel.id})
         if not document:
@@ -328,7 +328,7 @@ class Tmpc(Cog):
 
         if not document:
             raise WrongChatForCommandTmpc
-        elif document.owner != ctx.author:
+        elif not is_mod and document.owner != ctx.author:
             raise BotMissingPermissions
         return document
 
