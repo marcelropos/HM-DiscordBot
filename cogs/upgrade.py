@@ -105,7 +105,7 @@ class Upgrade(Cog):
                 category = channel.category
                 permissions: dict[Union[Role, Member], PermissionOverwrite] = channel.overwrites
 
-                role: Role = await guild.create_role(name=name, reason="upgrade", color=color)
+                role: Role = await guild.create_role(name=name, reason="upgrade", color=color, hoist=True)
                 permissions[role] = permissions.pop(document.role)
                 channel: TextChannel = await guild.create_text_channel(name=name,
                                                                        category=category,
