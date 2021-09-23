@@ -2,6 +2,7 @@ import asyncio
 import re
 from typing import Union
 
+import discord
 from discord import Guild, Role, Member, User, TextChannel, Embed
 from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument, has_guild_permissions
 from discord.ext.tasks import loop
@@ -13,6 +14,7 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
+from core import global_enum
 from core.error.error_collection import FailedToGrantRoleError
 from core.global_enum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
@@ -137,11 +139,16 @@ class StudyGroups(Cog):
         category_key = ConfigurationNameEnum.GROUP_CATEGORY
         separator_key = ConfigurationNameEnum.STUDY_SEPARATOR_ROLE
 
+        study_master = re.match(self.match, name).groups()[0]
+
+        color = global_enum.colors.get(study_master, discord.Color.default())
+
         study_groups.add((await StudySubjectUtil.get_server_objects(category_key,
                                                                     guild,
                                                                     name,
                                                                     separator_key,
-                                                                    self.db)).role)
+                                                                    self.db,
+                                                                    color=color)).role)
 
     @_group.command(pass_context=True,
                     name="category")

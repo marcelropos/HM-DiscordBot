@@ -1,9 +1,11 @@
 import re
 from typing import Union
 
+import discord
 from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
 from discord.ext.commands import Cog, Bot, Context, command, is_owner
 
+from core import global_enum
 from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from mongo.study_subject_relation import StudySubjectRelations, StudySubjectRelation
@@ -96,12 +98,14 @@ class Upgrade(Cog):
             channel: TextChannel = document.chat
 
             study_master, study_semester = re.match(match, document.role.name).groups()
+
+            color = global_enum.colors.get(study_master, discord.Color.default())
             if int(study_semester) == 2:
                 name = f"{study_master}1"
                 category = channel.category
                 permissions: dict[Union[Role, Member], PermissionOverwrite] = channel.overwrites
 
-                role: Role = await guild.create_role(name=name, reason="upgrade")
+                role: Role = await guild.create_role(name=name, reason="upgrade", color=color)
                 permissions[role] = permissions.pop(document.role)
                 channel: TextChannel = await guild.create_text_channel(name=name,
                                                                        category=category,

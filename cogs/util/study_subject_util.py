@@ -1,5 +1,6 @@
 from typing import Optional
 
+import discord
 from discord import CategoryChannel, Role, PermissionOverwrite, TextChannel, Guild, Embed
 from discord.ext.commands import Context
 
@@ -15,7 +16,8 @@ class StudySubjectUtil:
                                  guild: Guild,
                                  name: str,
                                  separator_key: ConfigurationNameEnum,
-                                 db: SubjectsOrGroups) -> SubjectOrGroup:
+                                 db: SubjectsOrGroups,
+                                 color: discord.Color = discord.Color.default()) -> SubjectOrGroup:
         """
         Creates a "role-chat" pair, saves it and places it correctly.
 
@@ -29,6 +31,8 @@ class StudySubjectUtil:
             separator_key: The position under which the role should be.
 
             db: The database connection to be used.
+
+            color: The optional Color of the Role created
 
         Returns:
             A SubjectOrGroup which contains the created pair.
@@ -44,7 +48,7 @@ class StudySubjectUtil:
             (await PrimitiveMongoData(CollectionEnum.ROLES)
              .find_one({separator_key.value: {"$exists": True}}))[separator_key.value])
 
-        role: Role = await guild.create_role(name=name, reason="")
+        role: Role = await guild.create_role(name=name, reason="", color=color)
 
         role_id: Optional[dict] = await PrimitiveMongoData(CollectionEnum.ROLES).find_one(
             {ConfigurationNameEnum.RESTRICTED.value: {"$exists": True}})

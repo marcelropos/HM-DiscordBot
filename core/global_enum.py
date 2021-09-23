@@ -1,6 +1,8 @@
 import logging
 from enum import Enum
 
+import discord
+
 
 class CollectionEnum(Enum):
     ROLES = "roles"
@@ -82,6 +84,13 @@ class LoggerEnum(Enum):
 class SubjectsOrGroupsEnum(Enum):
     SUBJECT = "subject"
     GROUP = "group"
+
+
+colors: dict[str, discord.Color] = {
+    "IF": discord.Color(0xd79921),
+    "IB": discord.Color.green(),
+    "DC": discord.Color.blue()
+}
 
 
 def no_intersection():
