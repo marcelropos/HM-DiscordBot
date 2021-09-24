@@ -107,13 +107,13 @@ class Linking(Cog):
             await self.db.insert_one((study_role, subject_role, default))
             verb = "linked"
         embed = Embed(title="Linking Add",
-                      description=f"Successfully {verb} {study_role} {study_role.mention} to {subject_role.mention} "
+                      description=f"Successfully {verb} {study_role.mention} to {subject_role.mention} "
                                   f"with default={default}")
         await ctx.reply(embed=embed)
 
     @link.command(pass_context=True,
                   aliases=["rem", "rm"],
-                  brief="Remove a link",
+                  brief="Removes a link",
                   help="A subject can not be chosen any longer.\n"
                        "'study_role' and 'subject_role' must be mentioned.")
     async def remove(self, ctx: Context,
