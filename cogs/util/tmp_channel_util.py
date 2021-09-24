@@ -4,7 +4,7 @@ from typing import Union
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
-    NotFound, Forbidden
+    NotFound
 from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
@@ -62,9 +62,8 @@ class TmpChannelUtil:
         moderator = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        is_moderator = moderator in member.roles
         overwrites = {member: PermissionOverwrite(view_channel=True),
-                      moderator: PermissionOverwrite(view_channel=not is_moderator),
+                      moderator: PermissionOverwrite(view_channel=True),
                       guild.default_role: PermissionOverwrite(view_channel=False)}
 
         text_channel: TextChannel = await guild.create_text_channel(name=name,
@@ -75,7 +74,7 @@ class TmpChannelUtil:
 
         overwrites = {member: PermissionOverwrite(view_channel=True, connect=True),
                       verified: PermissionOverwrite(view_channel=True, connect=True),
-                      moderator: PermissionOverwrite(view_channel=not is_moderator, connect=not is_moderator),
+                      moderator: PermissionOverwrite(view_channel=True, connect=True),
                       guild.default_role: PermissionOverwrite(view_channel=False, connect=False)}
 
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
@@ -92,7 +91,70 @@ class TmpChannelUtil:
         except Exception:
             pass
 
+        await TmpChannelUtil.make_welcome_embed(entry)
         return entry
+
+    @staticmethod
+    async def make_welcome_embed(document: Union[GamingChannel, StudyChannel]):
+        embed = Embed(title="Your tmpc channel",
+                      description="Here you can find all commands that you can use to manage your channel:")
+        if type(document) is StudyChannel:
+            embed.add_field(name="Make Channel persistent:",
+                            value="With"
+                                  "```!tmpc keep```"
+                                  "you can make your channel stay even after everyone has left the VC for a certain "
+                                  "amount of time. To turn it off just do the same command.",
+                            inline=True)
+        embed.add_field(name="Hide/Show channel:",
+                        value="With"
+                              "```!tmpc hide```"
+                              "and"
+                              "```!tmpc show```"
+                              "you can hide or show your channel to non invited member.",
+                        inline=True)
+        embed.add_field(name="(Un)Lock channel:",
+                        value="With"
+                              "```!tmpc lock```"
+                              "and"
+                              "```!tmpc unlock```"
+                              "you can lock or unlock so that non invited member can't join the VC but will still be "
+                              "able to see you.",
+                        inline=True)
+        embed.add_field(name="Show token:",
+                        value="With"
+                              "```!tmpc token show```"
+                              "the bot will post the join token of the channel.",
+                        inline=True)
+        embed.add_field(name="Send token to user:",
+                        value="With"
+                              "```!tmpc token send {@user}```"
+                              "you can send the token directly to a member.",
+                        inline=True)
+        embed.add_field(name="Place token in channel:",
+                        value="By using"
+                              "```!tmpc token place```"
+                              "in a channel of your choice you can place a handy dandy embed with which members can "
+                              "easily join this channel.",
+                        inline=True)
+        embed.add_field(name="Generate new token:",
+                        value="With"
+                              "```!tmpc token gen```"
+                              "you can generate a new token for this channel in case the token got leaked.",
+                        inline=True)
+        embed.add_field(name="Mod only command:",
+                        value="With"
+                              "```!tmpc nomod```"
+                              "a moderator set that other moderators are not treated in a special way for the "
+                              "visibility of the channel.",
+                        inline=True)
+        embed.add_field(name="Restrictions:",
+                        value="All commands except `tmpc token place` and `tmpc join {token}` need to be written in "
+                              "this channel.",
+                        inline=True)
+        embed.add_field(name="Join this channel:",
+                        value=f"With `!tmpc join {document.token}` members can join this channel even when locked.",
+                        inline=False)
+        await document.chat.send(content=document.owner.mention, embed=embed)
 
     @staticmethod
     async def update_category_and_voice_channel(value: int,

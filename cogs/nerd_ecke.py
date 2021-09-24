@@ -22,7 +22,7 @@ logger = get_discord_child_logger("Nerd-Ecke")
 
 class NerdEcke(Cog):
     """
-    Small collection of commands for various purposes.
+    Nerd commands.
     """
 
     def __init__(self, bot: Bot):
@@ -65,7 +65,8 @@ class NerdEcke(Cog):
                 await nerd_channel.item.set_permissions(role, connect=False, reason="No nerds are here.")
 
     @group(pass_context=True,
-           name="nerd")
+           name="nerd",
+           help="Nerd commands.")
     @bot_chat(bot_channels)
     @has_guild_permissions(administrator=True)
     async def nerd(self, ctx: Context):
@@ -75,7 +76,10 @@ class NerdEcke(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @nerd.command(pass_context=True,
-                  name="voice")
+                  name="voice",
+                  brief="Sets the nerd voice channel.",
+                  help="The sacred nerd channel, "
+                       "which is indisputably the center of everything, can be marked with this command.")
     async def study_channel_voice(self, ctx: Context, channel: int):
         """
         Saves the nerd channel voice chat

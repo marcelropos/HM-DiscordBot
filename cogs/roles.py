@@ -17,6 +17,10 @@ bot_channels: set[TextChannel] = set()
 
 
 class Roles(Cog):
+    """
+    Some small role commands.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.need_init = True

@@ -27,6 +27,9 @@ logger = get_discord_child_logger("GamingChannels")
 
 
 class GamingTmpChannels(Cog):
+    """
+    Configure gaming tmp settings.
+    """
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -88,7 +91,8 @@ class GamingTmpChannels(Cog):
                                                       ConfigurationNameEnum.GAMING_CATEGORY, logger, self.bot)
 
     @group(pass_context=True,
-           name="gamingChannel")
+           name="gamingChannel",
+           help="Configure gaming channel settings.")
     @bot_chat(bot_channels)
     @has_guild_permissions(administrator=True)
     async def gaming_channel(self, ctx: Context):
@@ -98,7 +102,10 @@ class GamingTmpChannels(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @gaming_channel.command(pass_context=True,
-                            name="category")
+                            name="category",
+                            brief="Sets the category.",
+                            help="The tmp channels will be found under this category.\n"
+                                 "The category must be given as an int value.")
     async def gaming_channel_category(self, ctx: Context, category: int):
         """
         Saves the category of the tmp study channels:
@@ -115,10 +122,13 @@ class GamingTmpChannels(Cog):
         await TmpChannelUtil.update_category_and_voice_channel(category, ctx, db, key, msg)
 
     @gaming_channel.command(pass_context=True,
-                            name="join")
+                            name="join",
+                            brief="Sets a join channel.",
+                            help="Joining the chosen channel will create a tmp channel.\n"
+                                 "The channel must be given as an int value.")
     async def gaming_channel_join(self, ctx: Context, channel: int):
         """
-        Saves the enter point of tmp study channels:
+        Saves the enter point of tmp gaming channels:
 
         Args:
             ctx: The command context provided by the discord.py wrapper.

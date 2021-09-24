@@ -23,6 +23,10 @@ logger = get_discord_child_logger("Moderator")
 
 
 class Moderator(Cog):
+    """
+    Moderator commands.
+    """
+
     def __init__(self, bot: Bot):
         self.bot = bot
         self.need_init = True
@@ -54,7 +58,7 @@ class Moderator(Cog):
 
     # commands
 
-    @command(brief="Verify a mentioned user")
+    @command(help="Verify a mentioned user")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
     async def verify(self, ctx: Context, member):  # parameter only for pretty help.
