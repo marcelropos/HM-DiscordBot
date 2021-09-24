@@ -1,19 +1,30 @@
 version: '3.2'
 
 services:
-  hm:
+  bot:
+    container_name: HMBot
     build: .
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./data:/app/data
     environment:
-      - DEBUG=0
-      - COMMAND_PREFIX=!
-    secrets:
       - TOKEN
+      - DEBUG
+      - COMMAND_PREFIX
+      - DB_CONN
+      - DB_NAME
+    depends_on:
+      - mongo
+
+  mongo:
+    container_name: mongodb
+    image: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD
+
 volumes:
   data:
-
-secrets:
-  TOKEN:
-    file: ./TOKEN.txt
