@@ -2,29 +2,29 @@ version: '3.2'
 
 services:
   bot:
-    container_name: HMBot
+    container_name: DiscordBot
     build: .
     restart: unless-stopped
     volumes:
-      - ./data:/app/data
+      - $PWD/appdata/bot/data:/app/data
     environment:
-      - TOKEN
-      - DEBUG
-      - COMMAND_PREFIX
-      - DB_CONN
-      - DB_NAME
+      - TOKEN=Put_your_discord_token_here
+      - DEBUG=Set_your_debug_mode
+      - COMMAND_PREFIX=!
+      - DB_CONN=mongodb://no-root-user:passwort@mongo:27017/discordBot
+      - DB_NAME=discordBot
     depends_on:
       - mongo
 
   mongo:
     container_name: mongodb
-    image: mongo
+    build: ./MongoDocker
     restart: unless-stopped
+    volumes:
+      - $PWD/appdata/mongo/mongo-entrypoint/:/docker-entrypoint-initdb.d/
+      - $PWD/appdata/mongo/data:/data/db
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME
-      - MONGO_INITDB_ROOT_PASSWORD
-
-volumes:
-  data:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
