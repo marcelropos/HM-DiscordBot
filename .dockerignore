@@ -8,4 +8,4 @@ Dockerfile
 venv/
 bin/
 docker-compose.yml
-Dockerfile-base-bot
+appdata/
