@@ -1,172 +1,117 @@
-import asyncio
-import datetime
-import logging
-import re
-import xml.etree.ElementTree as ElementTree
+from typing import Union
 
-from discord import Guild, Role, Message
-from discord.ext import commands, tasks
-from discord.ext.commands import Context, Bot, Cog
+from discord import TextChannel, User, Member, Embed, Role
+from discord.ext.commands import Cog, Bot, command, Context, cooldown, BucketType
+from discord.ext.tasks import loop
 
-from settings_files.all_errors import *
-from utils.utils import strtobool
+from cogs.bot_status import listener
+from cogs.util.ainit_ctx_mgr import AinitManager
+from cogs.util.assign_variables import assign_role, assign_accepted_chats, assign_chat
+from cogs.util.placeholder import Placeholder
+from core.global_enum import ConfigurationNameEnum
+from core.logger import get_discord_child_logger
+from core.predicates import bot_chat, has_role_plus
 
-logger = logging.getLogger("discord").getChild("cogs").getChild("moderator")
+bot_channels: set[TextChannel] = set()
+verified: set[Role] = set()
+moderator = Placeholder()
+restricted = Placeholder()
+mod_chat = Placeholder()
+first_init = True
 
-
-class Events(Cog):
-
-    def __init__(self, bot: Bot):
-        self.bot = bot
-        self.link = re.compile(r"https?://")
-        self.config = ElementTree.parse("./data/config.xml").getroot()
-
-    @Cog.listener(name="on_message")
-    async def restricted_messages(self, message: Message):
-        if message.guild:
-            channels_conf = self.config \
-                .find("Guilds") \
-                .find(f"Guild-{message.guild.id}") \
-                .find("Channels")
-            try:
-                restricted_channels = {channels_conf.find("BOT_COMMANDS_CHANNEL").text, channels_conf.find("HELP").text}
-                if message.guild and len(message.author.roles) == 1 and message.channel.id in restricted_channels:
-                    match = re.match(self.link, message.content)
-                    if match:
-                        await message.delete()
-                        await message.channel.send(f"<@{message.author.id}>\n"
-                                                   f"Non-verified members are not allowed to post links to this channel.")
-                        logger.info(f"Message >>{message.clean_content}<< in channel {message.channel}"
-                                    f"from {message.author.display_name}({message.author.id}) "
-                                    f"deleted according due restrictions.")
-            except Forbidden:
-                logger.warning("Failed to fulfill restriction.")
-            except HTTPException:
-                pass
+logger = get_discord_child_logger("Moderator")
 
 
 class Moderator(Cog):
+    """
+    Moderator commands.
+    """
 
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.kick_mode = False
+        self.need_init = True
+        if not first_init:
+            self.ainit.start()
 
-        self.config = ElementTree.parse("./data/config.xml").getroot()
-        self.kick_not_verified.start()
+    @listener()
+    async def on_ready(self):
+        global first_init
+        if first_init:
+            first_init = False
+            self.ainit.start()
 
-    def cog_unload(self):
-        self.kick_not_verified.cancel()
-
-    # noinspection PyUnusedLocal
-    @tasks.loop()
-    async def kick_not_verified(self, *_):
-        await self.wait_until()
-        self.config.find("Guilds")
-        for guild_conf in self.config.find("Guilds"):
-            guild_conf: ElementTree.Element
-            guild: Guild = await self.bot.fetch_guild(int(guild_conf.tag.strip("Guild-")))
-
-            kick_mode = strtobool(self.config
-                                  .find("Guilds")
-                                  .find(f"Guild-{guild.id}")
-                                  .find("Cogs")
-                                  .find("Moderator")
-                                  .find("kick_mode")
-                                  .text)
-            if not kick_mode:
-                continue
-
-            moderator_conf = self.config \
-                .find("Guilds") \
-                .find(f"Guild-{guild.id}") \
-                .find("Cogs") \
-                .find("Moderator")
-
-            roles_conf = self.config \
-                .find("Guilds") \
-                .find(f"Guild-{guild.id}") \
-                .find("RoleIDs")
-
-            support_channel = int(self.config
-                                  .find("Guilds")
-                                  .find(f"Guild-{guild.id}")
-                                  .find("Channels")
-                                  .find("HELP")
-                                  .text)
-
-            kick_after_days = int(moderator_conf.find("kick_after_days").text)
-            warn_before_day_x = int(moderator_conf.find("warn_before_day_x").text)
-
-            async for member in guild.fetch_members(limit=None):
-                verified: set[Role] = {role.id for role in member.roles
-                                       if role.id == int(roles_conf.find("VERIFIED").text)
-                                       or role.id == int(roles_conf.find("BOT").text)
-                                       or role.id == int(roles_conf.find("FRIENDS").text)}
-
-                if not verified:
-                    days_on_server = (datetime.datetime.now() - member.joined_at).days
-                    if days_on_server >= kick_after_days:
-                        # noinspection PyBroadException
-                        try:
-                            await member.send(
-                                content=f"You will be kicked from {guild.name} because you have not been "
-                                        "verified for too long. You can rejoin the server and "
-                                        "submit a request for verification.",
-                                delete_after=86400)
-                        except Exception:
-                            pass
-                        # noinspection PyBroadException
-                        try:
-                            await member.kick(reason="Too long without verification")
-                        except Exception:
-                            channel = await self.bot.fetch_channel(support_channel)
-                            await channel.send(f"Failed to kick <@{member.id}>.")
-                        else:
-                            logger.info(f"Kicked: {member} for being not verified")
-                    elif days_on_server > kick_after_days - warn_before_day_x - 1:
-
-                        channel = await self.bot.fetch_channel(support_channel)
-
-                        await channel.send(f"<@{member.id}>\n"
-                                           f"You will be removed from this server in "
-                                           f"{kick_after_days - days_on_server} days "
-                                           f"because you do not have a role.\n"
-                                           f"To avoid this, you need to get verified by a moderator.",
-                                           delete_after=86400)
-                    if days_on_server > kick_after_days - warn_before_day_x - 1:
-                        await asyncio.sleep(1)
-
-    @staticmethod
-    async def wait_until() -> None:
+    @loop()
+    async def ainit(self):
         """
-        Wait until 6 am.
+        Loads the configuration for the module.
         """
-        now = datetime.datetime.now()
-        until_time = now.replace(hour=6, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
-        until_time = (until_time.year, until_time.month, until_time.day, until_time.hour)
-        await asyncio.sleep((datetime.datetime(*until_time) - now).total_seconds())
+        global bot_channels, verified, moderator, restricted
+        # noinspection PyTypeChecker
+        async with AinitManager(bot=self.bot,
+                                loop=self.ainit,
+                                need_init=self.need_init,
+                                bot_channels=bot_channels,
+                                verified=verified,
+                                moderator=moderator) as need_init:
+            if need_init:
+                restricted.item = await assign_role(self.bot, ConfigurationNameEnum.RESTRICTED)
 
-    @commands.command(
-        name="kick-mode",
-        description="Enable or disable time based kicking",
-        brief="Enable or disable time based kicking",
-        aliases=[]
-    )
-    @commands.guild_only()
-    @commands.is_owner()
-    async def kick_mode(self, _, boolean: strtobool):
-        self.kick_mode = boolean
+    # commands
 
-    @kick_mode.error
-    async def kick_mode_error(self, ctx: Context, error):
-        if isinstance(error, MissingRole):
-            await ctx.send(
-                f"<@!{ctx.author.id}>\n"
-                f"This command is not intended for you. Please avoid sending this command.",
-                delete_after=60
-            )
+    @command(help="Verify a mentioned user")
+    @bot_chat(bot_channels)
+    @has_role_plus(moderator)
+    async def verify(self, ctx: Context, member):  # parameter only for pretty help.
+        """
+        Assigns a role to the mentioned member.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            member: The member who is to receive a role.
+        """
+        member: Union[Member, User] = ctx.message.mentions[0]
+        await member.add_roles(verified.item, reason=f"{str(ctx.author)}")
+        logger.info(f"User {str(member)} was verified by {str(ctx.author)}")
+
+    @command(help="Place or remove a restriction on the mentioned user.")
+    @bot_chat(bot_channels)
+    @has_role_plus(moderator)
+    async def restrict(self, ctx: Context, mode: bool, member):  # parameter only for pretty help.
+        """
+        Assigns a role to the mentioned member.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            mode: True if the role should be added, false if it should be removed.
+
+            member: The member who is to receive a role.
+        """
+        global mod_chat, restricted
+        member: Union[Member, User] = ctx.message.mentions[0]
+        title = "User restriction"
+        if mode:
+            await member.add_roles(restricted.item, reason=f"{str(ctx.author)}")
+            embed = Embed(title=title,
+                          description=f"User {str(ctx.author)} has applied the restriction to {str(member)}.")
+        else:
+            await member.remove_roles(restricted.item, reason=f"{str(ctx.author)}")
+            embed = Embed(title=title,
+                          description=f"User {str(ctx.author)} has removed the restriction from {str(member)}.")
+
+        await mod_chat.item.send(embed=embed)
+
+    @command(brief="Write an anonymous message to the mods.",
+             help="You can send an anonymous message to the mods twice an hour.")
+    @cooldown(2, 3600, BucketType.user)
+    async def mail(self, ctx: Context, *, message: str):
+        embed = Embed(title="Mod Mail",
+                      description=message)
+        await mod_chat.item.send(embed=embed)
+        await ctx.reply(content="The following embed has been sent to the moderator chat.",
+                        embed=embed)
 
 
-def setup(bot):
-    bot.add_cog(Events(bot))
+def setup(bot: Bot):
     bot.add_cog(Moderator(bot))
