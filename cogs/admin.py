@@ -88,6 +88,7 @@ class Admin(Cog):
 
     @group(pass_context=True, brief="Deletes messages",
            help="Depending on the subcommand either a whole chat is deleted or messages of one or more members.")
+    @commands.bot_has_guild_permissions(administrator=True)
     async def purge(self, ctx: Context):
         """
         A group of commands.
@@ -120,7 +121,6 @@ class Admin(Cog):
     @purge.command(brief="Deletes message from mentioned member.",
                    help="All messages after a certain date and from specified members will be deleted.\n"
                         "Dateformat: dd.mm.yyyy")
-    @commands.bot_has_guild_permissions(administrator=True)
     async def member(self, ctx: Context, after, *, mentions):  # parameter only for pretty help.
         """
         Cleans a chat of the messages from a user for the defined time.
