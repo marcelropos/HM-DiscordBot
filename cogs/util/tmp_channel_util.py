@@ -9,6 +9,7 @@ from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
 from cogs.util.placeholder import Placeholder
+from core.error.error_collection import BrokenConfigurationError
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -59,9 +60,15 @@ class TmpChannelUtil:
         verified = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
+        if not verified:
+            raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.STUDENTY.value)
+
         key = ConfigurationNameEnum.FRIEND.value
         friend = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        if not friend:
+            raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.FRIEND.value)
 
         overwrites = channel_category.overwrites
         overwrites[member] = PermissionOverwrite(view_channel=True)
