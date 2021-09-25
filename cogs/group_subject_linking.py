@@ -164,12 +164,12 @@ class Linking(Cog):
                     if study in sorted_links:
                         sorted_links[study][0].append(subject)
                     else:
-                        sorted_links[study] = (subject, list())
+                        sorted_links[study] = ([subject], list())
                 else:
                     if study in sorted_links:
                         sorted_links[study][1].append(subject)
                     else:
-                        sorted_links[study] = (list(), subject)
+                        sorted_links[study] = (list(), [subject])
 
             for study, linking in sorted_links.items():
                 embed = Embed(title="Linking:",
