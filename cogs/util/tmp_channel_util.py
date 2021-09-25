@@ -9,6 +9,7 @@ from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
 from cogs.util.placeholder import Placeholder
+from core.error.error_collection import BrokenConfigurationError
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -58,13 +59,19 @@ class TmpChannelUtil:
         key = ConfigurationNameEnum.STUDENTY.value
         verified = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-        key = ConfigurationNameEnum.MODERATOR_ROLE.value
-        moderator = guild.get_role(
+
+        if not verified:
+            raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.STUDENTY.value)
+
+        key = ConfigurationNameEnum.FRIEND.value
+        friend = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        overwrites = {member: PermissionOverwrite(view_channel=True),
-                      moderator: PermissionOverwrite(view_channel=True),
-                      guild.default_role: PermissionOverwrite(view_channel=False)}
+        if not friend:
+            raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.FRIEND.value)
+
+        overwrites = channel_category.overwrites
+        overwrites[member] = PermissionOverwrite(view_channel=True)
 
         text_channel: TextChannel = await guild.create_text_channel(name=name,
                                                                     category=channel_category,
@@ -72,10 +79,10 @@ class TmpChannelUtil:
                                                                     nsfw=False,
                                                                     reason="")
 
-        overwrites = {member: PermissionOverwrite(view_channel=True, connect=True),
-                      verified: PermissionOverwrite(view_channel=True, connect=True),
-                      moderator: PermissionOverwrite(view_channel=True, connect=True),
-                      guild.default_role: PermissionOverwrite(view_channel=False, connect=False)}
+        overwrites = channel_category.overwrites
+        overwrites[member] = PermissionOverwrite(view_channel=True, connect=True)
+        overwrites[verified] = PermissionOverwrite(view_channel=True, connect=True)
+        overwrites[friend] = PermissionOverwrite(view_channel=True, connect=True)
 
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
                                                                        category=channel_category,
