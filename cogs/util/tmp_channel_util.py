@@ -59,6 +59,10 @@ class TmpChannelUtil:
         verified = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
+        key = ConfigurationNameEnum.FRIEND.value
+        friend = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
         overwrites = channel_category.overwrites
         overwrites[member] = PermissionOverwrite(view_channel=True)
 
@@ -71,6 +75,7 @@ class TmpChannelUtil:
         overwrites = channel_category.overwrites
         overwrites[member] = PermissionOverwrite(view_channel=True, connect=True)
         overwrites[verified] = PermissionOverwrite(view_channel=True, connect=True)
+        overwrites[friend] = PermissionOverwrite(view_channel=True, connect=True)
 
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
                                                                        category=channel_category,
