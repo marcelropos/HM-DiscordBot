@@ -21,7 +21,6 @@ class CollectionEnum(Enum):
 
 
 class ConfigurationNameEnum(Enum):
-    ADMIN_ROLE = "admin"
     MODERATOR_ROLE = "moderator"
     MOD_CHAT = "modChat"
     STUDENTY = "studenty"
