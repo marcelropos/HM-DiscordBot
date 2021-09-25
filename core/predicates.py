@@ -47,11 +47,11 @@ def has_role_plus(item: Union[Placeholder, set[Role]]):
             raise NoRulesError
 
         if isinstance(item, Placeholder):
-            _item = {item}
+            _item = {item.item}
         else:
             _item = item
 
-        _item: set[Union[Role, Placeholder]]
+        _item: set[Role]
 
         if {_ for _ in set(ctx.author.roles) if _ in _item}:
             return True
