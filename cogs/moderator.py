@@ -45,7 +45,7 @@ class Moderator(Cog):
         """
         Loads the configuration for the module.
         """
-        global bot_channels, verified, moderator, restricted
+        global bot_channels, verified, moderator, restricted, mod_chat
         # noinspection PyTypeChecker
         async with AinitManager(bot=self.bot,
                                 loop=self.ainit,
@@ -55,6 +55,7 @@ class Moderator(Cog):
                                 moderator=moderator) as need_init:
             if need_init:
                 restricted.item = await assign_role(self.bot, ConfigurationNameEnum.RESTRICTED)
+                mod_chat.item = await assign_chat(self.bot, ConfigurationNameEnum.MOD_CHAT)
 
     # commands
 
