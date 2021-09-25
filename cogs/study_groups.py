@@ -161,6 +161,29 @@ class StudyGroups(Cog):
                                                                     color=color)).role)
 
     @_group.command(pass_context=True,
+                    name="edit",
+                    brief="Edits the role of a study group",
+                    help="The name must contain the tag and the semester number.")
+    async def group_edit(self, ctx: Context, channel: TextChannel, role: Role):
+        """
+        Edits a study group
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            name: The name of the role and the chat.
+        """
+        guild: Guild = ctx.guild
+        document = await self.db.find({DBKeyWrapperEnum.CHAT.value: channel.id})[0]
+        if not document:
+            return
+        new_document = {
+            DBKeyWrapperEnum.CHAT.value: channel.id,
+            DBKeyWrapperEnum.ROLE.value: role.id
+        }
+        await self.db.update_one(document.document, new_document)
+
+    @_group.command(pass_context=True,
                     name="category",
                     brief="Sets the category",
                     help="The category must be given as an int value.")
