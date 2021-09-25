@@ -50,19 +50,8 @@ class StudySubjectUtil:
 
         role: Role = await guild.create_role(name=name, reason="", color=color, hoist=True)
 
-        role_id: Optional[dict] = await PrimitiveMongoData(CollectionEnum.ROLES).find_one(
-            {ConfigurationNameEnum.RESTRICTED.value: {"$exists": True}})
-
-        restricted_role = None
-        if role_id:
-            restricted_role = guild.get_role(role_id[ConfigurationNameEnum.RESTRICTED.value])
-
-        if not restricted_role:
-            raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.RESTRICTED.value)
-
-        overwrites = {role: PermissionOverwrite(view_channel=True),
-                      restricted_role: PermissionOverwrite(send_messages=False),
-                      guild.default_role: PermissionOverwrite(view_channel=False)}
+        overwrites = study_category.overwrites
+        overwrites[role] = PermissionOverwrite(view_channel=True)
         channel: TextChannel = await guild.create_text_channel(name=name,
                                                                category=study_category,
                                                                overwrites=overwrites,
