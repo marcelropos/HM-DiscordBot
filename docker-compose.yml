@@ -9,7 +9,6 @@ services:
       - $PWD/appdata/bot/data:/app/data
     environment:
       - TOKEN=Put_your_discord_token_here
-      - DEBUG=Set_your_debug_mode
       - COMMAND_PREFIX=!
       - DB_CONN=mongodb://no-root-user:passwort@mongo:27017/discordBot
       - DB_NAME=discordBot
@@ -18,7 +17,7 @@ services:
 
   mongo:
     container_name: mongodb
-    build: ./MongoDocker
+    image: mongo
     restart: unless-stopped
     volumes:
       - $PWD/appdata/mongo/mongo-entrypoint/:/docker-entrypoint-initdb.d/
