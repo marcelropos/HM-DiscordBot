@@ -157,38 +157,40 @@ class Linking(Cog):
 
         links = [document for document in await self.db.find({})]
         if links:
-            default_links: dict[str, list[str]] = dict()
-            non_default_links: dict[str, list[str]] = dict()
+            sorted_links: dict[str, tuple[list[str], list[str]]] = dict()
             links = [(link.group.mention, link.subject.mention, link.default) for link in links]
             for study, subject, default in links:
                 if default:
-                    if study in default_links:
-                        default_links[study].append(subject)
+                    if study in sorted_links:
+                        sorted_links[study][0].append(subject)
                     else:
-                        default_links[study] = [subject]
+                        sorted_links[study] = (subject, list())
                 else:
-                    if study in non_default_links:
-                        non_default_links[study].append(subject)
+                    if study in sorted_links:
+                        sorted_links[study][1].append(subject)
                     else:
-                        non_default_links[study] = [subject]
+                        sorted_links[study] = (list(), subject)
 
-            embed = Embed(title="Linking:",
-                          description=f"At the moment there are following linking between study groups and subjects:")
-            linking_text = ""
-            for study, subjects in default_links.items():
-                linking_text += f"{study} : {reduce((lambda x, y: x + ' ' + y), subjects)}\n"
-            if linking_text:
-                embed.add_field(name="Default = True", value=linking_text, inline=False)
+            for study, linking in sorted_links.items():
+                embed = Embed(title="Linking:",
+                              description=f"At the moment there are following linking between study groups and subjects:")
+                linking_text = ""
+                for subjects in linking[0]:
+                    linking_text += f"{study} : {reduce((lambda x, y: x + ' ' + y), subjects)}\n"
+                if linking_text:
+                    embed.add_field(name="Default = True", value=linking_text, inline=False)
 
-            linking_text = ""
-            for study, subjects in non_default_links.items():
-                linking_text += f"{study} : {reduce((lambda x, y: x + ' ' + y), subjects)}\n"
-            if linking_text:
-                embed.add_field(name="Default = False", value=linking_text, inline=False)
+                linking_text = ""
+                for subjects in linking[1]:
+                    linking_text += f"{study} : {reduce((lambda x, y: x + ' ' + y), subjects)}\n"
+                if linking_text:
+                    embed.add_field(name="Default = False", value=linking_text, inline=False)
+                await ctx.reply(embed=embed)
         else:
             embed = Embed(title="Linking",
                           description="No linking saved")
-        await ctx.reply(embed=embed)
+            await ctx.reply(embed=embed)
+
 
     async def check_mentions(self, ctx: Context) -> tuple[Role, Role]:
         if len(ctx.message.role_mentions) != 2:
