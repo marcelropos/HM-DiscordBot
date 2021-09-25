@@ -84,6 +84,16 @@ class TmpChannelUtil:
         overwrites[verified] = PermissionOverwrite(view_channel=True, connect=True)
         overwrites[friend] = PermissionOverwrite(view_channel=True, connect=True)
 
+        try:
+            key = ConfigurationNameEnum.TMP_STUDENTY.value
+            tmp_verified = guild.get_role(
+                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+            if tmp_verified:
+                overwrites[tmp_verified] = PermissionOverwrite(view_channel=True, connect=True)
+        except Exception:
+            pass
+
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
                                                                        category=channel_category,
                                                                        overwrites=overwrites,
