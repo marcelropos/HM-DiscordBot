@@ -196,8 +196,7 @@ class TmpChannelUtil:
                 {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
             if not document:
-                await TmpChannelUtil.database_illegal_state(bot, voice_channel, logger)
-                return False
+                return True
 
             document: Union[StudyChannel, GamingChannel] = document[0]
 
