@@ -174,23 +174,18 @@ class Linking(Cog):
             for study, linking in sorted_links.items():
                 embed = Embed(title="Linking:",
                               description=f"At the moment there are following linking between study groups and subjects:")
-                linking_text = ""
-                for subjects in linking[0]:
-                    linking_text += f"{study} : {reduce((lambda x, y: x + ' ' + y), subjects)}\n"
-                if linking_text:
+                if linking[0]:
+                    linking_text = f"{study} : {reduce((lambda x, y: x + ' ' + y), linking[0])}\n"
                     embed.add_field(name="Default = True", value=linking_text, inline=False)
 
-                linking_text = ""
-                for subjects in linking[1]:
-                    linking_text += f"{study} : {reduce((lambda x, y: x + ' ' + y), subjects)}\n"
-                if linking_text:
+                if linking[1]:
+                    linking_text = f"{study} : {reduce((lambda x, y: x + ' ' + y), linking[1])}\n"
                     embed.add_field(name="Default = False", value=linking_text, inline=False)
                 await ctx.reply(embed=embed)
         else:
             embed = Embed(title="Linking",
                           description="No linking saved")
             await ctx.reply(embed=embed)
-
 
     async def check_mentions(self, ctx: Context) -> tuple[Role, Role]:
         if len(ctx.message.role_mentions) != 2:
