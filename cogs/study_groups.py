@@ -164,7 +164,7 @@ class StudyGroups(Cog):
                     name="edit",
                     brief="Edits the role of a study group",
                     help="The name must contain the tag and the semester number.")
-    async def group_edit(self, ctx: Context, channel: TextChannel, role: Role):
+    async def group_edit(self, ctx: Context, channel: TextChannel, role: Role, channel2: TextChannel):
         """
         Edits a study group
 
@@ -177,7 +177,7 @@ class StudyGroups(Cog):
         if not document:
             return
         new_document = {
-            DBKeyWrapperEnum.CHAT.value: channel.id,
+            DBKeyWrapperEnum.CHAT.value: channel2.id,
             DBKeyWrapperEnum.ROLE.value: role.id
         }
         await self.db.update_one(document.document, new_document)
