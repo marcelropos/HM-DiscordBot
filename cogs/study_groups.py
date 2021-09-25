@@ -173,8 +173,7 @@ class StudyGroups(Cog):
 
             name: The name of the role and the chat.
         """
-        guild: Guild = ctx.guild
-        document = await self.db.find({DBKeyWrapperEnum.CHAT.value: channel.id})[0]
+        document = (await self.db.find({DBKeyWrapperEnum.CHAT.value: channel.id}))[0]
         if not document:
             return
         new_document = {
