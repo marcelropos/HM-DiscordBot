@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound
-from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions
+from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
@@ -72,6 +72,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   help="Keeps the channel after leaving.")
+    @cooldown(1, 300, BucketType.channel)
     async def keep(self, ctx: Context):
         """
         Makes a Study Channel stay for a longer time.
@@ -93,6 +94,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   help="Deletes the channel after leaving.")
+    @cooldown(1, 300, BucketType.channel)
     async def release(self, ctx: Context):
         """
         Deletes the channel after leaving.
@@ -112,6 +114,7 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Hides the channel",
                   help="Not invited or not joined member will not see your tmp channel.")
+    @cooldown(1, 300, BucketType.channel)
     async def hide(self, ctx: Context):
         """
         Hides a Study or Gaming Channel.
@@ -135,6 +138,7 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Shows the channel",
                   help="All member will see your tmp channel again.")
+    @cooldown(1, 300, BucketType.channel)
     async def show(self, ctx: Context):
         """
         Shows (Unhides) a Study or Gaming Channel.
@@ -156,6 +160,7 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
                   help="Not invited or not joined member will not be able to access your tmp channel.")
+    @cooldown(1, 300, BucketType.channel)
     async def lock(self, ctx: Context):
         """
         Locks a Study or Gaming Channel.
@@ -179,6 +184,7 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
                   help="Not invited or not joined member will be able to access your tmp channel again.")
+    @cooldown(1, 300, BucketType.channel)
     async def unlock(self, ctx: Context):
         """
         Unlocks a Study or Gaming Channel.
@@ -201,6 +207,7 @@ class Tmpc(Cog):
                   brief="Locks the channel",
                   help="Not invited or not joined member will be able to access your tmp channel again.",
                   aliases=["rn", "mv"])
+    @cooldown(1, 300, BucketType.channel)
     async def rename(self, ctx: Context, name: str):
         """
         Renames a study/gaming channel
