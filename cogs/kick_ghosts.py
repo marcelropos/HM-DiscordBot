@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from discord import Member, User, Role, Embed, Guild, TextChannel, Forbidden
-from discord.ext.commands import Cog, Bot, group, bot_has_guild_permissions, Context, BadArgument
+from discord.ext.commands import Cog, Bot, group, Context, BadArgument, has_guild_permissions
 from discord.ext.tasks import loop
 from pymongo.errors import ServerSelectionTimeoutError
 
@@ -74,7 +74,7 @@ class KickGhosts(Cog):
     @group(pass_context=True,
            name="kick",
            help="Manages the conditions when unverified members should be kicked or warned.")
-    @bot_has_guild_permissions(administrator=True)
+    @has_guild_permissions(administrator=True)
     async def kick_ghosts(self, ctx: Context):
         self.check_subcommand(ctx)
 
@@ -190,7 +190,7 @@ class KickGhosts(Cog):
     @group(pass_context=True,
            name="safeRoles",
            help="Manages the safe roles.")
-    @bot_has_guild_permissions(administrator=True)
+    @has_guild_permissions(administrator=True)
     async def safe_roles(self, ctx: Context):
         self.check_subcommand(ctx)
 

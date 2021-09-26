@@ -2,7 +2,7 @@ import logging
 from typing import Union
 
 from discord import Member, User, Embed
-from discord.ext.commands import Cog, Bot, command, bot_has_guild_permissions, Context
+from discord.ext.commands import Cog, Bot, command, Context, has_guild_permissions
 
 from cogs.bot_status import listener
 from core.global_enum import LoggingLevel, CollectionEnum, LoggerEnum
@@ -47,7 +47,7 @@ class Logger(Cog):
              help=pretty_logger_help.format(
                  [e.name for e in LoggingLevel],
                  [e.value for e in LoggerEnum]))
-    @bot_has_guild_permissions(administrator=True)
+    @has_guild_permissions(administrator=True)
     async def logger(self, ctx: Context, _logger: LoggerEnum, level: str):
         """
         Assigns the verbose level for a given logger

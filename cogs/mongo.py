@@ -3,8 +3,7 @@ from distutils.util import strtobool
 from typing import Union
 
 from discord import Embed, Guild, Member, Role, TextChannel, User
-from discord.ext import commands
-from discord.ext.commands import Cog, Bot, BadArgument
+from discord.ext.commands import Cog, Bot, BadArgument, has_guild_permissions
 from discord.ext.commands import group, Context
 
 from core.error.error_collection import CouldNotEditEntryError
@@ -31,7 +30,7 @@ class Mongo(Cog):
            brief="Accesses and modifies primitive data collections.",
            help=f"You can modify data from the following collection with one of the subcommands.\n"
                 f"{collection_enum}")
-    @commands.bot_has_guild_permissions(administrator=True)
+    @has_guild_permissions(administrator=True)
     async def mongo(self, ctx: Context):
         if not ctx.invoked_subcommand:
             raise BadArgument

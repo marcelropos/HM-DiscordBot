@@ -4,8 +4,7 @@ from typing import Union, Callable
 
 import discord
 from discord import Embed, Member, User, Message
-from discord.ext import commands
-from discord.ext.commands import Cog, Bot, Context, group, command, is_owner, BadArgument
+from discord.ext.commands import Cog, Bot, Context, group, command, is_owner, BadArgument, has_guild_permissions
 
 from core.logger import get_discord_child_logger
 
@@ -21,7 +20,7 @@ class Admin(Cog):
         self.bot = bot
 
     @group(pass_context=True, name="cog", aliases=["module"])
-    @commands.bot_has_guild_permissions(administrator=True)
+    @has_guild_permissions(administrator=True)
     async def module(self, ctx: Context):
         """
         A group of commands.
@@ -88,7 +87,7 @@ class Admin(Cog):
 
     @group(pass_context=True, brief="Deletes messages",
            help="Depending on the subcommand either a whole chat is deleted or messages of one or more members.")
-    @commands.bot_has_guild_permissions(administrator=True)
+    @has_guild_permissions(administrator=True)
     async def purge(self, ctx: Context):
         """
         A group of commands.
