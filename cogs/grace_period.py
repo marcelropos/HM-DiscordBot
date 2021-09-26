@@ -12,6 +12,7 @@ from core.logger import get_discord_child_logger
 tmp_verified: Placeholder = Placeholder()
 first_init = True
 logger = get_discord_child_logger("GracePeriod")
+active_listener = False
 
 
 class GracePeriod(Cog):
@@ -33,17 +34,23 @@ class GracePeriod(Cog):
         """
         Loads the configuration for the module.
         """
-        global tmp_verified
+        global tmp_verified, active_listener
+
         try:
             tmp_verified.item = await assign_role(self.bot, ConfigurationNameEnum.TMP_STUDENTY)
+            active_listener = True
         except BrokenConfigurationError:
             pass
         self.ainit.stop()
 
+    def cog_unload(self):
+        global active_listener
+        active_listener = False
+
     @listener()
     async def on_member_join(self, member: Member):
-        global tmp_verified
-        if tmp_verified:
+        global tmp_verified, active_listener
+        if active_listener:
             logger.info(f"Member {member.display_name} joined giving him tmp_studenty role")
             await member.add_roles(tmp_verified.item, reason="Grace Period")
 
