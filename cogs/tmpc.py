@@ -208,7 +208,7 @@ class Tmpc(Cog):
                   help="Not invited or not joined member will be able to access your tmp channel again.",
                   aliases=["rn", "mv"])
     @cooldown(1, 300, BucketType.channel)
-    async def rename(self, ctx: Context, name: str):
+    async def rename(self, ctx: Context, *, name: str):
         """
         Renames a study/gaming channel
         """
