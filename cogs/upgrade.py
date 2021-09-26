@@ -3,7 +3,7 @@ from typing import Union
 
 import discord
 from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
-from discord.ext.commands import Cog, Bot, Context, command, is_owner
+from discord.ext.commands import Cog, Bot, Context, command, is_owner, has_guild_permissions
 
 from core import global_enum
 from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
@@ -24,6 +24,7 @@ class Upgrade(Cog):
 
     @command(help="Performs the upgrade")
     @is_owner()
+    @has_guild_permissions(administrator=True)
     async def upgrade(self, ctx: Context):
         logger.info("Started doing upgrade")
 
