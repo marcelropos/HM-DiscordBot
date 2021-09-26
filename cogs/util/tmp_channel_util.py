@@ -119,13 +119,10 @@ class TmpChannelUtil:
             embed.add_field(name="Make Channel persistent:",
                             value="With"
                                   "```!tmpc keep```"
-                                  "you can make your channel stay even after everyone has left the VC for a certain "
-                                  "amount of time.",
-                            inline=True)
-            embed.add_field(name="Make Channel persistent:",
-                            value="With"
+                                  "and"
                                   "```!tmpc release```"
-                                  "your channel will be deleted after everyone has left the VC.",
+                                  "you can make your channel persistent or not even after everyone has left the VC for "
+                                  "a certain amount of time.",
                             inline=True)
         embed.add_field(name="Hide/Show channel:",
                         value="With"
@@ -176,7 +173,7 @@ class TmpChannelUtil:
         embed.add_field(name="Restrictions:",
                         value="All commands except `tmpc token place` and `tmpc join {token}` need to be written in "
                               "this channel.",
-                        inline=True)
+                        inline=False)
         embed.add_field(name="Join this channel:",
                         value=f"With `!tmpc join {document.token}` members can join this channel even when locked.",
                         inline=False)
