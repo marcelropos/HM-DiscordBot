@@ -1,5 +1,3 @@
-import os
-
 from discord import Member
 from discord.ext.commands import Cog, Bot
 from discord.ext.tasks import loop
@@ -39,13 +37,15 @@ class GracePeriod(Cog):
         try:
             tmp_verified.item = await assign_role(self.bot, ConfigurationNameEnum.TMP_STUDENTY)
         except BrokenConfigurationError:
-            logger.info("Unloading Grace Period Cog since no TMP Verified role is set up")
-            self.cog_unload()
+            pass
         self.ainit.stop()
 
     @listener()
     async def on_member_join(self, member: Member):
-        await member.add_roles(tmp_verified.item, reason="Grace Period")
+        global tmp_verified
+        if tmp_verified:
+            logger.info(f"Member {member.display_name} joined giving him tmp_studenty role")
+            await member.add_roles(tmp_verified.item, reason="Grace Period")
 
 
 def setup(bot: Bot):
