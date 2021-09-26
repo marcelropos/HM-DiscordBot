@@ -79,17 +79,31 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx)
         if type(document) == GamingChannel:
             raise BotMissingPermissions(["Channel needs to be Study Channel"])
-        if document.deleteAt:
-            document.deleteAt = None
-            embed = Embed(title="Turned off keep",
-                          description=f"This channel will no longer stay after everyone leaves")
-        else:
-            key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
-            time_difference: tuple[int, int] = (await self.config_db.find_one({key: {"$exists": True}}))[key]
-            document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
-            embed = Embed(title="Turned on keep",
-                          description=f"This channel will stay after everyone leaves for "
-                                      f"{time_difference[0]} hours and {time_difference[1]} minutes")
+
+        key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+        time_difference: tuple[int, int] = (await self.config_db.find_one({key: {"$exists": True}}))[key]
+        document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+        embed = Embed(title="Turned on keep",
+                      description=f"This channel will stay after everyone leaves for "
+                                  f"{time_difference[0]} hours and {time_difference[1]} minutes")
+
+        await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+        await ctx.reply(embed=embed)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
+
+    @tmpc.command(pass_context=True,
+                  help="Deletes the channel after leaving.")
+    async def release(self, ctx: Context):
+        """
+        Deletes the channel after leaving.
+        """
+        document = await self.check_tmpc_channel(ctx)
+        if type(document) == GamingChannel:
+            raise BotMissingPermissions(["Channel needs to be Study Channel"])
+
+        document.deleteAt = None
+        embed = Embed(title="Turned off keep",
+                      description=f"This channel will no longer stay after everyone leaves")
 
         await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
