@@ -169,10 +169,14 @@ class TmpChannelUtil:
                               "a moderator set that other moderators are not treated in a special way for the "
                               "visibility of the channel.",
                         inline=True)
+        embed.add_field(name="Rename channel:",
+                        value="With"
+                              "```!tmpc rename <name>```"
+                              "you can rename this channel."),
         embed.add_field(name="Restrictions:",
                         value="All commands except `tmpc token place` and `tmpc join {token}` need to be written in "
                               "this channel.",
-                        inline=False)
+                        inline=True)
         embed.add_field(name="Join this channel:",
                         value=f"With `!tmpc join {document.token}` members can join this channel even when locked.",
                         inline=False)

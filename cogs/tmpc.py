@@ -198,6 +198,26 @@ class Tmpc(Cog):
         await ctx.reply(embed=embed)
 
     @tmpc.command(pass_context=True,
+                  brief="Locks the channel",
+                  help="Not invited or not joined member will be able to access your tmp channel again.",
+                  aliases=["rn", "mv"])
+    async def rename(self, ctx: Context, name: str):
+        """
+        Renames a study/gaming channel
+        """
+        document = await self.check_tmpc_channel(ctx, is_mod=True)
+
+        if len(name) > 100:
+            raise BadArgument("The given Name is to long.")
+
+        await document.chat.edit(name=name)
+        await document.voice.edit(name=name)
+
+        embed = Embed(title="Channels renamed.",
+                      description=f"The channels are renamed to {name}")
+        await ctx.reply(embed=embed)
+
+    @tmpc.command(pass_context=True,
                   brief="Manages the token for your tmp channel",
                   help="mode:\n"
                        "- show: show the current token.\n"
