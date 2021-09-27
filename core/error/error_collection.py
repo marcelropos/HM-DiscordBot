@@ -102,6 +102,11 @@ class NoRulesError(CommandError):
 # OTHERS #
 ##########
 
+class MentionNotFoundError(CommandError):
+    def __init__(self, want, mention):
+        self.want = want
+        self.mention = mention
+
 
 class ManPageNotFound(Exception):
     pass

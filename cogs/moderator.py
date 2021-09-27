@@ -8,6 +8,7 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role, assign_chat
 from cogs.util.placeholder import Placeholder
+from core.error.error_collection import MentionNotFoundError
 from core.global_enum import ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -72,7 +73,10 @@ class Moderator(Cog):
             member: The member who is to receive a role.
         """
         global verified
-        member: Union[Member, User] = ctx.message.mentions[0]
+        try:
+            member: Union[Member, User] = ctx.message.mentions[0]
+        except IndexError:
+            raise MentionNotFoundError("member", member)
         await member.add_roles(*verified, reason=f"{str(ctx.author)}")
         logger.info(f"User {str(member)} was verified by {str(ctx.author)}")
 
