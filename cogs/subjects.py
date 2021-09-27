@@ -95,7 +95,7 @@ class Subjects(Cog):
         subjects: list[Role] = await self.get_possible_subjects(roles)
 
         embed = Embed(title="Subjects",
-                      description="You can opt-in/out of following subjects:")
+                      description="You can opt-in/out one or more of the following subjects:")
         subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
                                   enumerate([subject.name for subject in subjects if subject in roles])])[1:-1]
         if subjects_text:
@@ -111,7 +111,7 @@ class Subjects(Cog):
 
     @subject.command(pass_context=True,
                      name="add",
-                     help="Adds an available subject.")
+                     help="Adds one or more available subject.")
     async def subject_add(self, ctx: Context, *, subjects: str):
         """
         opts-in a user into the specified subject
@@ -119,7 +119,7 @@ class Subjects(Cog):
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            subjecsts: The Subjects to opt into
+            subjects: The Subjects to opt into
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
