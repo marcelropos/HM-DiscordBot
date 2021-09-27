@@ -68,7 +68,8 @@ class Subjects(Cog):
     # subject group
 
     @group(pass_context=True,
-           name="subject")
+           name="subject",
+           help="Manage your subjects")
     @bot_chat(bot_channels)
     @has_role_plus(verified)
     async def subject(self, ctx: Context):
