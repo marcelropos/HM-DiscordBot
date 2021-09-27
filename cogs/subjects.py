@@ -156,7 +156,7 @@ class Subjects(Cog):
     @subject.command(pass_context=True,
                      aliases=["rem", "rm"],
                      name="remove",
-                     help="Removes a subject.")
+                     help="Removes one or more  subjects.")
     async def subject_remove(self, ctx: Context, *, subjects: str):
         """
         opts-out a user out of the specified subject
