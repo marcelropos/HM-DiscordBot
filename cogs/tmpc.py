@@ -129,6 +129,18 @@ class Tmpc(Cog):
         await document.voice.set_permissions(verified, connect=document.voice.overwrites_for(verified).connect,
                                              view_channel=False)
 
+        try:
+            key = ConfigurationNameEnum.TMP_STUDENTY.value
+            tmp_verified = guild.get_role(
+                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+            if tmp_verified:
+                await document.voice.set_permissions(verified,
+                                                     connect=document.voice.overwrites_for(tmp_verified).connect,
+                                                     view_channel=False)
+        except Exception:
+            pass
+
         embed = Embed(title="Hidden",
                       description=f"Hidden this channel. Now only the students that you can see on the "
                                   f"right side can see the vc.\n"
@@ -153,6 +165,18 @@ class Tmpc(Cog):
         await document.voice.set_permissions(verified, connect=document.voice.overwrites_for(verified).connect,
                                              view_channel=True)
 
+        try:
+            key = ConfigurationNameEnum.TMP_STUDENTY.value
+            tmp_verified = guild.get_role(
+                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+            if tmp_verified:
+                await document.voice.set_permissions(verified,
+                                                     connect=document.voice.overwrites_for(tmp_verified).connect,
+                                                     view_channel=True)
+        except Exception:
+            pass
+
         embed = Embed(title="Unhidden",
                       description=f"Made this channel visible. Now every Student can see the vc.")
         await ctx.reply(embed=embed)
@@ -174,6 +198,18 @@ class Tmpc(Cog):
 
         await document.voice.set_permissions(verified, connect=False,
                                              view_channel=document.voice.overwrites_for(verified).view_channel)
+
+        try:
+            key = ConfigurationNameEnum.TMP_STUDENTY.value
+            tmp_verified = guild.get_role(
+                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+            if tmp_verified:
+                await document.voice.set_permissions(verified, connect=False,
+                                                     view_channel=document.voice.overwrites_for(
+                                                         tmp_verified).view_channel)
+        except Exception:
+            pass
 
         embed = Embed(title="Locked",
                       description=f"Locked this channel. Now only the students that you can see on the "
@@ -198,6 +234,18 @@ class Tmpc(Cog):
 
         await document.voice.set_permissions(verified, connect=True,
                                              view_channel=document.voice.overwrites_for(verified).view_channel)
+
+        try:
+            key = ConfigurationNameEnum.TMP_STUDENTY.value
+            tmp_verified = guild.get_role(
+                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+            if tmp_verified:
+                await document.voice.set_permissions(verified, connect=True,
+                                                     view_channel=document.voice.overwrites_for(
+                                                         tmp_verified).view_channel)
+        except Exception:
+            pass
 
         embed = Embed(title="Unlocked",
                       description=f"Unlocked this channel. Now every Student can join the vc.")
