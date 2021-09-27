@@ -346,6 +346,7 @@ class Tmpc(Cog):
 
         await document.voice.set_permissions(ctx.author, view_channel=True, connect=True)
         await document.chat.set_permissions(ctx.author, view_channel=True)
+        await ctx.message.delete()
 
         try:
             await ctx.author.move_to(document.voice, reason="Joined via Token")
