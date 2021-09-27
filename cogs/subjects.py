@@ -126,8 +126,12 @@ class Subjects(Cog):
         added = ""
         possible_subjects: list[Role] = await self.get_possible_subjects(roles)
 
-        for subject in subjects.split(" "):
+        number = {f"{number + 1}": subject for number, subject in
+                  enumerate([subject.name for subject in possible_subjects if subject not in roles])}
 
+        for subject in subjects.split(" "):
+            if subject in number:
+                subject = number[subject]
             subject = subject.lower()
 
             if subject not in [subject.name.lower() for subject in possible_subjects]:
@@ -161,7 +165,12 @@ class Subjects(Cog):
         removed = ""
         possible_subjects: list[Role] = await self.get_possible_subjects(roles)
 
+        number = {f"{number + 1}": subject for number, subject in
+                  enumerate([subject.name for subject in possible_subjects if subject in roles])}
+
         for subject in subjects.split(" "):
+            if subject in number:
+                subject = number[subject]
             subject = subject.lower()
 
             if subject not in [subject.name for subject in possible_subjects if subject in roles]:
