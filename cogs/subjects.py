@@ -96,12 +96,14 @@ class Subjects(Cog):
         subjects: list[Role] = await self.get_possible_subjects(roles)
 
         embed = Embed(title="Subjects",
-                      description="You can opt-in/out of following subjects:")
-        subjects_text: str = str([subject.name for subject in subjects if subject in roles])[1:-1]
+                      description="You can opt-in/out one or more of the following subjects:")
+        subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
+                                  enumerate([subject.name for subject in subjects if subject in roles])])[1:-1]
         if subjects_text:
             embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
-        subjects_text: str = str([subject.name for subject in subjects if subject not in roles])[1:-1]
+        subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
+                                  enumerate([subject.name for subject in subjects if subject not in roles])])[1:-1]
         if subjects_text:
             embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
@@ -110,63 +112,97 @@ class Subjects(Cog):
 
     @subject.command(pass_context=True,
                      name="add",
-                     help="Adds an available subject.")
-    async def subject_add(self, ctx: Context, subject: str):
+                     help="Adds one or more available subject.")
+    async def subject_add(self, ctx: Context, *, subjects: str):
         """
         opts-in a user into the specified subject
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            subject: The Subject to opt into
+            subjects: The Subjects to opt into
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
+        add = set()
+        possible_subjects: list[Role] = await self.get_possible_subjects(roles)
 
-        subjects: list[Role] = await self.get_possible_subjects(roles)
+        may_assign = [subject.name.lower() for subject in possible_subjects]
+        not_assigned_subjects = [subject.name.lower() for subject in possible_subjects if subject not in roles]
 
-        subject = subject.lower()
+        number = {f"{number + 1}": subject for number, subject in
+                  enumerate([subject.name for subject in possible_subjects if subject not in roles])}
 
-        if subject not in [subject.name.lower() for subject in subjects]:
-            raise CantAssignToSubject
+        for subject in subjects.split(self.get_sep(subjects)):
+            if subject in number:
+                subject = number[subject]
+            subject = subject.lower()
 
-        if subject not in [subject.name.lower() for subject in subjects if subject not in roles]:
-            raise YouAlreadyHaveThisSubjectError
+            if subject not in may_assign:
+                raise CantAssignToSubject
 
-        role: Role = [role for role in subjects if role.name.lower() == subject][0]
-        await member.add_roles(role)
+            if subject not in not_assigned_subjects:
+                raise YouAlreadyHaveThisSubjectError
+
+            role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
+            add.add(role)
+        await member.add_roles(*add)
+        added = ""
+        for r in add:
+            added += r.mention + "\n"
         embed = Embed(title="Successfully assigned",
-                      description=f"Assigned you to {role.mention}")
+                      description=f"Assigned you to:\n {added}")
         await ctx.reply(content=member.mention, embed=embed)
-        return
 
     @subject.command(pass_context=True,
                      aliases=["rem", "rm"],
                      name="remove",
-                     help="Removes a subject.")
-    async def subject_remove(self, ctx: Context, subject: str):
+                     help="Removes one or more  subjects.")
+    async def subject_remove(self, ctx: Context, *, subjects: str):
         """
         opts-out a user out of the specified subject
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            subject: The Subject to opt into
+            subjects: The Subjects to opt out
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
+        remove = set()
+        possible_subjects: list[Role] = await self.get_possible_subjects(roles)
+        removable = [subject.name.lower() for subject in possible_subjects if subject in roles]
 
-        subjects: list[Role] = await self.get_possible_subjects(roles)
+        number = {f"{number + 1}": subject for number, subject in
+                  enumerate([subject.name for subject in possible_subjects if subject in roles])}
 
-        if subject not in [subject.name for subject in subjects if subject in roles]:
-            raise CantRemoveSubject
+        for subject in subjects.split(self.get_sep(subjects)):
+            if subject in number:
+                subject = number[subject]
+            subject = subject.lower()
 
-        role: Role = [role for role in subjects if role.name == subject][0]
-        await member.remove_roles(role)
+            if subject not in removable:
+                raise CantRemoveSubject
+
+            role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
+            remove.add(role)
+
+        await member.remove_roles(*remove)
+        removed = ""
+        for r in remove:
+            removed += r.mention + "\n"
         embed = Embed(title="Successfully Opted out of subject",
-                      description=f"Removed you from {role.mention}")
+                      description=f"Removed you from:\n {removed}")
         await ctx.reply(content=member.mention, embed=embed)
-        return
+
+    @staticmethod
+    def get_sep(_input: str) -> str:
+        sep: str = " "
+        if ", " in _input:
+            sep = ", "
+        elif "," in _input:
+            sep = ","
+        return sep
 
     # subjects group
 
