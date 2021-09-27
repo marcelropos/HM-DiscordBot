@@ -126,21 +126,21 @@ class Subjects(Cog):
         add = set()
         possible_subjects: list[Role] = await self.get_possible_subjects(roles)
 
-        may_not_assign = [subject.name.lower() for subject in possible_subjects]
-        already_added_subjects = [subject.name.lower() for subject in possible_subjects if subject not in roles]
+        may_assign = [subject.name.lower() for subject in possible_subjects]
+        not_assigned_subjects = [subject.name.lower() for subject in possible_subjects if subject not in roles]
 
         number = {f"{number + 1}": subject for number, subject in
                   enumerate([subject.name for subject in possible_subjects if subject not in roles])}
 
-        for subject in subjects.split(" "):
+        for subject in subjects.split(self.get_sep(subjects)):
             if subject in number:
                 subject = number[subject]
             subject = subject.lower()
 
-            if subject not in may_not_assign:
+            if subject not in may_assign:
                 raise CantAssignToSubject
 
-            if subject not in already_added_subjects:
+            if subject not in not_assigned_subjects:
                 raise YouAlreadyHaveThisSubjectError
 
             role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
@@ -175,7 +175,7 @@ class Subjects(Cog):
         number = {f"{number + 1}": subject for number, subject in
                   enumerate([subject.name for subject in possible_subjects if subject in roles])}
 
-        for subject in subjects.split(" "):
+        for subject in subjects.split(self.get_sep(subjects)):
             if subject in number:
                 subject = number[subject]
             subject = subject.lower()
@@ -193,6 +193,15 @@ class Subjects(Cog):
         embed = Embed(title="Successfully Opted out of subject",
                       description=f"Removed you from:\n {removed}")
         await ctx.reply(content=member.mention, embed=embed)
+
+    @staticmethod
+    def get_sep(_input: str) -> str:
+        sep: str = " "
+        if ", " in _input:
+            sep = ", "
+        elif "," in _input:
+            sep = ","
+        return sep
 
     # subjects group
 
