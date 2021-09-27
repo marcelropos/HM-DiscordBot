@@ -155,6 +155,12 @@ class TmpChannelUtil:
                               "```!tmpc token gen```"
                               "you can generate a new token for this channel in case the token got leaked.",
                         inline=True)
+        embed.add_field(name="Kick user:",
+                        value="With"
+                              "```!tmpc kick {@user}```"
+                              "you can remove a user from the list of users that can still join/see the channels after"
+                              "you used tmpc hide of tmpc lock.",
+                        inline=True)
         embed.add_field(name="Mod only command:",
                         value="With"
                               "```!tmpc nomod```"

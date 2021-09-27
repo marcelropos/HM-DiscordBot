@@ -393,6 +393,27 @@ class Tmpc(Cog):
             pass
 
     @tmpc.command(pass_context=True,
+                  brief="Kicks user from tmpc",
+                  help="You can remove a user from the list of users that can still join/see the channels after"
+                       " you used tmpc hide of tmpc lock.")
+    @has_role_plus(moderator)
+    async def kick(self, ctx: Context, member: Union[User, Member]):
+        """
+        Kicks a user from the tmpc channel
+
+        Args:
+           ctx: The command context provided by the discord.py wrapper.
+
+           member: The member to kick
+        """
+        document = await self.check_tmpc_channel(ctx, is_mod=True)
+        await document.voice.set_permissions(member, overwrite=None)
+        await document.chat.set_permissions(member, overwrite=None)
+        embed: Embed = Embed(title="Kick",
+                             description=f"{member.mention} was kicked.")
+        await ctx.reply(embed=embed)
+
+    @tmpc.command(pass_context=True,
                   brief="Removes mod rights.",
                   help="Mods have special rights. Lock and hide commands are ineffective against moderators."
                        "This command removes these special rights.")
@@ -407,8 +428,8 @@ class Tmpc(Cog):
         global moderator
 
         document = await self.check_tmpc_channel(ctx, is_mod=True)
-        await document.voice.set_permissions(moderator.item, view_channel=False, connect=False)
-        await document.chat.set_permissions(moderator.item, view_channel=False)
+        await document.voice.set_permissions(moderator.item, overwrite=None)
+        await document.chat.set_permissions(moderator.item, overwrite=None)
         embed: Embed = Embed(title="No Mod",
                              description=f"Mods can't see or join this channel anymore")
         await ctx.reply(embed=embed)
