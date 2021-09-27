@@ -357,15 +357,6 @@ class Tmpc(Cog):
                 await self.gaming_db.update_one(document.document, new_document)
             embed: Embed = Embed(title="Token",
                                  description=f"`!tmpc join {new_token}`")
-        elif mode.lower() == "send":
-            if not ctx.message.mentions:
-                raise BadArgument
-            member: Union[Member, User] = ctx.message.mentions[0]
-            embed: Embed = Embed(title="Token",
-                                 description=f"`!tmpc join {document.token}`")
-            await member.send(embed=embed)
-            embed: Embed = Embed(title="Send token",
-                                 description=f"Send token as a private message to {member.mention}")
         else:
             raise BadArgument
 

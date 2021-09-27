@@ -144,11 +144,6 @@ class TmpChannelUtil:
                               "```!tmpc token show```"
                               "the bot will post the join token of the channel.",
                         inline=True)
-        embed.add_field(name="Send token to user:",
-                        value="With"
-                              "```!tmpc token send {@user}```"
-                              "you can send the token directly to a member.",
-                        inline=True)
         embed.add_field(name="Place token in channel:",
                         value="By using"
                               "```!tmpc token place```"
