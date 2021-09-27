@@ -62,6 +62,10 @@ class CantRemoveSubject(CommandError):
     pass
 
 
+class YouNeedAStudyGroupError(CommandError):
+    pass
+
+
 ###############
 # TMPC ERRORS #
 ###############

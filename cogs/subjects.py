@@ -2,7 +2,7 @@ import re
 from typing import Union
 
 from discord import Role, TextChannel, Member, User, Guild, Embed
-from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument, BotMissingRole
+from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
@@ -11,7 +11,8 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
-from core.error.error_collection import CantAssignToSubject, YouAlreadyHaveThisSubjectError, CantRemoveSubject
+from core.error.error_collection import CantAssignToSubject, YouAlreadyHaveThisSubjectError, CantRemoveSubject, \
+    YouNeedAStudyGroupError
 from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -249,7 +250,7 @@ class Subjects(Cog):
         all_study_groups = await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({})
         study_group: list[Role] = [document.role for document in all_study_groups if document.role in roles]
         if not study_group:
-            raise BotMissingRole
+            raise YouNeedAStudyGroupError()
         study_group: Role = study_group[0]
         study_master, study_semester = re.match(self.match, study_group.name).groups()
         study_semester = int(study_semester)
