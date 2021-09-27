@@ -112,62 +112,68 @@ class Subjects(Cog):
     @subject.command(pass_context=True,
                      name="add",
                      help="Adds an available subject.")
-    async def subject_add(self, ctx: Context, subject: str):
+    async def subject_add(self, ctx: Context, *, subjects: str):
         """
         opts-in a user into the specified subject
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            subject: The Subject to opt into
+            subjecsts: The Subjects to opt into
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
+        added = ""
+        possible_subjects: list[Role] = await self.get_possible_subjects(roles)
 
-        subjects: list[Role] = await self.get_possible_subjects(roles)
+        for subject in subjects.split(" "):
 
-        subject = subject.lower()
+            subject = subject.lower()
 
-        if subject not in [subject.name.lower() for subject in subjects]:
-            raise CantAssignToSubject
+            if subject not in [subject.name.lower() for subject in possible_subjects]:
+                raise CantAssignToSubject
 
-        if subject not in [subject.name.lower() for subject in subjects if subject not in roles]:
-            raise YouAlreadyHaveThisSubjectError
+            if subject not in [subject.name.lower() for subject in possible_subjects if subject not in roles]:
+                raise YouAlreadyHaveThisSubjectError
 
-        role: Role = [role for role in subjects if role.name.lower() == subject][0]
-        await member.add_roles(role)
+            role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
+            await member.add_roles(role)
+            added += role.mention + "\n"
         embed = Embed(title="Successfully assigned",
-                      description=f"Assigned you to {role.mention}")
+                      description=f"Assigned you to:\n {added}")
         await ctx.reply(content=member.mention, embed=embed)
-        return
 
     @subject.command(pass_context=True,
                      aliases=["rem", "rm"],
                      name="remove",
                      help="Removes a subject.")
-    async def subject_remove(self, ctx: Context, subject: str):
+    async def subject_remove(self, ctx: Context, *, subjects: str):
         """
         opts-out a user out of the specified subject
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            subject: The Subject to opt into
+            subjects: The Subjects to opt out
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
+        removed = ""
+        possible_subjects: list[Role] = await self.get_possible_subjects(roles)
 
-        subjects: list[Role] = await self.get_possible_subjects(roles)
+        for subject in subjects.split(" "):
+            subject = subject.lower()
 
-        if subject not in [subject.name for subject in subjects if subject in roles]:
-            raise CantRemoveSubject
+            if subject not in [subject.name for subject in possible_subjects if subject in roles]:
+                raise CantRemoveSubject
 
-        role: Role = [role for role in subjects if role.name == subject][0]
-        await member.remove_roles(role)
+            role: Role = [role for role in possible_subjects if role.name == subject][0]
+            await member.remove_roles(role)
+            removed += role.mention + "\n"
+
         embed = Embed(title="Successfully Opted out of subject",
-                      description=f"Removed you from {role.mention}")
+                      description=f"Removed you from:\n {removed}")
         await ctx.reply(content=member.mention, embed=embed)
-        return
 
     # subjects group
 
