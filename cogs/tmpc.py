@@ -135,7 +135,7 @@ class Tmpc(Cog):
                 (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
             if tmp_verified:
-                await document.voice.set_permissions(verified,
+                await document.voice.set_permissions(tmp_verified,
                                                      connect=document.voice.overwrites_for(tmp_verified).connect,
                                                      view_channel=False)
         except Exception:
@@ -171,7 +171,7 @@ class Tmpc(Cog):
                 (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
             if tmp_verified:
-                await document.voice.set_permissions(verified,
+                await document.voice.set_permissions(tmp_verified,
                                                      connect=document.voice.overwrites_for(tmp_verified).connect,
                                                      view_channel=True)
         except Exception:
@@ -205,7 +205,7 @@ class Tmpc(Cog):
                 (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
             if tmp_verified:
-                await document.voice.set_permissions(verified, connect=False,
+                await document.voice.set_permissions(tmp_verified, connect=False,
                                                      view_channel=document.voice.overwrites_for(
                                                          tmp_verified).view_channel)
         except Exception:
@@ -241,7 +241,7 @@ class Tmpc(Cog):
                 (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
             if tmp_verified:
-                await document.voice.set_permissions(verified, connect=True,
+                await document.voice.set_permissions(tmp_verified, connect=True,
                                                      view_channel=document.voice.overwrites_for(
                                                          tmp_verified).view_channel)
         except Exception:
