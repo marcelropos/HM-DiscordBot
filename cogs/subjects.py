@@ -78,7 +78,7 @@ class Subjects(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @subject.command(pass_context=True,
-                     name="Displays all accessible subjects.",
+                     name="show",
                      help="All topics available for you will be listed.\n"
                           "If something is missing, please report it to an admin.")
     async def subject_show(self, ctx: Context):
