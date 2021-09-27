@@ -96,11 +96,13 @@ class Subjects(Cog):
 
         embed = Embed(title="Subjects",
                       description="You can opt-in/out of following subjects:")
-        subjects_text: str = str([subject.name for subject in subjects if subject in roles])[1:-1]
+        subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
+                                  enumerate([subject.name for subject in subjects if subject in roles])])[1:-1]
         if subjects_text:
             embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
-        subjects_text: str = str([subject.name for subject in subjects if subject not in roles])[1:-1]
+        subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
+                                  enumerate([subject.name for subject in subjects if subject not in roles])])[1:-1]
         if subjects_text:
             embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
