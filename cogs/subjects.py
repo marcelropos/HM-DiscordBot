@@ -98,15 +98,18 @@ class Subjects(Cog):
         embed = Embed(title="Subjects",
                       description="You can opt-in/out one or more of the following subjects:")
         subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
-                                  enumerate([subject.name for subject in subjects if subject in roles])])[1:-1]
+                                  enumerate(sorted([subject.name for subject in subjects if subject in roles]))])[1:-1]
         if subjects_text:
             embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
-        subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
-                                  enumerate([subject.name for subject in subjects if subject not in roles])])[1:-1]
+        subjects_text: str = str(
+            [f"{number + 1}. {subject}" for number, subject in
+             enumerate(sorted([subject.name for subject in subjects if subject not in roles]))])[1:-1]
         if subjects_text:
             embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
+
+        embed.add_field(name="Add/Remove subjects", value="```!subject <add|remove> <names|numbers>```", inline=False)
 
         await ctx.reply(embed=embed)
 
@@ -124,14 +127,14 @@ class Subjects(Cog):
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
-        add = set()
+        add = list()
         possible_subjects: list[Role] = await self.get_possible_subjects(roles)
 
         may_assign = [subject.name.lower() for subject in possible_subjects]
         not_assigned_subjects = [subject.name.lower() for subject in possible_subjects if subject not in roles]
 
         number = {f"{number + 1}": subject for number, subject in
-                  enumerate([subject.name for subject in possible_subjects if subject not in roles])}
+                  enumerate(sorted([subject.name for subject in possible_subjects if subject not in roles]))}
 
         for subject in subjects.split(self.get_sep(subjects)):
             if subject in number:
@@ -145,7 +148,7 @@ class Subjects(Cog):
                 raise YouAlreadyHaveThisSubjectError
 
             role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
-            add.add(role)
+            add.append(role)
         await member.add_roles(*add)
         added = ""
         for r in add:
@@ -169,12 +172,12 @@ class Subjects(Cog):
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
-        remove = set()
+        remove = list()
         possible_subjects: list[Role] = await self.get_possible_subjects(roles)
         removable = [subject.name.lower() for subject in possible_subjects if subject in roles]
 
         number = {f"{number + 1}": subject for number, subject in
-                  enumerate([subject.name for subject in possible_subjects if subject in roles])}
+                  enumerate(sorted([subject.name for subject in possible_subjects if subject in roles]))}
 
         for subject in subjects.split(self.get_sep(subjects)):
             if subject in number:
@@ -185,7 +188,7 @@ class Subjects(Cog):
                 raise CantRemoveSubject
 
             role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
-            remove.add(role)
+            remove.append(role)
 
         await member.remove_roles(*remove)
         removed = ""
