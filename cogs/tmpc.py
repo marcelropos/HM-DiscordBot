@@ -38,6 +38,7 @@ class Tmpc(Cog):
         self.need_init = True
         if not first_init:
             self.ainit.start()
+        logger.info(f"The cog is online.")
 
     @listener()
     async def on_ready(self):
@@ -60,6 +61,9 @@ class Tmpc(Cog):
                                 moderator=moderator) as need_init:
             if need_init:
                 DiscordComponents(self.bot)
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     @group(pass_context=True,
            name="tmpc",

@@ -42,10 +42,12 @@ class GracePeriod(Cog):
         except BrokenConfigurationError:
             pass
         self.ainit.stop()
+        logger.info(f"The cog is online.")
 
     def cog_unload(self):
         global active_listener
         active_listener = False
+        logger.warning("Cog has been unloaded.")
 
     @listener()
     async def on_member_join(self, member: Member):

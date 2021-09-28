@@ -11,6 +11,9 @@ from discord.ext.commands import command, Context
 from prettytable import PrettyTable
 
 from core.error.error_collection import ManPageNotFound
+from core.logger import get_discord_child_logger
+
+logger = get_discord_child_logger("spielereien")
 
 
 class Spielereien(Cog):
@@ -20,6 +23,10 @@ class Spielereien(Cog):
 
     def __init__(self, bot: Bot):
         self.bot: Bot = bot
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     @command(help="Computes the time between the command and it's (first) reply.")
     async def ping(self, ctx: Context):

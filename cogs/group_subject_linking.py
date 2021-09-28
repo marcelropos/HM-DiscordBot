@@ -53,6 +53,10 @@ class Linking(Cog):
                                 bot_channels=bot_channels) as need_init:
             if need_init:
                 DiscordComponents(self.bot)
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     # link group
 

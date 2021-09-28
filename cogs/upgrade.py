@@ -21,6 +21,10 @@ class Upgrade(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     @command(help="Performs the upgrade")
     @is_owner()

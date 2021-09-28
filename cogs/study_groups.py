@@ -44,6 +44,7 @@ class StudyGroups(Cog):
         self.need_init = True
         if not first_init:
             self.ainit.start()
+        logger.info(f"The cog is online.")
 
     @listener()
     async def on_ready(self):
@@ -68,6 +69,9 @@ class StudyGroups(Cog):
             if need_init:
                 DiscordComponents(self.bot)
                 await assign_set_of_roles(self.bot.guilds[0], self.db, study_groups)
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     # commands
 
