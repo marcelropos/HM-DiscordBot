@@ -119,9 +119,3 @@ class LinkingNotFoundError(CommandError):
 
 class HasNoHandlerException(Exception):
     pass
-
-
-class MentionNotFoundError:
-    def __init__(self, want, mention):
-        self.want = want
-        self.mention = mention
