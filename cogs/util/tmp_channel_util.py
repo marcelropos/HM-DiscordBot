@@ -4,7 +4,7 @@ from typing import Union
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
-    NotFound
+    NotFound, Message, Forbidden, HTTPException
 from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
@@ -243,12 +243,19 @@ class TmpChannelUtil:
                 key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
                 time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[key]
                 document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
-                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+                if document.deletion_notification:
+                    try:
+                        msg: Message = await document.chat.fetch_message(document.deletion_notification)
+                        await msg.delete()
+                    except (NotFound, Forbidden, HTTPException):
+                        pass
                 embed = Embed(title="Channel Deletion",
                               description=f"This channel will be deleted "
                                           f"<t:{int(document.deleteAt.timestamp())}:R> at "
                                           f"<t:{int(document.deleteAt.timestamp())}:F>")
-                await document.chat.send(embed=embed)
+                msg: Message = await document.chat.send(embed=embed)
+                document.deletion_notification = msg.id
+                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         return False
 
     @staticmethod
