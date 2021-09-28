@@ -44,6 +44,10 @@ class NerdEcke(Cog):
                                 bot_channels=bot_channels) as need_init:
             if need_init:
                 nerd_channel.item = await assign_chat(self.bot, ConfigurationNameEnum.NERD_VOICE_CHANNEL)
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     @listener()
     async def on_ready(self):

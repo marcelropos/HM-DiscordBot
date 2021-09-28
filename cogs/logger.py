@@ -23,6 +23,9 @@ class Logger(Cog):
         self.bot = bot
         self.db: PrimitiveMongoData = PrimitiveMongoData(CollectionEnum.LOGGER)
 
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
+
     @listener()
     async def on_ready(self):
         """
@@ -42,6 +45,7 @@ class Logger(Cog):
                 await self.db.insert_one({_logger.value: default.value})
                 logger.info(f"No default for {_logger.value} has been found, default is now set to {default.name}")
         logger.info("All levels has been applied.")
+        logger.info(f"The cog is online.")
 
     @command(brief="Modifies a main logger.",
              help=pretty_logger_help.format(

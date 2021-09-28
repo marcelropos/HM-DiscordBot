@@ -25,6 +25,10 @@ class Mongo(Cog):
         global collection_enum
         self.bot: Bot = bot
         collection_enum = [e.value for e in CollectionEnum]
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     @group(pass_context=True,
            brief="Accesses and modifies primitive data collections.",

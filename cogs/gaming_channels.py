@@ -56,9 +56,11 @@ class GamingTmpChannels(Cog):
                                                         ConfigurationNameEnum.GAMING_JOIN_VOICE_CHANNEL,
                                                         ConfigurationNameEnum.DEFAULT_GAMING_NAME,
                                                         default_gaming_channel_name)
+        logger.info(f"The cog is online.")
 
     def cog_unload(self):
         self.delete_old_channels.stop()
+        logger.warning("Cog has been unloaded.")
 
     @listener()
     async def on_ready(self):

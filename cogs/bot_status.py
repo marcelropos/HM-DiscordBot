@@ -5,6 +5,7 @@ from discord.ext.commands import Bot, Cog
 from core.logger import get_discord_child_logger
 
 listener = Cog.listener
+logger = get_discord_child_logger("bot-status")
 
 
 class BotStatus(Cog):
@@ -19,6 +20,10 @@ class BotStatus(Cog):
             bot: the bot Object
         """
         self.bot = bot
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     @listener()
     async def on_ready(self):

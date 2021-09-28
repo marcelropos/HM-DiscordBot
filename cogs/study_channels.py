@@ -38,6 +38,7 @@ class StudyTmpChannels(Cog):
         self.need_init = True
         if not first_init:
             self.ainit.start()
+        logger.info(f"The cog is online.")
 
     @loop()
     async def ainit(self):
@@ -65,6 +66,7 @@ class StudyTmpChannels(Cog):
 
     def cog_unload(self):
         self.delete_old_channels.stop()
+        logger.warning("Cog has been unloaded.")
 
     @listener()
     async def on_ready(self):

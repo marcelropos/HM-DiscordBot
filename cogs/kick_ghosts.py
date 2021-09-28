@@ -36,9 +36,11 @@ class KickGhosts(Cog):
             ConfigurationNameEnum.WARNING: 7,
             ConfigurationNameEnum.TIME: event(hour=8, min=0)
         }
+        logger.info(f"The cog is online.")
 
     def cog_unload(self):
         self.kick_not_verified.stop()
+        logger.warning("Cog has been unloaded.")
 
     @listener()
     async def on_ready(self):

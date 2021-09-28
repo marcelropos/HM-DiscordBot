@@ -7,6 +7,7 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_role
 from cogs.util.placeholder import Placeholder
 from core.global_enum import ConfigurationNameEnum
+from core.logger import get_discord_child_logger
 from core.predicates import has_role_plus, bot_chat
 
 first_init = True
@@ -14,6 +15,7 @@ news = Placeholder()
 nsfw = Placeholder()
 verified: set[Role] = set()
 bot_channels: set[TextChannel] = set()
+logger = get_discord_child_logger("roles")
 
 
 class Roles(Cog):
@@ -49,6 +51,10 @@ class Roles(Cog):
             if need_init:
                 news.item = await assign_role(self.bot, ConfigurationNameEnum.NEWSLETTER)
                 nsfw.item = await assign_role(self.bot, ConfigurationNameEnum.NSFW)
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     # Not Safe For Work
 

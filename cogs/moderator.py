@@ -57,6 +57,10 @@ class Moderator(Cog):
             if need_init:
                 restricted.item = await assign_role(self.bot, ConfigurationNameEnum.RESTRICTED)
                 mod_chat.item = await assign_chat(self.bot, ConfigurationNameEnum.MOD_CHAT)
+            logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     # commands
 

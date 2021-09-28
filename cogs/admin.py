@@ -18,6 +18,10 @@ class Admin(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
+        logger.info(f"The cog is online.")
+
+    def cog_unload(self):
+        logger.warning("Cog has been unloaded.")
 
     @group(pass_context=True, name="cog", aliases=["module"])
     @has_guild_permissions(administrator=True)
