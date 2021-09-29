@@ -63,7 +63,6 @@ class DBKeyWrapperEnum(Enum):
     SUBJECT = "subject"
     DEFAULT = "default"
     MESSAGES = "messages"
-    DELETION_NOTIFICATION = "deletionNotification"
 
 
 class LoggingLevel(Enum):

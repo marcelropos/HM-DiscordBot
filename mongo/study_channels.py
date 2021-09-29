@@ -15,7 +15,6 @@ from mongo.mongo_collection import MongoCollection
 class StudyChannel(GamingChannel):
     deleteAt: datetime
     messages: list[Message]
-    deletion_notification: Optional[int] = None
 
     @property
     def message_ids(self) -> list[int]:
@@ -26,8 +25,7 @@ class StudyChannel(GamingChannel):
         document = super(StudyChannel, self).document
         document.update(
             {DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt,
-             DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in self.messages],
-             DBKeyWrapperEnum.DELETION_NOTIFICATION.value: self.deletion_notification}),
+             DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in self.messages]})
         return document
 
 
@@ -52,8 +50,7 @@ class StudyChannels(MongoCollection):
                                 guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
                                 result[DBKeyWrapperEnum.TOKEN.value],
                                 result[DBKeyWrapperEnum.DELETE_AT.value],
-                                messages,
-                                result[key] if key in result else None)
+                                messages)
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
