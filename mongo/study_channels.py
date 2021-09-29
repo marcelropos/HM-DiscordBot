@@ -15,7 +15,7 @@ from mongo.mongo_collection import MongoCollection
 class StudyChannel(GamingChannel):
     deleteAt: datetime
     messages: list[Message]
-    deletion_notification: Union[int, None] = None
+    deletion_notification: Optional[int] = None
 
     @property
     def message_ids(self) -> list[int]:
