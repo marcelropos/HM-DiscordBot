@@ -249,7 +249,7 @@ class TmpChannelUtil:
                 new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
                 diff: timedelta = document.deleteAt - datetime.now()
 
-                if diff.seconds < (datetime.now() - new_deadline).seconds / 2 or datetime.now() > document.deleteAt:
+                if diff.seconds < (new_deadline - datetime.now()).seconds / 2 or datetime.now() > document.deleteAt:
                     document.deleteAt = new_deadline
                     await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
                     await document.chat.edit(
