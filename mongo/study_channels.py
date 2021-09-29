@@ -43,7 +43,6 @@ class StudyChannels(MongoCollection):
                     messages.append(await guild.get_channel(channel).fetch_message(message))
                 except (NotFound, AttributeError):
                     pass
-            key = DBKeyWrapperEnum.DELETION_NOTIFICATION.value
             return StudyChannel(result[DBKeyWrapperEnum.ID.value],
                                 await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
                                 guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
