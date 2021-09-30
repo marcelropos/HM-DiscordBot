@@ -90,10 +90,15 @@ class Tmpc(Cog):
         document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
         embed = Embed(title="Turned on keep",
                       description=f"This channel will stay after everyone leaves for "
-                                  f"{time_difference[0]} hours and {time_difference[1]} minutes")
+                                  f"{time_difference[0]} hours and {time_difference[1]} minutes.\n"
+                                  f"Please check the channel topic for the exact deletion time.")
 
         await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
+        await document.chat.edit(
+            topic=f"Owner: {document.owner.display_name}\n"
+                  f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                  f"{datetime.now().astimezone().tzinfo}")
         await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
 
     @tmpc.command(pass_context=True,

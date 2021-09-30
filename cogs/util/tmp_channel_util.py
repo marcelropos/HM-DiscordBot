@@ -4,7 +4,7 @@ from typing import Union
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
-    NotFound, Message, Forbidden, HTTPException
+    NotFound
 from discord.ext.commands import Context, Bot
 
 from cogs.util.assign_variables import assign_category, assign_chat
@@ -77,6 +77,7 @@ class TmpChannelUtil:
                                                                     category=channel_category,
                                                                     overwrites=overwrites,
                                                                     nsfw=False,
+                                                                    topic=f"Owner: {member.display_name}",
                                                                     reason="")
 
         overwrites = channel_category.overwrites
@@ -240,22 +241,21 @@ class TmpChannelUtil:
                 logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
                 return True
             elif reset_delete_at[0] and document.deleteAt:
+
                 key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
-                time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[key]
-                document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
-                if document.deletion_notification:
-                    try:
-                        msg: Message = await document.chat.fetch_message(document.deletion_notification)
-                        await msg.delete()
-                    except (NotFound, Forbidden, HTTPException):
-                        pass
-                embed = Embed(title="Channel Deletion",
-                              description=f"This channel will be deleted "
-                                          f"<t:{int(document.deleteAt.timestamp())}:R> at "
-                                          f"<t:{int(document.deleteAt.timestamp())}:F>")
-                msg: Message = await document.chat.send(embed=embed)
-                document.deletion_notification = msg.id
-                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+                time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[
+                    key]
+
+                new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+                diff: timedelta = document.deleteAt - datetime.now()
+
+                if diff.seconds < (new_deadline - datetime.now()).seconds / 2 or datetime.now() > document.deleteAt:
+                    document.deleteAt = new_deadline
+                    await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+                    await document.chat.edit(
+                        topic=f"Owner: {document.owner.display_name}\n"
+                              f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                              f"{datetime.now().astimezone().tzinfo}")
         return False
 
     @staticmethod
