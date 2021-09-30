@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Callable
-from typing import final, Union
+from typing import Callable, Optional, final
 
+from discord import Message, NotFound
 from discord.ext.commands import Context
 
 from core.error.error_reply import error_reply
@@ -37,22 +37,28 @@ class BaseHandler(ABC):
 
     # noinspection PyMethodMayBeStatic
     @property
-    def content(self) -> Union[str, None]:
+    def content(self) -> Optional[str]:
         return None
 
     # noinspection PyMethodMayBeStatic,PyTypeChecker
     @property
-    def delete_after(self) -> Union[int, None]:
-        return None
+    def delete_after(self) -> Optional[int]:
+        return 60
 
     @final
     async def handle(self):
-        await error_reply(ctx=self.ctx,
-                          logger=self.logger("error"),
-                          cause=self.cause,
-                          solution=await self.solution,
-                          content=self.content,
-                          delete_after=self.delete_after)
+        try:
+            await error_reply(ctx=self.ctx,
+                              logger=self.logger("error"),
+                              cause=self.cause,
+                              solution=await self.solution,
+                              content=self.content,
+                              delete_after=self.delete_after)
+            msg: Message = self.ctx.message
+
+            await msg.delete(delay=self.delete_after)
+        except NotFound:
+            pass
 
     @staticmethod
     def handlers(error: Exception, ctx: Context):
