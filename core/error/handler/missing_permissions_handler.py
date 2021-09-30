@@ -1,18 +1,18 @@
 from logging import Logger
 from typing import Callable
 
-from discord.ext.commands import BotMissingPermissions
+from discord.ext.commands import MissingPermissions
 
 from core.error.handler.base_handler import BaseHandler
 from core.logger import get_discord_child_logger
 
 
-class BotMissingPermissionsHandler(BaseHandler):
-    error: BotMissingPermissions
+class MissingPermissionsHandler(BaseHandler):
+    error: MissingPermissions
 
     @staticmethod
     def handles_type():
-        return BotMissingPermissions
+        return MissingPermissions
 
     @property
     def cause(self) -> str:
