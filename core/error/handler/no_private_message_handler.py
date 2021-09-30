@@ -5,11 +5,11 @@ from discord.ext.commands import NoPrivateMessage
 
 from core.error.handler.base_handler import BaseHandler
 from core.global_enum import CollectionEnum, ConfigurationNameEnum
-from core.logger import get_mongo_child_logger
+from core.logger import get_discord_child_logger
 from mongo.primitive_mongo_data import PrimitiveMongoData
 
 
-class BadArgumentHandler(BaseHandler):
+class NoPrivateMessageHandler(BaseHandler):
     error: NoPrivateMessage
 
     @staticmethod
@@ -29,4 +29,4 @@ class BadArgumentHandler(BaseHandler):
 
     @property
     def logger(self) -> Callable[[str], Logger]:
-        return get_mongo_child_logger
+        return get_discord_child_logger
