@@ -254,7 +254,8 @@ class TmpChannelUtil:
                     await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
                     await document.chat.edit(
                         topic=f"Owner: {document.owner.display_name}\n"
-                              f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')}")
+                              f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                              f"{datetime.now().astimezone().tzinfo}")
         return False
 
     @staticmethod

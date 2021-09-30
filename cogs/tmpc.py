@@ -97,7 +97,8 @@ class Tmpc(Cog):
         await ctx.reply(embed=embed)
         await document.chat.edit(
             topic=f"Owner: {document.owner.display_name}\n"
-                  f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')}")
+                  f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                  f"{datetime.now().astimezone().tzinfo}")
         await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
 
     @tmpc.command(pass_context=True,
