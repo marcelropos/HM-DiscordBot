@@ -4,7 +4,7 @@ from typing import Callable
 from discord.ext.commands import BadArgument
 
 from core.error.handler.base_handler import BaseHandler
-from core.logger import get_mongo_child_logger
+from core.logger import get_discord_child_logger
 
 
 class BadArgumentHandler(BaseHandler):
@@ -30,4 +30,4 @@ class BadArgumentHandler(BaseHandler):
 
     @property
     def logger(self) -> Callable[[str], Logger]:
-        return get_mongo_child_logger
+        return get_discord_child_logger
