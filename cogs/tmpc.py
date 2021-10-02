@@ -76,7 +76,6 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   help="Keeps the channel after leaving.")
-    @cooldown(1, 300, BucketType.channel)
     async def keep(self, ctx: Context):
         """
         Makes a Study Channel stay for a longer time.
@@ -103,7 +102,6 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   help="Deletes the channel after leaving.")
-    @cooldown(1, 300, BucketType.channel)
     async def release(self, ctx: Context):
         """
         Deletes the channel after leaving.
@@ -123,7 +121,6 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Hides the channel",
                   help="Not invited or not joined member will not see your tmp channel.")
-    @cooldown(1, 300, BucketType.channel)
     async def hide(self, ctx: Context):
         """
         Hides a Study or Gaming Channel.
@@ -132,10 +129,17 @@ class Tmpc(Cog):
         guild: Guild = ctx.guild
 
         key = ConfigurationNameEnum.STUDENTY.value
-        verified = guild.get_role(
+        role = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, connect=document.voice.overwrites_for(verified).connect,
+        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
+                                             view_channel=False)
+
+        key = ConfigurationNameEnum.FRIEND.value
+        role = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
                                              view_channel=False)
 
         try:
@@ -159,7 +163,6 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Shows the channel",
                   help="All member will see your tmp channel again.")
-    @cooldown(1, 300, BucketType.channel)
     async def show(self, ctx: Context):
         """
         Shows (Unhides) a Study or Gaming Channel.
@@ -168,10 +171,17 @@ class Tmpc(Cog):
         guild: Guild = ctx.guild
 
         key = ConfigurationNameEnum.STUDENTY.value
-        verified = guild.get_role(
+        role = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, connect=document.voice.overwrites_for(verified).connect,
+        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
+                                             view_channel=True)
+
+        key = ConfigurationNameEnum.FRIEND.value
+        role = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
                                              view_channel=True)
 
         try:
@@ -193,7 +203,6 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
                   help="Not invited or not joined member will not be able to access your tmp channel.")
-    @cooldown(1, 300, BucketType.channel)
     async def lock(self, ctx: Context):
         """
         Locks a Study or Gaming Channel.
@@ -202,11 +211,18 @@ class Tmpc(Cog):
         guild: Guild = ctx.guild
 
         key = ConfigurationNameEnum.STUDENTY.value
-        verified = guild.get_role(
+        role = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, connect=False,
-                                             view_channel=document.voice.overwrites_for(verified).view_channel)
+        await document.voice.set_permissions(role, connect=False,
+                                             view_channel=document.voice.overwrites_for(role).view_channel)
+
+        key = ConfigurationNameEnum.FRIEND.value
+        role = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        await document.voice.set_permissions(role, connect=False,
+                                             view_channel=document.voice.overwrites_for(role).view_channel)
 
         try:
             key = ConfigurationNameEnum.TMP_STUDENTY.value
@@ -229,7 +245,6 @@ class Tmpc(Cog):
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
                   help="Not invited or not joined member will be able to access your tmp channel again.")
-    @cooldown(1, 300, BucketType.channel)
     async def unlock(self, ctx: Context):
         """
         Unlocks a Study or Gaming Channel.
@@ -238,11 +253,18 @@ class Tmpc(Cog):
         guild: Guild = ctx.guild
 
         key = ConfigurationNameEnum.STUDENTY.value
-        verified = guild.get_role(
+        role = guild.get_role(
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
-        await document.voice.set_permissions(verified, connect=True,
-                                             view_channel=document.voice.overwrites_for(verified).view_channel)
+        await document.voice.set_permissions(role, connect=True,
+                                             view_channel=document.voice.overwrites_for(role).view_channel)
+
+        key = ConfigurationNameEnum.FRIEND.value
+        role = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        await document.voice.set_permissions(role, connect=True,
+                                             view_channel=document.voice.overwrites_for(role).view_channel)
 
         try:
             key = ConfigurationNameEnum.TMP_STUDENTY.value
@@ -264,7 +286,7 @@ class Tmpc(Cog):
                   brief="Locks the channel",
                   help="Not invited or not joined member will be able to access your tmp channel again.",
                   aliases=["rn", "mv"])
-    @cooldown(1, 300, BucketType.channel)
+    @cooldown(1, 60, BucketType.user)
     async def rename(self, ctx: Context, *, name: str):
         """
         Renames a study/gaming channel
