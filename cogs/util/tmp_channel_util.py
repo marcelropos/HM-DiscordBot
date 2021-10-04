@@ -281,7 +281,7 @@ class TmpChannelUtil:
 
             document: Union[GamingChannel, StudyChannel] = document[0]
             await document.chat.set_permissions(member, view_channel=True)
-            await document.voice.set_permissions(member, view_channel=True)
+            await document.voice.set_permissions(member, view_channel=True, connect=True)
 
     @staticmethod
     async def ainit_helper(bot: Bot, db: Union[GamingChannels, StudyChannels],
