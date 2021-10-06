@@ -128,37 +128,25 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx)
         guild: Guild = ctx.guild
 
-        key = ConfigurationNameEnum.STUDENTY.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
-                                             view_channel=False)
-
-        key = ConfigurationNameEnum.FRIEND.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
-                                             view_channel=False)
-
-        try:
-            key = ConfigurationNameEnum.TMP_STUDENTY.value
-            tmp_verified = guild.get_role(
-                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-            if tmp_verified:
-                await document.voice.set_permissions(tmp_verified,
-                                                     connect=document.voice.overwrites_for(tmp_verified).connect,
-                                                     view_channel=False)
-        except Exception:
-            pass
+        await self.hide_helper(document, guild, ConfigurationNameEnum.STUDENTY.value)
+        await self.hide_helper(document, guild, ConfigurationNameEnum.FRIEND.value)
+        await self.hide_helper(document, guild, ConfigurationNameEnum.TMP_STUDENTY.value)
 
         embed = Embed(title="Hidden",
                       description=f"Hidden this channel. Now only the students that you can see on the "
                                   f"right side can see the vc.\n"
                                   f"If you are not a moderator, moderators can join and see this channel.")
         await ctx.reply(embed=embed)
+
+    @staticmethod
+    async def hide_helper(document, guild, key):
+        result = await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}})
+        if result:
+            role = guild.get_role(result[key])
+            if role:
+                await document.voice.set_permissions(role,
+                                                     connect=document.voice.overwrites_for(role).connect,
+                                                     view_channel=False)
 
     @tmpc.command(pass_context=True,
                   brief="Shows the channel",
@@ -170,35 +158,23 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx)
         guild: Guild = ctx.guild
 
-        key = ConfigurationNameEnum.STUDENTY.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
-                                             view_channel=True)
-
-        key = ConfigurationNameEnum.FRIEND.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=document.voice.overwrites_for(role).connect,
-                                             view_channel=True)
-
-        try:
-            key = ConfigurationNameEnum.TMP_STUDENTY.value
-            tmp_verified = guild.get_role(
-                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-            if tmp_verified:
-                await document.voice.set_permissions(tmp_verified,
-                                                     connect=document.voice.overwrites_for(tmp_verified).connect,
-                                                     view_channel=True)
-        except Exception:
-            pass
+        await self.show_helper(document, guild, ConfigurationNameEnum.STUDENTY.value)
+        await self.show_helper(document, guild, ConfigurationNameEnum.FRIEND.value)
+        await self.show_helper(document, guild, ConfigurationNameEnum.TMP_STUDENTY.value)
 
         embed = Embed(title="Unhidden",
                       description=f"Made this channel visible. Now every Student can see the vc.")
         await ctx.reply(embed=embed)
+
+    @staticmethod
+    async def show_helper(document, guild, key):
+        result = await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}})
+        if result:
+            role = guild.get_role(result[key])
+            if role:
+                await document.voice.set_permissions(role,
+                                                     connect=document.voice.overwrites_for(role).connect,
+                                                     view_channel=True)
 
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
@@ -210,37 +186,25 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx)
         guild: Guild = ctx.guild
 
-        key = ConfigurationNameEnum.STUDENTY.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=False,
-                                             view_channel=document.voice.overwrites_for(role).view_channel)
-
-        key = ConfigurationNameEnum.FRIEND.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=False,
-                                             view_channel=document.voice.overwrites_for(role).view_channel)
-
-        try:
-            key = ConfigurationNameEnum.TMP_STUDENTY.value
-            tmp_verified = guild.get_role(
-                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-            if tmp_verified:
-                await document.voice.set_permissions(tmp_verified, connect=False,
-                                                     view_channel=document.voice.overwrites_for(
-                                                         tmp_verified).view_channel)
-        except Exception:
-            pass
+        await self.lock_helper(document, guild, ConfigurationNameEnum.STUDENTY.value)
+        await self.lock_helper(document, guild, ConfigurationNameEnum.FRIEND.value)
+        await self.lock_helper(document, guild, ConfigurationNameEnum.TMP_STUDENTY.value)
 
         embed = Embed(title="Locked",
                       description=f"Locked this channel. Now only the students that you can see on the "
                                   f"right side can join the vc.\n"
                                   f"If you are not a moderator, moderators can join this channel.")
         await ctx.reply(embed=embed)
+
+    @staticmethod
+    async def lock_helper(document, guild, key):
+        result = await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}})
+        if result:
+            role = guild.get_role(result[key])
+            if role:
+                await document.voice.set_permissions(role,
+                                                     connect=False,
+                                                     view_channel=document.voice.overwrites_for(role).view_channel)
 
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
@@ -252,35 +216,23 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx)
         guild: Guild = ctx.guild
 
-        key = ConfigurationNameEnum.STUDENTY.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=True,
-                                             view_channel=document.voice.overwrites_for(role).view_channel)
-
-        key = ConfigurationNameEnum.FRIEND.value
-        role = guild.get_role(
-            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-        await document.voice.set_permissions(role, connect=True,
-                                             view_channel=document.voice.overwrites_for(role).view_channel)
-
-        try:
-            key = ConfigurationNameEnum.TMP_STUDENTY.value
-            tmp_verified = guild.get_role(
-                (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
-
-            if tmp_verified:
-                await document.voice.set_permissions(tmp_verified, connect=True,
-                                                     view_channel=document.voice.overwrites_for(
-                                                         tmp_verified).view_channel)
-        except Exception:
-            pass
+        await self.unlock_helper(document, guild, ConfigurationNameEnum.STUDENTY.value)
+        await self.unlock_helper(document, guild, ConfigurationNameEnum.FRIEND.value)
+        await self.unlock_helper(document, guild, ConfigurationNameEnum.TMP_STUDENTY.value)
 
         embed = Embed(title="Unlocked",
                       description=f"Unlocked this channel. Now every Student can join the vc.")
         await ctx.reply(embed=embed)
+
+    @staticmethod
+    async def unlock_helper(document, guild, key):
+        result = await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}})
+        if result:
+            role = guild.get_role(result[key])
+            if role:
+                await document.voice.set_permissions(role,
+                                                     connect=True,
+                                                     view_channel=document.voice.overwrites_for(role).view_channel)
 
     @tmpc.command(pass_context=True,
                   brief="Locks the channel",
