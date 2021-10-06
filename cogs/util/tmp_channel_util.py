@@ -70,8 +70,17 @@ class TmpChannelUtil:
         if not friend:
             raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.FRIEND.value)
 
+        key = ConfigurationNameEnum.MODERATOR_ROLE.value
+        moderator = guild.get_role(
+            (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
+
+        if not moderator:
+            raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.MODERATOR_ROLE.value)
+
         overwrites = channel_category.overwrites
         overwrites[member] = PermissionOverwrite(view_channel=True)
+        if moderator in member.roles:
+            overwrites.pop(moderator, default=None)
 
         text_channel: TextChannel = await guild.create_text_channel(name=name,
                                                                     category=channel_category,
@@ -84,6 +93,8 @@ class TmpChannelUtil:
         overwrites[member] = PermissionOverwrite(view_channel=True, connect=True)
         overwrites[verified] = PermissionOverwrite(view_channel=True, connect=True)
         overwrites[friend] = PermissionOverwrite(view_channel=True, connect=True)
+        if moderator in member.roles:
+            overwrites.pop(moderator, default=None)
 
         try:
             key = ConfigurationNameEnum.TMP_STUDENTY.value
