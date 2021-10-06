@@ -80,8 +80,10 @@ class TmpChannelUtil:
         overwrites = channel_category.overwrites
         overwrites[member] = PermissionOverwrite(view_channel=True)
         if moderator in member.roles:
-            overwrites.pop(moderator, default=None)
-
+            try:
+                overwrites.pop(moderator)
+            except KeyError:
+                pass
         text_channel: TextChannel = await guild.create_text_channel(name=name,
                                                                     category=channel_category,
                                                                     overwrites=overwrites,
@@ -94,7 +96,10 @@ class TmpChannelUtil:
         overwrites[verified] = PermissionOverwrite(view_channel=True, connect=True)
         overwrites[friend] = PermissionOverwrite(view_channel=True, connect=True)
         if moderator in member.roles:
-            overwrites.pop(moderator, default=None)
+            try:
+                overwrites.pop(moderator)
+            except KeyError:
+                pass
 
         try:
             key = ConfigurationNameEnum.TMP_STUDENTY.value
