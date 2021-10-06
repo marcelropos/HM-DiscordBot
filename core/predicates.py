@@ -56,6 +56,6 @@ def has_role_plus(item: Union[Placeholder, set[Role]]):
         if {_ for _ in set(ctx.author.roles) if _ in _item}:
             return True
         else:
-            raise BotMissingRole([role.name for role in _item])
+            raise BotMissingRole([role.mention for role in _item])
 
     return check(predicate)

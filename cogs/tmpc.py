@@ -418,7 +418,7 @@ class Tmpc(Cog):
         if not document:
             raise WrongChatForCommandTmpc
         elif not is_mod and document.owner != ctx.author:
-            raise BotMissingPermissions
+            raise BotMissingPermissions(["You are not the Channel owner"])
         return document
 
 
