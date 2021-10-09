@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
-from typing import Union
-
 from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound, PermissionOverwrite
 from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
+from typing import Union
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
@@ -418,7 +417,7 @@ class Tmpc(Cog):
         if not document:
             raise WrongChatForCommandTmpc
         elif not is_mod and document.owner != ctx.author:
-            raise BotMissingPermissions(["You are not the Channel owner"])
+            raise BotMissingPermissions(["Channel Owner"])
         return document
 
 
