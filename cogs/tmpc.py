@@ -10,7 +10,7 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken
+from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -417,7 +417,7 @@ class Tmpc(Cog):
         if not document:
             raise WrongChatForCommandTmpc
         elif not is_mod and document.owner != ctx.author:
-            raise BotMissingPermissions(["Channel Owner"])
+            raise NotOwnerError(is_mod=is_mod, owner=document.owner.mention)
         return document
 
 

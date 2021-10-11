@@ -79,6 +79,12 @@ class WrongChatForCommandTmpc(CommandError):
     pass
 
 
+class NotOwnerError(CommandError):
+    def __init__(self, is_mod: bool, owner: str):
+        self.is_mod = is_mod
+        self.owner = owner
+
+
 ####################
 # PREDICATE ERRORS #
 ####################
