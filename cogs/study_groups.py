@@ -15,7 +15,7 @@ from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core import global_enum
-from core.error.error_collection import FailedToGrantRoleError
+from core.error.error_collection import FailedToGrantRoleError, MissingInteractionError
 from core.global_enum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, is_not_in_group, has_role_plus
@@ -268,10 +268,14 @@ class StudyGroups(Cog):
 
             group_names: All available semester yrs.
         """
-        a, b = await asyncio.gather(
-            self.wait_for_group(group_names, author),
-            self.wait_for_semester(group_semester, author)
-        )
+        try:
+            a, b = await asyncio.gather(
+                self.wait_for_group(group_names, author),
+                self.wait_for_semester(group_semester, author),
+                return_exceptions=True
+            )
+        except asyncio.TimeoutError:
+            raise MissingInteractionError
 
         result = set()
         result.update({role for role in groups if role.name == a + b})
@@ -292,7 +296,8 @@ class StudyGroups(Cog):
             The course name.
         """
         res: Interaction = await self.bot.wait_for("select_option",
-                                                   check=lambda x: self.check(x, group_names, member))
+                                                   check=lambda x: self.check(x, group_names, member),
+                                                   timeout=120)
         await res.respond(content=f"I received your group input.")
         # noinspection PyUnresolvedReferences
         return res.values[0]
@@ -310,7 +315,8 @@ class StudyGroups(Cog):
             Semester yr.
         """
         res: Interaction = await self.bot.wait_for("select_option",
-                                                   check=lambda x: self.check(x, group_semester, member))
+                                                   check=lambda x: self.check(x, group_semester, member),
+                                                   timeout=120)
         await res.respond(content="I received your semester input.")
         # noinspection PyUnresolvedReferences
         return res.values[0]

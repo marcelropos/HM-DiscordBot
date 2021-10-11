@@ -119,3 +119,7 @@ class LinkingNotFoundError(CommandError):
 
 class HasNoHandlerException(Exception):
     pass
+
+
+class MissingInteractionError(CommandError):
+    pass
