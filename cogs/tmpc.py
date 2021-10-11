@@ -386,7 +386,7 @@ class Tmpc(Cog):
         await document.voice.set_permissions(member, overwrite=None)
         await document.chat.set_permissions(member, overwrite=None)
         if member in document.voice.members:
-            await member.move_to(member)
+            await member.move_to(None)
         embed: Embed = Embed(title="Kick",
                              description=f"{member.mention} was kicked.")
         await ctx.reply(embed=embed)
