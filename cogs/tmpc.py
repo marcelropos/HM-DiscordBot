@@ -227,8 +227,8 @@ class Tmpc(Cog):
         return overwrites
 
     @tmpc.command(pass_context=True,
-                  brief="Locks the channel",
-                  help="Not invited or not joined member will be able to access your tmp channel again.",
+                  brief="Renames the Channel",
+                  help="Renames the channel",
                   aliases=["rn", "mv"])
     @cooldown(1, 60, BucketType.user)
     async def rename(self, ctx: Context, *, name: str):
@@ -409,6 +409,10 @@ class Tmpc(Cog):
         await ctx.reply(embed=embed)
 
     async def check_tmpc_channel(self, ctx: Context, is_mod: bool = False) -> Union[GamingChannel, StudyChannel]:
+        if is_mod:
+            global moderator
+            is_mod = moderator in ctx.author.roles
+
         key = DBKeyWrapperEnum.CHAT.value
         document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: ctx.channel.id})
         if not document:
