@@ -6,7 +6,7 @@ from core.error.handler.base_handler import BaseHandler
 from core.logger import get_discord_child_logger
 
 
-class BadArgumentHandler(BaseHandler):
+class MissingInteractionHandler(BaseHandler):
     error: MissingInteractionError
 
     @staticmethod
