@@ -371,7 +371,7 @@ class Tmpc(Cog):
                   brief="Kicks user from tmpc",
                   help="You can remove a user from the list of users that can still join/see the channels after"
                        " you used tmpc hide of tmpc lock.")
-    async def kick(self, ctx: Context, member: Union[User, Member]):
+    async def kick(self, ctx: Context, member: User):
         """
         Kicks a user from the tmpc channel
 
@@ -380,11 +380,13 @@ class Tmpc(Cog):
 
            member: The member to kick
         """
+        guild: Guild = ctx.guild
+        member: Union[User, Member] = guild.get_member(member.id)
         document = await self.check_tmpc_channel(ctx, is_mod=True)
         await document.voice.set_permissions(member, overwrite=None)
         await document.chat.set_permissions(member, overwrite=None)
         if member in document.voice.members:
-            await member.move_to(None)
+            await member.move_to(member)
         embed: Embed = Embed(title="Kick",
                              description=f"{member.mention} was kicked.")
         await ctx.reply(embed=embed)
