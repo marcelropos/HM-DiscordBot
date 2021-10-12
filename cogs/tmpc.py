@@ -413,10 +413,6 @@ class Tmpc(Cog):
         await ctx.reply(embed=embed)
 
     async def check_tmpc_channel(self, ctx: Context, is_mod: bool = False) -> Union[GamingChannel, StudyChannel]:
-        if is_mod:
-            global moderator
-            is_mod = moderator in ctx.author.roles
-
         key = DBKeyWrapperEnum.CHAT.value
         document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: ctx.channel.id})
         if not document:
@@ -424,9 +420,12 @@ class Tmpc(Cog):
 
         if not document:
             raise WrongChatForCommandTmpc
-        elif not is_mod and document.owner != ctx.author:
-            raise NotOwnerError(is_mod=is_mod, owner=document.owner.mention)
-        return document
+
+        member: Member = ctx.author
+        if member == document.owner or \
+                (is_mod and moderator.item in member.roles):
+            return document
+        raise NotOwnerError(is_mod=is_mod, owner=document.owner.mention)
 
 
 def setup(bot: Bot):
