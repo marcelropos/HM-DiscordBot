@@ -263,11 +263,12 @@ class TmpChannelUtil:
                     key]
 
                 new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
-                diff: timedelta = document.deleteAt - datetime.now()
 
-                if diff.seconds < (new_deadline - datetime.now()).seconds / 2 or datetime.now() > document.deleteAt:
-                    document.deleteAt = new_deadline
-                    await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+                document.deleteAt = new_deadline
+                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+
+                diff: timedelta = document.deleteAt - datetime.now()
+                if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
                     await document.chat.edit(
                         topic=f"Owner: {document.owner.display_name}\n"
                               f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
