@@ -88,8 +88,8 @@ class Tmpc(Cog):
         time_difference: tuple[int, int] = (await self.config_db.find_one({key: {"$exists": True}}))[key]
         document.deleteAt = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
         embed = Embed(title="Turned on keep",
-                      description=f"This channel will stay after everyone leaves for "
-                                  f"{time_difference[0]} hours and {time_difference[1]} minutes.\n"
+                      description=f"This channel will stay for {time_difference[0]} hours and {time_difference[1]} "
+                                  f"minutes, after everyone has left.\n"
                                   f"Please check the channel topic for the exact deletion time.")
 
         await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)

@@ -181,7 +181,7 @@ class TmpChannelUtil:
         embed.add_field(name="Mod only command:",
                         value="With"
                               "```!tmpc nomod```"
-                              "a moderator set that other moderators are not treated in a special way for the "
+                              "a moderator can toggle, that other moderators are not treated in a special way for the "
                               "visibility of the channel.",
                         inline=True)
         embed.add_field(name="Rename channel:",
