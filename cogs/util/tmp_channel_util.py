@@ -174,7 +174,7 @@ class TmpChannelUtil:
                         inline=True)
         embed.add_field(name="Kick user:",
                         value="With"
-                              "```!tmpc kick {@user}```"
+                              "```!tmpc kick <@user>```"
                               "you can remove a user from the list of users that can still join/see the channels after"
                               "you used tmpc hide of tmpc lock.",
                         inline=True)
@@ -189,7 +189,7 @@ class TmpChannelUtil:
                               "```!tmpc rename <name>```"
                               "you can rename this channel."),
         embed.add_field(name="Restrictions:",
-                        value="All commands except `tmpc token place` and `tmpc join {token}` need to be written in "
+                        value="All commands except `tmpc token place` and `tmpc join <token>` need to be written in "
                               "this channel.",
                         inline=False)
         embed.add_field(name="Join this channel:",
