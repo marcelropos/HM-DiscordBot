@@ -319,7 +319,7 @@ class KickGhosts(Cog):
         for member in kick_member:
             try:
                 await member.kick(reason="Too long without verification")
-                logger.info('Kicked user: User="{member.name}#{member.discriminator}({member.id})" ')
+                logger.info(f'Kicked user: User="{member.name}#{member.discriminator}({member.id})" ')
                 embed = Embed(title="Kick Ghosts",
                               description=f"Kicked {member.mention}.")
             except Forbidden:
