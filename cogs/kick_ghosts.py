@@ -314,7 +314,7 @@ class KickGhosts(Cog):
                                   f"{safe_roles_names}\n"
                                   f"within the next **{left}** days.",
                             inline=False)
-            await help_chat.send(embed=embed)  # , content=member.mention")
+            await help_chat.send(embed=embed, delete_after=86400, content=member.mention)
 
         for member in kick_member:
             try:
