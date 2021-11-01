@@ -3,9 +3,11 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from typing import Union
 
+import discord
 from discord import Member, User, Role, Embed, Guild, TextChannel, Forbidden
 from discord.ext.commands import Cog, Bot, group, Context, BadArgument, has_guild_permissions
 from discord.ext.tasks import loop
+from prettytable import PrettyTable
 from pymongo.errors import ServerSelectionTimeoutError
 
 from cogs.bot_status import listener
@@ -279,6 +281,33 @@ class KickGhosts(Cog):
             embed = Embed(title="Safe Roles",
                           description="No safe roles found.")
         await ctx.reply(embed=embed)
+
+    @safe_roles.command(pass_context=True,
+                        help="Shows all as safe registered roles.")
+    async def ghosts(self, ctx: Context):
+        column = ["name", "roles"]
+        warn_list = PrettyTable(column)
+        warn_list.title = "Warning list"
+        kick_list = PrettyTable(column)
+        kick_list.title = "Kick list"
+        deadline = self.config[ConfigurationNameEnum.DEADLINE]
+        warning = self.config[ConfigurationNameEnum.WARNING]
+        guild: Guild = ctx.guild
+        safe_roles = await self.get_safe_roles(guild)
+
+        kick_members, warn_members = await self.kick_warn_member(deadline, guild, safe_roles, warning)
+
+        for warn_member in warn_members:
+            warn_list.add_row((warn_member.display_name, warn_member.roles))
+
+        for kick_member in kick_members:
+            kick_list.add_row((kick_member.display_name, kick_member.roles))
+
+        result = f"{warn_list}\n{kick_list}"
+
+        await ctx.reply(discord.File(bytes(result, encoding='utf-8'),
+                                     filename="Ghost list"),
+                        content="Here is your Ghost list")
 
     # Loop
 
