@@ -3,9 +3,11 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from typing import Union
 
+import discord
 from discord import Member, User, Role, Embed, Guild, TextChannel, Forbidden
 from discord.ext.commands import Cog, Bot, group, Context, BadArgument, has_guild_permissions
 from discord.ext.tasks import loop
+from prettytable import PrettyTable
 from pymongo.errors import ServerSelectionTimeoutError
 
 from cogs.bot_status import listener
@@ -280,6 +282,33 @@ class KickGhosts(Cog):
                           description="No safe roles found.")
         await ctx.reply(embed=embed)
 
+    @safe_roles.command(pass_context=True,
+                        help="Shows all as safe registered roles.")
+    async def ghosts(self, ctx: Context):
+        column = ["name", "roles"]
+        warn_list = PrettyTable(column)
+        warn_list.title = "Warning list"
+        kick_list = PrettyTable(column)
+        kick_list.title = "Kick list"
+        deadline = self.config[ConfigurationNameEnum.DEADLINE]
+        warning = self.config[ConfigurationNameEnum.WARNING]
+        guild: Guild = ctx.guild
+        safe_roles = await self.get_safe_roles(guild)
+
+        kick_members, warn_members = await self.kick_warn_member(deadline, guild, safe_roles, warning)
+
+        for warn_member in warn_members:
+            warn_list.add_row((warn_member.display_name, warn_member.roles))
+
+        for kick_member in kick_members:
+            kick_list.add_row((kick_member.display_name, kick_member.roles))
+
+        result = f"{warn_list}\n{kick_list}"
+
+        await ctx.reply(discord.File(bytes(result, encoding='utf-8'),
+                                     filename="Ghost list"),
+                        content="Here is your Ghost list")
+
     # Loop
 
     @loop(minutes=1)
@@ -293,15 +322,7 @@ class KickGhosts(Cog):
 
         deadline, debug_chat, guild, help_chat, safe_roles, safe_roles_names, warning = await self.assign_variables()
 
-        not_verified: set[Union[Member, User]] = {member for member in guild.members if
-                                                  not set(member.roles).intersection(safe_roles)}
-
-        kick_member: set[Union[Member, User]] = {member for member in not_verified if
-                                                 self.days_on_server(member) > deadline}
-
-        warn_member: set[Union[Member, User]] = {member for member in not_verified if
-                                                 self.days_on_server(member) > deadline - warning - 1
-                                                 and member not in kick_member}
+        kick_member, warn_member = await self.kick_warn_member(deadline, guild, safe_roles, warning)
 
         for member in warn_member:
             left = deadline - self.days_on_server(member)
@@ -314,14 +335,17 @@ class KickGhosts(Cog):
                                   f"{safe_roles_names}\n"
                                   f"within the next **{left}** days.",
                             inline=False)
+            logger.info(f"Warn {member.display_name}({member.id}) of its upcoming removal.")
             await help_chat.send(embed=embed, delete_after=86400, content=member.mention)
 
         for member in kick_member:
             try:
+                user = f"{member.display_name}({member.id})"
                 await member.kick(reason="Too long without verification")
                 logger.info(f'Kicked user: User="{member.name}#{member.discriminator}({member.id})" ')
                 embed = Embed(title="Kick Ghosts",
                               description=f"Kicked {member.mention}.")
+                logger.info(f"The user {user} has been removed.")
             except Forbidden:
                 logger.error(f'Tried to kick User="{member.name}#{member.discriminator}({member.id})" '
                              f'but failed due missing permissions.')
@@ -330,6 +354,20 @@ class KickGhosts(Cog):
             await debug_chat.send(embed=embed)
 
     # Helper methods
+
+    async def kick_warn_member(self, deadline, guild, safe_roles, warning) \
+            -> tuple[set[Union[Member, User]], set[Union[Member, User]]]:
+
+        not_verified: set[Union[Member, User]] = {member for member in guild.members if
+                                                  not set(member.roles).intersection(safe_roles)}
+
+        kick_member: set[Union[Member, User]] = {member for member in not_verified if
+                                                 self.days_on_server(member) > deadline}
+
+        warn_member: set[Union[Member, User]] = {member for member in not_verified if
+                                                 self.days_on_server(member) > deadline - warning - 1
+                                                 and member not in kick_member}
+        return kick_member, warn_member
 
     async def kick(self) -> bool:
         """
@@ -366,14 +404,7 @@ class KickGhosts(Cog):
         """
         guild: Guild = self.bot.guilds[0]
 
-        key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
-        found = await self.db.find_one({key: {"$exists": True}})
-        safe_roles: set[Role] = {guild.get_role(safe_role_id) for safe_role_id in found[key]}
-
-        if None in safe_roles:
-            logger.error("A non-existent role id was loaded. For security reasons, "
-                         "the execution of the member kick was aborted.")
-            raise BrokenConfigurationError(self.db.collection.name, key)
+        safe_roles = await self.get_safe_roles(guild)
 
         deadline = self.config[ConfigurationNameEnum.DEADLINE]
         warning = self.config[ConfigurationNameEnum.WARNING]
@@ -390,6 +421,16 @@ class KickGhosts(Cog):
         for safe_role in safe_roles:
             safe_roles_names += safe_role.mention
         return deadline, debug_chat, guild, help_chat, safe_roles, safe_roles_names, warning
+
+    async def get_safe_roles(self, guild):
+        key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
+        found = await self.db.find_one({key: {"$exists": True}})
+        safe_roles: set[Role] = {guild.get_role(safe_role_id) for safe_role_id in found[key]}
+        if None in safe_roles:
+            logger.error("A non-existent role id was loaded. For security reasons, "
+                         "the execution of the member kick was aborted.")
+            raise BrokenConfigurationError(self.db.collection.name, key)
+        return safe_roles
 
     @staticmethod
     def days_on_server(member: Member):
