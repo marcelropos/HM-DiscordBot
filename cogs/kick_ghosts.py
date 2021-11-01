@@ -314,14 +314,17 @@ class KickGhosts(Cog):
                                   f"{safe_roles_names}\n"
                                   f"within the next **{left}** days.",
                             inline=False)
+            logger.info(f"Warn {member.display_name}({member.id}) of its upcoming removal.")
             await help_chat.send(embed=embed, delete_after=86400, content=member.mention)
 
         for member in kick_member:
             try:
+                user = f"{member.display_name}({member.id})"
                 await member.kick(reason="Too long without verification")
                 logger.info(f'Kicked user: User="{member.name}#{member.discriminator}({member.id})" ')
                 embed = Embed(title="Kick Ghosts",
                               description=f"Kicked {member.mention}.")
+                logger.info(f"The user {user} has been removed.")
             except Forbidden:
                 logger.error(f'Tried to kick User="{member.name}#{member.discriminator}({member.id})" '
                              f'but failed due missing permissions.')
