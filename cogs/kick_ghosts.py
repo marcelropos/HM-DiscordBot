@@ -231,16 +231,16 @@ class KickGhosts(Cog):
     # noinspection PyUnusedLocal
     @safe_roles.command(pass_context=True,
                         aliases=["rem", "rm"],
-                        brief="Removes one or more roles to the list of safe roles.",
+                        brief="Removes one role to the list of safe role.",
                         help="Ping all roles you want to remove.\n"
                              "You should probably use this role on a private debug chat.")
-    async def remove(self, ctx: Context, *, roles):  # role is used for pretty help
+    async def remove(self, ctx: Context, *, role):  # role is used for pretty help
         """
-       Remove one or more roles to the list of safe roles.
+       Remove one role to the list of safe role.
        Args:
            ctx: The command context provided by the discord.py wrapper.
 
-           roles: The pinged roles to be removed to the safe list.
+           role: The pinged roles to be removed to the safe list.
 
        Reply:
            A success message.
@@ -248,7 +248,7 @@ class KickGhosts(Cog):
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find({key: {"$exists": True}})
         safe_roles: set[int] = set(found[key])
-        safe_roles.difference(set(ctx.message.raw_role_mentions))
+        safe_roles.remove(ctx.message.raw_role_mentions)
         await self.db.update_one({key: {"$exists": True}}, {key: safe_roles})
 
         embed = Embed(title="Safe Roles",
