@@ -248,7 +248,7 @@ class KickGhosts(Cog):
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find({key: {"$exists": True}})
         safe_roles: set[int] = set(found[key])
-        safe_roles.difference(ctx.message.raw_role_mentions)
+        safe_roles.difference(set(ctx.message.raw_role_mentions))
         await self.db.update_one({key: {"$exists": True}}, {key: safe_roles})
 
         embed = Embed(title="Safe Roles",
