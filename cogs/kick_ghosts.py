@@ -1,6 +1,7 @@
 import asyncio
 from collections import namedtuple
 from datetime import datetime, timedelta
+from io import StringIO
 from typing import Union
 
 import discord
@@ -298,16 +299,18 @@ class KickGhosts(Cog):
         kick_members, warn_members = await self.kick_warn_member(deadline, guild, safe_roles, warning)
 
         for warn_member in warn_members:
-            warn_list.add_row((warn_member.display_name, warn_member.roles))
+            warn_list.add_row((warn_member.display_name, [role.name for role in warn_member.roles[1:]]))
 
         for kick_member in kick_members:
-            kick_list.add_row((kick_member.display_name, kick_member.roles))
+            kick_list.add_row((kick_member.display_name, [role.name for role in kick_member.roles[1:]]))
 
         result = f"{warn_list}\n{kick_list}"
 
-        await ctx.reply(discord.File(bytes(result, encoding='utf-8'),
-                                     filename="Ghost list"),
-                        content="Here is your Ghost list")
+        await ctx.reply(
+            file=discord.File(
+                fp=StringIO(result),
+                filename="List_of_all_members.txt"),
+            content="Here is your ghost list")
 
     # Loop
 
