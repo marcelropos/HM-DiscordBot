@@ -1,7 +1,7 @@
 from logging import Logger
-from typing import Optional, Union
+from typing import Optional
 
-from discord import Embed, User, Member, Guild, TextChannel, Permissions, HTTPException
+from discord import Embed, User, Guild, TextChannel, Permissions, HTTPException
 from discord.ext.commands import Context, Bot
 
 
@@ -11,12 +11,14 @@ async def error_reply(ctx: Context,
                       solution: str,
                       content: str = None,
                       delete_after: Optional[int] = 60) -> None:
+    user: User = ctx.author
     embed = Embed(title="Error during command processing occurred")
     command: str = ctx.message.content
     embed.add_field(name="Command", value=f"`{command}`", inline=False)
     embed.add_field(name="Cause", value=cause, inline=False)
     embed.add_field(name="Solution", value=solution, inline=False)
-    user: Union[Member, User] = ctx.author
+    embed.set_footer(text=user.name, icon_url=user.avatar_url)
+    embed.timestamp = ctx.message.created_at
     try:
         await ctx.reply(embed=embed, content=content, delete_after=delete_after)
     except HTTPException as err:
