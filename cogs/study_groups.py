@@ -280,6 +280,8 @@ class StudyGroups(Cog):
             raise a
         elif isinstance(b, Exception):
             raise b
+        a: str
+        b: str
 
         result = set()
         result.update({role for role in groups if role.name == a + b})
