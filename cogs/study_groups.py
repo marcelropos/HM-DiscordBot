@@ -268,14 +268,18 @@ class StudyGroups(Cog):
 
             group_names: All available semester yrs.
         """
-        try:
-            a, b = await asyncio.gather(
-                self.wait_for_group(group_names, author),
-                self.wait_for_semester(group_semester, author),
-                return_exceptions=True
-            )
-        except asyncio.TimeoutError:
+
+        a, b = await asyncio.gather(
+            self.wait_for_group(group_names, author),
+            self.wait_for_semester(group_semester, author),
+            return_exceptions=True
+        )
+        if isinstance(a, asyncio.TimeoutError) or isinstance(a, asyncio.TimeoutError):
             raise MissingInteractionError
+        elif isinstance(a, Exception):
+            raise a
+        elif isinstance(b, Exception):
+            raise b
 
         result = set()
         result.update({role for role in groups if role.name == a + b})
