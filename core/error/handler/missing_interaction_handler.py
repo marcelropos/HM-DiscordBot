@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Callable
+from typing import Callable, Optional
 
 from core.error.error_collection import MissingInteractionError
 from core.error.handler.base_handler import BaseHandler
@@ -20,6 +20,10 @@ class MissingInteractionHandler(BaseHandler):
     @property
     async def solution(self) -> str:
         return "Just repeat the command"
+
+    @property
+    def delete_after(self) -> Optional[int]:
+        return None
 
     @property
     def logger(self) -> Callable[[str], Logger]:
