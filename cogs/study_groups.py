@@ -274,7 +274,7 @@ class StudyGroups(Cog):
             self.wait_for_semester(group_semester, author),
             return_exceptions=True
         )
-        if isinstance(a, asyncio.TimeoutError) or isinstance(a, asyncio.TimeoutError):
+        if isinstance(a, asyncio.TimeoutError) or isinstance(b, asyncio.TimeoutError):
             raise MissingInteractionError
         elif isinstance(a, Exception):
             raise a
