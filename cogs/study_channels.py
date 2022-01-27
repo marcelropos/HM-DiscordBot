@@ -172,13 +172,10 @@ class StudyTmpChannels(Cog):
 
     @loop(minutes=10)
     async def delete_old_channels(self):
-        to_delete = set()
         channels = study_channels.copy()
         for voice_channel in channels:
             if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger, self.bot):
-                to_delete.add(voice_channel)
-        for old in to_delete:
-            study_channels.remove(old)
+                study_channels.remove(voice_channel)
 
 
 def setup(bot: Bot):
