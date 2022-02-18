@@ -28,7 +28,6 @@ class ConfigurationNameEnum(Enum):
     TMP_STUDENTY = "tmp_studenty"
     NSFW = "nsfw"
     NEWSLETTER = "newsletter"
-    RESTRICTED = "restricted"
     STUDY_SEPARATOR_ROLE = "studySeparator"
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
     GROUP_CATEGORY = "groupCategory"
