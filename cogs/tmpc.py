@@ -252,10 +252,9 @@ class Tmpc(Cog):
                   help="mode:\n"
                        "- show: show the current token.\n"
                        "- gen: generate a new token.\n"
-                       "- send <@user>: sends the token to a user.\n"
                        "- place: place an embed in the channel so that user can easily join the Study Channel.\n"
                        "\tAttention the place Command only works for Study Channels.")
-    async def token(self, ctx: Context, mode: str, user=None):
+    async def token(self, ctx: Context, mode: str):
         """
         Manage token
 
@@ -265,11 +264,8 @@ class Tmpc(Cog):
             mode: One of the following:
                     show: show the current token;
                     gen: generate a new token;
-                    send <@user>: sends the token to a user;
                     place: place an embed in the channel so that user can easily join the Study Channel.
                         Attention the place Command only works for Study Channels.
-
-            user: The user if you want to send the token directly to a user
         """
         if mode.lower() == "place":
             document: StudyChannel = await self.study_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
@@ -306,12 +302,12 @@ class Tmpc(Cog):
             await self.study_db.update_one(document.document, new_document)
             return
 
-        document = await self.check_tmpc_channel(ctx)
-
         if mode.lower() == "show":
+            document = await self.check_tmpc_channel(ctx, everyone=True)
             embed: Embed = Embed(title="Token",
                                  description=f"`!tmpc join {document.token}`")
         elif mode.lower() == "gen":
+            document = await self.check_tmpc_channel(ctx)
             new_token = TmpChannelUtil.create_token()
             new_document = {
                 DBKeyWrapperEnum.OWNER.value: document.owner_id,
@@ -412,7 +408,8 @@ class Tmpc(Cog):
                              description=f"Mods can't see or join this channel anymore")
         await ctx.reply(embed=embed)
 
-    async def check_tmpc_channel(self, ctx: Context, is_mod: bool = False) -> Union[GamingChannel, StudyChannel]:
+    async def check_tmpc_channel(self, ctx: Context, is_mod: bool = False, everyone: bool = False) \
+            -> Union[GamingChannel, StudyChannel]:
         key = DBKeyWrapperEnum.CHAT.value
         document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: ctx.channel.id})
         if not document:
@@ -422,7 +419,7 @@ class Tmpc(Cog):
             raise WrongChatForCommandTmpc
 
         member: Member = ctx.author
-        if member == document.owner or \
+        if everyone or member == document.owner or \
                 (is_mod and moderator.item in member.roles):
             return document
         raise NotOwnerError(is_mod=is_mod, owner=document.owner.mention)
