@@ -187,7 +187,13 @@ class TmpChannelUtil:
         embed.add_field(name="Rename channel:",
                         value="With"
                               "```!tmpc rename <name>```"
-                              "you can rename this channel."),
+                              "you can rename this channel.",
+                        inline=True)
+        embed.add_field(name="Delete channel:",
+                        value="With"
+                              "```!tmpc delete```"
+                              "you can force delete this channel even if someone is currently in the voice chat.",
+                        inline=True)
         embed.add_field(name="Restrictions:",
                         value="All commands except `tmpc token place` and `tmpc join <token>` need to be written in "
                               "this channel.",
@@ -233,6 +239,9 @@ class TmpChannelUtil:
                 return True
 
             document: Union[StudyChannel, GamingChannel] = document[0]
+
+            if document.voice == None and document.chat == None:
+                return True
 
             if type(document) == GamingChannel or not document.deleteAt or (
                     not reset_delete_at[0] and datetime.now() > document.deleteAt):

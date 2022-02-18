@@ -392,6 +392,39 @@ class Tmpc(Cog):
         await ctx.reply(embed=embed)
 
     @tmpc.command(pass_context=True,
+                  aliases=["remove", "rem", "rm"],
+                  brief="Deletes the tmpc even if someone is still in the channel",
+                  help="You can force delete this tmpc even if people are still in the voice channel.")
+    async def delete(self, ctx: Context):
+        """
+        Deletes the tmpc even if the voice channel is not empty
+
+        Args:
+           ctx: The command context provided by the discord.py wrapper.
+        """
+        document = await self.check_tmpc_channel(ctx)
+        try:
+            await document.voice.delete(reason="Force deleted by owner")
+        except NotFound:
+            pass
+        try:
+            await document.chat.delete(reason="Force deleted by owner")
+        except NotFound:
+            pass
+
+        if type(document) == StudyChannel:
+            for message in document.messages:
+                try:
+                    await message.delete()
+                except NotFound:
+                    pass
+            await self.study_db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
+        else:
+            await self.gaming_db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
+
+        logger.info(f"Force deleted Tmp Channel {document.voice.name}")
+
+    @tmpc.command(pass_context=True,
                   brief="Removes mod rights.",
                   help="Mods have special rights. Lock and hide commands are ineffective against moderators."
                        "This command removes these special rights.")
