@@ -405,24 +405,24 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx)
         try:
             await document.voice.delete(reason="Force deleted by owner")
-        except NotFound:
+        except (NotFound, AttributeError):
             pass
         try:
             await document.chat.delete(reason="Force deleted by owner")
-        except NotFound:
+        except (NotFound, AttributeError):
             pass
 
         if type(document) == StudyChannel:
             for message in document.messages:
                 try:
                     await message.delete()
-                except NotFound:
+                except (NotFound, AttributeError):
                     pass
             await self.study_db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
         else:
             await self.gaming_db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
 
-        logger.info(f"Force deleted Tmp Channel {document.voice.name}")
+        logger.info(f"Deleted Tmp Channel {document.voice.name} on user command")
 
     @tmpc.command(pass_context=True,
                   brief="Removes mod rights.",
