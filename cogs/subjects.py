@@ -11,8 +11,7 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
-from core.error.error_collection import CantAssignToSubject, YouAlreadyHaveThisSubjectError, CantRemoveSubject, \
-    YouNeedAStudyGroupError
+from core.error.error_collection import YouNeedAStudyGroupError
 from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -97,18 +96,23 @@ class Subjects(Cog):
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
 
-        subjects: list[Role] = await self.get_possible_subjects(roles)
+        subjects: set[int: Role] = await self.get_possible_subjects(roles)
 
         embed = Embed(title="Subjects",
                       description="You can opt-in/out one or more of the following subjects:")
-        subjects_text: str = str([f"{number + 1}. {subject}" for number, subject in
-                                  enumerate(sorted([subject.name for subject in subjects if subject in roles]))])[1:-1]
+        subjects_text: str = ""
+        for number, subject in subjects.items():
+            if subject in roles:
+                subjects_text += f"`{number}: {subject}`\n"
+
         if subjects_text:
             embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
-        subjects_text: str = str(
-            [f"{number + 1}. {subject}" for number, subject in
-             enumerate(sorted([subject.name for subject in subjects if subject not in roles]))])[1:-1]
+        subjects_text: str = ""
+        for number, subject in subjects.items():
+            if subject not in roles:
+                subjects_text += f"`{number}: {subject}`\n"
+
         if subjects_text:
             embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
@@ -129,33 +133,17 @@ class Subjects(Cog):
 
             subjects: The Subjects to opt into
         """
+
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
-        add = list()
-        possible_subjects: list[Role] = await self.get_possible_subjects(roles)
+        possible_subjects: list[str: Role] = await self.get_possible_subjects(roles)
+        changeable = [subject.name.lower() for subject in possible_subjects.values()]
 
-        may_assign = [subject.name.lower() for subject in possible_subjects]
-        not_assigned_subjects = [subject.name.lower() for subject in possible_subjects if subject not in roles]
+        to_add = await self.to_change(changeable, possible_subjects, subjects)
 
-        number = {f"{number + 1}": subject for number, subject in
-                  enumerate(sorted([subject.name for subject in possible_subjects if subject not in roles]))}
-
-        for subject in subjects.split(self.get_sep(subjects)):
-            if subject in number:
-                subject = number[subject]
-            subject = subject.lower()
-
-            if subject not in may_assign:
-                raise CantAssignToSubject
-
-            if subject not in not_assigned_subjects:
-                raise YouAlreadyHaveThisSubjectError
-
-            role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
-            add.append(role)
-        await member.add_roles(*add)
+        await member.add_roles(*to_add)
         added = ""
-        for r in add:
+        for r in to_add:
             added += r.mention + "\n"
         embed = Embed(title="Successfully assigned",
                       description=f"Assigned you to:\n {added}")
@@ -176,27 +164,14 @@ class Subjects(Cog):
         """
         member: Union[Member, User] = ctx.author
         roles: list[Role] = member.roles
-        remove = list()
-        possible_subjects: list[Role] = await self.get_possible_subjects(roles)
-        removable = [subject.name.lower() for subject in possible_subjects if subject in roles]
+        possible_subjects: list[str: Role] = await self.get_possible_subjects(roles)
+        changeable = [subject.name.lower() for subject in possible_subjects.values() if subject in roles]
 
-        number = {f"{number + 1}": subject for number, subject in
-                  enumerate(sorted([subject.name for subject in possible_subjects if subject in roles]))}
+        to_remove = await self.to_change(changeable, possible_subjects, subjects)
 
-        for subject in subjects.split(self.get_sep(subjects)):
-            if subject in number:
-                subject = number[subject]
-            subject = subject.lower()
-
-            if subject not in removable:
-                raise CantRemoveSubject
-
-            role: Role = [role for role in possible_subjects if role.name.lower() == subject][0]
-            remove.append(role)
-
-        await member.remove_roles(*remove)
+        await member.remove_roles(*to_remove)
         removed = ""
-        for r in remove:
+        for r in to_remove:
             removed += r.mention + "\n"
         embed = Embed(title="Successfully Opted out of subject",
                       description=f"Removed you from:\n {removed}")
@@ -289,7 +264,7 @@ class Subjects(Cog):
         msg = "separator"
         await StudySubjectUtil.update_category_and_separator(role.id, ctx, db, key, msg)
 
-    async def get_possible_subjects(self, roles: list[Role]) -> list[Role]:
+    async def get_possible_subjects(self, roles: list[Role]) -> set[str:Role]:
         all_study_groups = await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({})
         study_group: list[Role] = [document.role for document in all_study_groups if document.role in roles]
         if not study_group:
@@ -301,9 +276,21 @@ class Subjects(Cog):
         for i in range(study_semester):
             compatible_study_groups += [document.role for document in all_study_groups if
                                         document.role.name == study_master + str(i)]
-        return [document.subject for document in
-                await StudySubjectRelations(self.bot).find({}) if
-                document.group in compatible_study_groups]
+        return {str(number): document.subject for number, document in
+                enumerate(await StudySubjectRelations(self.bot).find({})) if
+                document.group in compatible_study_groups}
+
+    async def to_change(self, changeable, possible_subjects, subjects):
+        result = list()
+        for subject in subjects.split(self.get_sep(subjects)):
+            if subject in possible_subjects:
+                subject = possible_subjects[subject].name
+            subject = subject.lower()
+
+            if subject in changeable:
+                role: Role = [role for role in possible_subjects.values() if role.name.lower() == subject][0]
+                result.append(role)
+        return result
 
 
 def setup(bot: Bot):
