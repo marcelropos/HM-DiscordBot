@@ -1,9 +1,10 @@
+import os
 import re
 from typing import Union
 
 import discord
 from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
-from discord.ext.commands import Cog, Bot, Context, command, is_owner, has_guild_permissions
+from discord.ext.commands import Cog, Bot, Context, command, is_owner, has_guild_permissions, ExtensionNotLoaded
 
 from core import global_enum
 from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
@@ -31,6 +32,16 @@ class Upgrade(Cog):
     @has_guild_permissions(administrator=True)
     async def upgrade(self, ctx: Context):
         logger.info("Started doing upgrade")
+
+        logger.info("Disabling all commands")
+        for filename in os.listdir("./cogs"):
+            if filename.endswith(".py") and filename != "upgrade.py":
+                try:
+                    ctx.bot.unload_extension(f"cogs.{filename[:-3]}")
+                    logger.info(f"Unloaded: cogs.{filename[:-3]}")
+                except ExtensionNotLoaded:
+                    logger.info(f"Already Unloaded: cogs.{filename[:-3]}")
+        logger.info("Disabled all commands")
 
         guild: Guild = ctx.guild
         members: list[Member] = guild.members
@@ -156,7 +167,11 @@ class Upgrade(Cog):
                             (document.group in groups and document.default)]
             await member.add_roles(*roles_to_add, reason="upgrade")
         logger.info("Assigned everyone to their new subjects")
+
         logger.info("Finished upgrade")
+
+        logger.warning("You need to restart the Bot")
+        await ctx.reply(content="Please restart the bot")
 
 
 def setup(bot: Bot):
