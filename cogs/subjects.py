@@ -151,7 +151,8 @@ class Subjects(Cog):
             added += r.mention + "\n"
         embed = Embed(title="Successfully assigned",
                       description=f"Assigned you to:\n {added}")
-        await ctx.reply(content=member.mention, embed=embed)
+        await ctx.reply(content=member.mention, embed=embed, delete_after=300)
+        await ctx.message.delete(delay=300)
 
     @subject.command(pass_context=True,
                      aliases=["rem", "rm"],
@@ -179,7 +180,8 @@ class Subjects(Cog):
             removed += r.mention + "\n"
         embed = Embed(title="Successfully Opted out of subject",
                       description=f"Removed you from:\n {removed}")
-        await ctx.reply(content=member.mention, embed=embed)
+        await ctx.reply(content=member.mention, embed=embed, delete_after=300)
+        await ctx.message.delete(delay=300)
 
     @staticmethod
     def get_sep(_input: str) -> str:
