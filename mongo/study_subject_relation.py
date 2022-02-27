@@ -25,6 +25,10 @@ class StudySubjectRelation(MongoDocument):
             DBKeyWrapperEnum.DEFAULT.value: self.default
         }
 
+    @property
+    def name(self):
+        return self.group.name
+
 
 class StudySubjectRelations(MongoCollection):
     def __init__(self, bot: Bot):

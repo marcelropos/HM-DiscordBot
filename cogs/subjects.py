@@ -1,4 +1,5 @@
 import re
+from operator import attrgetter
 from typing import Union
 
 from discord import Role, TextChannel, Member, User, Guild, Embed
@@ -117,9 +118,12 @@ class Subjects(Cog):
             embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
 
-        embed.add_field(name="Add/Remove subjects", value="```!subject <add|remove> <names|numbers>```", inline=False)
+        embed.add_field(name="Add/Remove subjects", value="```!subject <add|remove> <names|numbers>```\n"
+                                                          "Example:```"
+                                                          "!subject add 0,2,5,7"
+                                                          "```", inline=False)
 
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, delete_after=300)
 
     @subject.command(pass_context=True,
                      name="add",
@@ -277,7 +281,7 @@ class Subjects(Cog):
             compatible_study_groups += [document.role for document in all_study_groups if
                                         document.role.name == study_master + str(i)]
         return {str(number): document.subject for number, document in
-                enumerate(await StudySubjectRelations(self.bot).find({})) if
+                enumerate(sorted(await StudySubjectRelations(self.bot).find({}), key=attrgetter("name"))) if
                 document.group in compatible_study_groups}
 
     async def to_change(self, changeable, possible_subjects, subjects):
