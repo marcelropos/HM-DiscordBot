@@ -123,7 +123,7 @@ class Subjects(Cog):
                                                           "!subject add 0,2,5,7"
                                                           "```", inline=False)
 
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, delete_after=300)
 
     @subject.command(pass_context=True,
                      name="add",
