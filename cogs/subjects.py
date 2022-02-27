@@ -1,4 +1,5 @@
 import re
+from operator import attrgetter
 from typing import Union
 
 from discord import Role, TextChannel, Member, User, Guild, Embed
@@ -277,7 +278,7 @@ class Subjects(Cog):
             compatible_study_groups += [document.role for document in all_study_groups if
                                         document.role.name == study_master + str(i)]
         return {str(number): document.subject for number, document in
-                enumerate(await StudySubjectRelations(self.bot).find({})) if
+                enumerate(sorted(await StudySubjectRelations(self.bot).find({}), key=attrgetter("name"))) if
                 document.group in compatible_study_groups}
 
     async def to_change(self, changeable, possible_subjects, subjects):
