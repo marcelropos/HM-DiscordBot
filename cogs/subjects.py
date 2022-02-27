@@ -118,7 +118,10 @@ class Subjects(Cog):
             embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
                             inline=False)
 
-        embed.add_field(name="Add/Remove subjects", value="```!subject <add|remove> <names|numbers>```", inline=False)
+        embed.add_field(name="Add/Remove subjects", value="```!subject <add|remove> <names|numbers>```\n"
+                                                          "Example:```"
+                                                          "!subject add 0,2,5,7"
+                                                          "```", inline=False)
 
         await ctx.reply(embed=embed)
 
