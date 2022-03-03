@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound, PermissionOverwrite
-from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType
+from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType, \
+    max_concurrency
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents
 
@@ -10,7 +11,7 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError
+from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, NameDuplicationError
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -76,6 +77,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   help="Keeps the channel after leaving.")
+    @max_concurrency(1, BucketType.channel)
     async def keep(self, ctx: Context):
         """
         Makes a Study Channel stay for a longer time.
@@ -230,15 +232,18 @@ class Tmpc(Cog):
                   brief="Renames the Channel",
                   help="Renames the channel",
                   aliases=["rn", "mv"])
-    @cooldown(1, 60, BucketType.user)
+    @cooldown(1, 60, BucketType.channel)
     async def rename(self, ctx: Context, *, name: str):
         """
         Renames a study/gaming channel
         """
         document = await self.check_tmpc_channel(ctx, is_mod=True)
+        names = {channel.name.lower() for channel in ctx.guild.channels}
 
         if len(name) > 100:
             raise BadArgument("The given Name is to long.")
+        if name.lower() in names:
+            raise NameDuplicationError(name)
 
         await document.chat.edit(name=name)
         await document.voice.edit(name=name)
