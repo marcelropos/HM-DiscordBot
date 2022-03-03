@@ -83,7 +83,7 @@ class GamingTmpChannels(Cog):
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
             if voice_channel in gaming_channels:
-                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger, self.bot):
+                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
                     gaming_channels.remove(voice_channel)
 
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
@@ -147,7 +147,7 @@ class GamingTmpChannels(Cog):
     async def delete_old_channels(self):
         to_delete = set()
         for voice_channel in gaming_channels:
-            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger, self.bot):
+            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
                 to_delete.add(voice_channel)
         for old in to_delete:
             gaming_channels.remove(old)

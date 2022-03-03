@@ -242,7 +242,7 @@ class TmpChannelUtil:
 
     @staticmethod
     async def check_delete_channel(voice_channel: VoiceChannel, db: Union[GamingChannels, StudyChannels],
-                                   logger: logging.Logger, bot: Bot,
+                                   logger: logging.Logger,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
         if len({member for member in voice_channel.members if not member.bot}) == 0:
             document: list[Union[StudyChannel, GamingChannel]] = await db.find(

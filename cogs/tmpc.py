@@ -100,7 +100,7 @@ class Tmpc(Cog):
             topic=f"Owner: {document.owner.display_name}\n"
                   f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
                   f"{datetime.now().astimezone().tzinfo}")
-        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
 
     @tmpc.command(pass_context=True,
                   help="Deletes the channel after leaving.")
@@ -118,7 +118,7 @@ class Tmpc(Cog):
 
         await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
-        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger, self.bot)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
 
     @tmpc.command(pass_context=True,
                   brief="Hides the channel",
