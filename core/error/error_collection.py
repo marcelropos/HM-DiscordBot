@@ -90,6 +90,10 @@ class NotOwnerError(CommandError):
         self.owner = owner
 
 
+class LeaveOwnChannelError(CommandError):
+    pass
+
+
 ####################
 # PREDICATE ERRORS #
 ####################

@@ -12,7 +12,8 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, NameDuplicationError
+from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, NameDuplicationError, \
+    LeaveOwnChannelError
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -520,7 +521,7 @@ class Tmpc(Cog):
     async def leave(self, ctx: Context):
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, everyone=True)
         if ctx.author.id == document.owner.id:
-            return
+            raise LeaveOwnChannelError()
         overwrites: dict = document.voice.overwrites
         changed = False
         if moderator.item in ctx.author.roles:
