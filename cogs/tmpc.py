@@ -70,6 +70,7 @@ class Tmpc(Cog):
     @group(pass_context=True,
            name="tmpc",
            help="Manages the gaming/study tmp channels.")
+    @max_concurrency(1, BucketType.channel, wait=True)
     async def tmpc(self, ctx: Context):
         if not ctx.invoked_subcommand:
             raise BadArgument
@@ -78,7 +79,6 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   help="Keeps the channel after leaving.")
-    @max_concurrency(1, BucketType.channel)
     async def keep(self, ctx: Context):
         """
         Makes a Study Channel stay for a longer time.
