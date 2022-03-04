@@ -224,6 +224,13 @@ class TmpChannelUtil:
         embed.add_field(name="Join this channel:",
                         value=f"With `!tmpc join {document.token}` members can join this channel even when locked.",
                         inline=False)
+        embed.add_field(name="Invite member",
+                        value="With `!tmpc invite <rue|false> <@members>` you can add up uo ten members to the channel.",
+                        inline=True)
+        embed.add_field(name="Leave channel",
+                        value="With `!tmpc leave` you can leave the channel.\n"
+                              "The owner will not be able to invite you after that. ",
+                        inline=True)
         await document.chat.send(content=document.owner.mention, embed=embed)
 
     @staticmethod

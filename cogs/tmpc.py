@@ -82,7 +82,7 @@ class Tmpc(Cog):
         """
         Makes a Study Channel stay for a longer time.
         """
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         if type(document) == GamingChannel:
             raise BotMissingPermissions(["Channel needs to be Study Channel"])
 
@@ -108,7 +108,7 @@ class Tmpc(Cog):
         """
         Deletes the channel after leaving.
         """
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         if type(document) == GamingChannel:
             raise BotMissingPermissions(["Channel needs to be Study Channel"])
 
@@ -127,7 +127,7 @@ class Tmpc(Cog):
         """
         Hides a Study or Gaming Channel.
         """
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         guild: Guild = ctx.guild
 
         overwrites = document.voice.overwrites
@@ -150,7 +150,7 @@ class Tmpc(Cog):
         """
         Shows (Unhides) a Study or Gaming Channel.
         """
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         guild: Guild = ctx.guild
 
         overwrites = document.voice.overwrites
@@ -181,7 +181,7 @@ class Tmpc(Cog):
         """
         Locks a Study or Gaming Channel.
         """
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         guild: Guild = ctx.guild
 
         overwrites = document.voice.overwrites
@@ -204,7 +204,7 @@ class Tmpc(Cog):
         """
         Unlocks a Study or Gaming Channel.
         """
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         guild: Guild = ctx.guild
 
         overwrites = document.voice.overwrites
@@ -237,7 +237,7 @@ class Tmpc(Cog):
         """
         Renames a study/gaming channel
         """
-        document = await self.check_tmpc_channel(ctx, is_mod=True)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, is_mod=True)
         names = {channel.name.lower() for channel in ctx.guild.channels}
 
         if len(name) > 100:
@@ -308,11 +308,11 @@ class Tmpc(Cog):
             return
 
         if mode.lower() == "show":
-            document = await self.check_tmpc_channel(ctx, everyone=True)
+            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, everyone=True)
             embed: Embed = Embed(title="Token",
                                  description=f"`!tmpc join {document.token}`")
         elif mode.lower() == "gen":
-            document = await self.check_tmpc_channel(ctx)
+            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
             new_token = TmpChannelUtil.create_token()
             new_document = {
                 DBKeyWrapperEnum.OWNER.value: document.owner_id,
@@ -403,7 +403,7 @@ class Tmpc(Cog):
         Args:
            ctx: The command context provided by the discord.py wrapper.
         """
-        document = await self.check_tmpc_channel(ctx)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         try:
             await document.voice.delete(reason="Force deleted by owner")
         except (NotFound, AttributeError):
@@ -439,24 +439,70 @@ class Tmpc(Cog):
         """
         global moderator
 
-        document = await self.check_tmpc_channel(ctx, is_mod=True)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, is_mod=True)
         await document.voice.set_permissions(moderator.item, overwrite=None)
         await document.chat.set_permissions(moderator.item, overwrite=None)
         embed: Embed = Embed(title="No Mod",
                              description=f"Mods can't see or join this channel anymore")
         await ctx.reply(embed=embed)
 
-    async def check_tmpc_channel(self, ctx: Context, is_mod: bool = False, everyone: bool = False) \
+    @tmpc.command(pass_context=True,
+                  brief="A user to your temp channel",
+                  help="Default add user to the temp channel, for gaming channel the first argument must be 'False'!\n"
+                       "Member must be invited by mentions.\n"
+                       "Limitations:\n"
+                       "- This command can be used 3/hour/user\n"
+                       "- The invite command is limited to 10 user at once")
+    @cooldown(3, 3600, BucketType.user)
+    async def invite(self, ctx: Context, study_channel: bool):
+
+        if study_channel:
+            channel = await self.study_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
+        else:
+            channel = await self.gaming_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
+        channel: Union[GamingChannel, StudyChannel]
+        document = await self.check_tmpc_channel(ctx.author, channel.chat.id)
+
+        overwrites = document.voice.overwrites
+        msg: Message = ctx.message
+        if len(msg.mentions) > 10:
+            await ctx.reply("Warning hit limit")
+
+        changed = False
+        for mention in msg.mentions[:10]:
+            if mention not in overwrites:
+                changed = True
+                overwrites[mention] = PermissionOverwrite(connect=True,
+                                                          view_channel=True)
+        if changed:
+            await document.voice.edit(overwrites=overwrites)
+            await document.chat.edit(overwrites=overwrites)
+
+    @tmpc.command(pass_context=True,
+                  brief="Removes personal rights.",
+                  help="Limitations:"
+                       "- This command can be used 4/hour/user\n")
+    @cooldown(1, 3600, BucketType.channel)
+    async def leave(self, ctx: Context):
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, everyone=True)
+        if ctx.author.id == document.owner.id:
+            return
+        overwrites: dict = document.voice.overwrites
+        overwrites[ctx.author] = PermissionOverwrite(connect=False,
+                                                     view_channel=False)
+        await document.voice.edit(overwrites=overwrites)
+        await document.chat.edit(overwrites=overwrites)
+
+    async def check_tmpc_channel(self, member: Member, _id: int, is_mod: bool = False, everyone: bool = False) \
             -> Union[GamingChannel, StudyChannel]:
         key = DBKeyWrapperEnum.CHAT.value
-        document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: ctx.channel.id})
+        document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: _id})
         if not document:
-            document = await self.gaming_db.find_one({key: ctx.channel.id})
+            document = await self.gaming_db.find_one({key: _id})
 
         if not document:
             raise WrongChatForCommandTmpc
 
-        member: Member = ctx.author
         if everyone or member == document.owner or \
                 (is_mod and moderator.item in member.roles):
             return document
