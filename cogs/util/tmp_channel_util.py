@@ -304,7 +304,9 @@ class TmpChannelUtil:
                                    category: ConfigurationNameEnum, logger: logging.Logger, bot: Bot):
         async with Locker():
             if voice_channel is join_voice_channel:
-                if await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id}):
+                temp_channel = await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id})
+                if temp_channel:
+                    await member.move_to(temp_channel.voice, reason="Member has already a temp channel")
                     return
 
                 channels.add((await TmpChannelUtil.get_server_objects(category, guild,
