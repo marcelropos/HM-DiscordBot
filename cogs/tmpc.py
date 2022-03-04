@@ -480,8 +480,9 @@ class Tmpc(Cog):
         await ctx.reply(embed=embed)
 
     @tmpc.command(pass_context=True,
-                  brief="A user to your temp channel",
-                  help="Default add user to the temp channel, for gaming channel the first argument must be 'False'!\n"
+                  brief="Invite a user to your temp channel",
+                  help="By default add the user to the study channel "
+                       "for gaming channel the first argument must be 'False'!\n"
                        "Member must be invited by mentions.\n"
                        "Limitations:\n"
                        "- This command can be used 3/hour/user\n"
