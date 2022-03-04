@@ -1,8 +1,11 @@
+from datetime import datetime
 from logging import Logger
 from typing import Optional
 
 from discord import Embed, User, Guild, TextChannel, Permissions, HTTPException
 from discord.ext.commands import Context, Bot
+
+from core.logger import get_discord_child_logger
 
 
 async def error_reply(ctx: Context,
@@ -27,6 +30,23 @@ async def error_reply(ctx: Context,
         else:
             raise err
     logger.error(f'User="{user.name}#{user.discriminator}({user.id})", Command="{command}", Cause="{cause}"')
+
+
+async def send_error(chat: TextChannel,
+                     action: str,
+                     cause: str,
+                     solution: str,
+                     user: User,
+                     delete_after: Optional[int] = 60) -> None:
+    embed = Embed(title="Error during action processing occurred")
+    embed.add_field(name="Action", value=f"`{action}`", inline=False)
+    embed.add_field(name="Cause", value=cause, inline=False)
+    embed.add_field(name="Solution", value=solution, inline=False)
+    embed.set_footer(text=user.name, icon_url=user.avatar_url)
+    embed.timestamp = datetime.now()
+    await chat.send(embed=embed, delete_after=delete_after, content=user.mention)
+    get_discord_child_logger(action) \
+        .error(f'User="{user.name}#{user.discriminator}({user.id})", Action="{action}", Cause="{cause}"')
 
 
 async def startup_error_reply(

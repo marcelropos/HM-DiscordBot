@@ -79,10 +79,19 @@ class WrongChatForCommandTmpc(CommandError):
     pass
 
 
+class NameDuplicationError(CommandError):
+    def __init__(self, name: str):
+        self.name = name
+
+
 class NotOwnerError(CommandError):
     def __init__(self, is_mod: bool, owner: str):
         self.is_mod = is_mod
         self.owner = owner
+
+
+class LeaveOwnChannelError(CommandError):
+    pass
 
 
 ####################
@@ -129,3 +138,9 @@ class HasNoHandlerException(Exception):
 
 class MissingInteractionError(CommandError):
     pass
+
+
+class HitDiscordLimitsError(CommandError):
+    def __init__(self, cause: str, solution: str):
+        self.cause = cause
+        self.solution = solution

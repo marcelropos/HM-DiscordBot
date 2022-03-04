@@ -1,10 +1,7 @@
-from typing import Optional
-
 import discord
 from discord import CategoryChannel, Role, PermissionOverwrite, TextChannel, Guild, Embed
 from discord.ext.commands import Context
 
-from core.error.error_collection import BrokenConfigurationError
 from core.global_enum import CollectionEnum, ConfigurationNameEnum
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.subjects_or_groups import SubjectOrGroup, SubjectsOrGroups

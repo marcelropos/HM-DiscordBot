@@ -1,4 +1,5 @@
 import logging
+from asyncio import Lock
 from datetime import datetime, timedelta
 from typing import Union
 
@@ -7,16 +8,31 @@ from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, T
     NotFound
 from discord.ext.commands import Context, Bot
 
-from cogs.util.assign_variables import assign_category, assign_chat
+from cogs.util.assign_variables import assign_category, assign_chat, assign_accepted_chats
 from cogs.util.placeholder import Placeholder
-from core.error.error_collection import BrokenConfigurationError
+from core.discord_limits import CATEGORY_CHANNEL_LIMIT, GLOBAL_CHANNEL_LIMIT
+from core.error.error_collection import BrokenConfigurationError, HitDiscordLimitsError
+from core.error.error_reply import send_error
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.study_channels import StudyChannels, StudyChannel
 
 
+class Locker:
+    lock = Lock()
+
+    @classmethod
+    async def __aenter__(cls):
+        await cls.lock.acquire()
+
+    @classmethod
+    async def __aexit__(cls, exc_type, exc_val, exc_tb):
+        cls.lock.release()
+
+
 class TmpChannelUtil:
+
     @staticmethod
     async def get_server_objects(category_key: ConfigurationNameEnum,
                                  guild: Guild,
@@ -43,9 +59,16 @@ class TmpChannelUtil:
         Raises:
             Forbidden,ServerSelectionTimeoutError
         """
+        if len(guild.channels) + 2 > GLOBAL_CHANNEL_LIMIT:
+            raise HitDiscordLimitsError("Hit server channel limit", "you can do nothing about this")
+
         channel_category: CategoryChannel = guild.get_channel(
             (await PrimitiveMongoData(CollectionEnum.CATEGORIES).find_one({category_key.value: {"$exists": True}}))[
                 category_key.value])
+
+        if len(channel_category.channels) + 2 > CATEGORY_CHANNEL_LIMIT:
+            raise HitDiscordLimitsError("To many temporary channels",
+                                        "Try to create a channel later or report it to a moderator")
 
         if name_format.format(0) != name_format:
             i = 1
@@ -201,6 +224,14 @@ class TmpChannelUtil:
         embed.add_field(name="Join this channel:",
                         value=f"With `!tmpc join {document.token}` members can join this channel even when locked.",
                         inline=False)
+        embed.add_field(name="Invite member",
+                        value="With `!tmpc invite <true|false> <@members>` "
+                              "you can add up to ten members to the channel.",
+                        inline=True)
+        embed.add_field(name="Leave channel",
+                        value="With `!tmpc leave` you can leave the channel.\n"
+                              "The owner will not be able to invite you after that. ",
+                        inline=True)
         await document.chat.send(content=document.owner.mention, embed=embed)
 
     @staticmethod
@@ -229,7 +260,7 @@ class TmpChannelUtil:
 
     @staticmethod
     async def check_delete_channel(voice_channel: VoiceChannel, db: Union[GamingChannels, StudyChannels],
-                                   logger: logging.Logger, bot: Bot,
+                                   logger: logging.Logger,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
         if len({member for member in voice_channel.members if not member.bot}) == 0:
             document: list[Union[StudyChannel, GamingChannel]] = await db.find(
@@ -289,25 +320,36 @@ class TmpChannelUtil:
                                    voice_channel: VoiceChannel, join_voice_channel: VoiceChannel, guild: Guild,
                                    default_channel_name: str, member: Union[Member, User],
                                    category: ConfigurationNameEnum, logger: logging.Logger, bot: Bot):
-        if voice_channel is join_voice_channel:
-            if await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id}):
-                return
+        async with Locker():
+            try:
+                if voice_channel is join_voice_channel:
+                    temp_channel = await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id})
+                    if temp_channel:
+                        await member.move_to(temp_channel.voice, reason="Member has already a temp channel")
+                        return
 
-            channels.add((await TmpChannelUtil.get_server_objects(category, guild,
-                                                                  default_channel_name, member, db)).voice)
-            logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
+                    channels.add((await TmpChannelUtil.get_server_objects(category, guild,
+                                                                          default_channel_name, member, db)).voice)
+                    logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
-        if voice_channel in channels:
-            document: list[Union[GamingChannel, StudyChannel]] = await db.find(
-                {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+                if voice_channel in channels:
+                    document: list[Union[GamingChannel, StudyChannel]] = await db.find(
+                        {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
-            if not document:
-                await TmpChannelUtil.database_illegal_state(bot, voice_channel, logger)
-                return
+                    if not document:
+                        await TmpChannelUtil.database_illegal_state(bot, voice_channel, logger)
+                        return
 
-            document: Union[GamingChannel, StudyChannel] = document[0]
-            await document.chat.set_permissions(member, view_channel=True)
-            await document.voice.set_permissions(member, view_channel=True, connect=True)
+                    document: Union[GamingChannel, StudyChannel] = document[0]
+                    await document.chat.set_permissions(member, view_channel=True)
+                    await document.voice.set_permissions(member, view_channel=True, connect=True)
+            except HitDiscordLimitsError as e:
+                bot_chats = set()
+                await assign_accepted_chats(bot, bot_chats)
+                for chat in bot_chats:
+                    chat: TextChannel
+                    if member in chat.members:
+                        await send_error(chat, "CreateTempChannel", e.cause, e.solution, member)
 
     @staticmethod
     async def ainit_helper(bot: Bot, db: Union[GamingChannels, StudyChannels],
