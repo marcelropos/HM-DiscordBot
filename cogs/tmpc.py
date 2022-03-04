@@ -373,6 +373,7 @@ class Tmpc(Cog):
                   brief="Kicks user from tmpc",
                   help="You can remove a user from the list of users that can still join/see the channels after"
                        " you used tmpc hide of tmpc lock.")
+    @cooldown(1, 60, BucketType.channel)
     async def kick(self, ctx: Context, member: User):
         """
         Kicks a user from the tmpc channel
