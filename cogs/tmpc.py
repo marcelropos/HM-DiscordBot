@@ -387,7 +387,8 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, is_mod=True)
 
         msg: Message = ctx.message
-        overwrites: dict = document.voice.overwrites
+        voice_overwrites: dict = document.voice.overwrites
+        chat_overwrites: dict = document.chat.overwrites
         changed = False
         kicked = ""
         for mention in msg.mentions:
@@ -395,15 +396,16 @@ class Tmpc(Cog):
             if mention in document.chat.members:
                 # noinspection PyBroadException
                 try:
-                    overwrites.pop(mention)
+                    voice_overwrites.pop(mention)
+                    chat_overwrites.pop(mention)
                     changed = True
                     kicked += mention.mention + "\n"
                 except KeyError:
                     pass
 
         if changed:
-            await document.voice.edit(overwrite=overwrites)
-            await document.chat.edit(overwrite=overwrites)
+            await document.voice.edit(overwrite=voice_overwrites)
+            await document.chat.edit(overwrite=chat_overwrites)
             for mention in msg.mentions:
                 mention: Member
                 if mention in document.voice.members:
@@ -417,9 +419,12 @@ class Tmpc(Cog):
                     break
             else:
                 category: GuildChannel = document.voice.category
-                overwrites[moderator.item] = category.overwrites[moderator.item]
-                await document.voice.edit(overwrite=overwrites)
-                await document.chat.edit(overwrite=overwrites)
+                voice_overwrites = document.voice.overwrites
+                voice_overwrites[moderator.item] = category.overwrites[moderator.item]
+                chat_overwrites = document.chat.overwrites
+                chat_overwrites[moderator.item] = category.overwrites[moderator.item]
+                await document.voice.edit(overwrite=voice_overwrites)
+                await document.chat.edit(overwrite=chat_overwrites)
                 embed.add_field(name="Moderator permissions",
                                 value="Since this chat cannot be moderated without a moderator, "
                                       "the moderator rights will be restored.")
