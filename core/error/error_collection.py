@@ -134,3 +134,9 @@ class HasNoHandlerException(Exception):
 
 class MissingInteractionError(CommandError):
     pass
+
+
+class HitDiscordLimitsError(CommandError):
+    def __init__(self, cause: str, solution: str):
+        self.cause = cause
+        self.solution = solution
