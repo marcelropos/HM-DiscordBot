@@ -521,10 +521,20 @@ class Tmpc(Cog):
         if ctx.author.id == document.owner.id:
             return
         overwrites: dict = document.voice.overwrites
-        overwrites[ctx.author] = PermissionOverwrite(connect=False,
-                                                     view_channel=False)
-        await document.voice.edit(overwrites=overwrites)
-        await document.chat.edit(overwrites=overwrites)
+        changed = False
+        if moderator.item in ctx.author.roles:
+            try:
+                overwrites.pop(ctx.author)
+                changed = True
+            except KeyError:
+                pass
+        else:
+            changed = True
+            overwrites[ctx.author] = PermissionOverwrite(connect=False,
+                                                         view_channel=False)
+        if changed:
+            await document.voice.edit(overwrites=overwrites)
+            await document.chat.edit(overwrites=overwrites)
 
     async def check_tmpc_channel(self, member: Member, _id: int, is_mod: bool = False, everyone: bool = False) \
             -> Union[GamingChannel, StudyChannel]:
