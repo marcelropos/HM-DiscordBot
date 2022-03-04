@@ -503,20 +503,22 @@ class Tmpc(Cog):
         channel: Union[GamingChannel, StudyChannel]
         document = await self.check_tmpc_channel(ctx.author, channel.chat.id)
 
-        overwrites = document.voice.overwrites
+        voice_overwrites = document.voice.overwrites
+        chat_overwrites = document.chat.overwrites
         msg: Message = ctx.message
         if len(msg.mentions) > 10:
             await ctx.reply("Warning hit limit")
 
         changed = False
         for mention in msg.mentions[:10]:
-            if mention not in overwrites:
+            if mention not in chat_overwrites:
                 changed = True
-                overwrites[mention] = PermissionOverwrite(connect=True,
-                                                          view_channel=True)
+                voice_overwrites[mention] = PermissionOverwrite(connect=True,
+                                                                view_channel=True)
+                chat_overwrites[mention] = PermissionOverwrite(view_channel=True)
         if changed:
-            await document.voice.edit(overwrites=overwrites)
-            await document.chat.edit(overwrites=overwrites)
+            await document.voice.edit(overwrites=voice_overwrites)
+            await document.chat.edit(overwrites=chat_overwrites)
 
     @tmpc.command(pass_context=True,
                   brief="Removes personal rights.",
@@ -527,21 +529,28 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, everyone=True)
         if ctx.author.id == document.owner.id:
             raise LeaveOwnChannelError()
-        overwrites: dict = document.voice.overwrites
+
+        voice_overwrites: dict = document.voice.overwrites
+        chat_overwrites: dict = document.chat.overwrites
         changed = False
         if moderator.item in ctx.author.roles:
             try:
-                overwrites.pop(ctx.author)
+                voice_overwrites.pop(ctx.author)
+                chat_overwrites.pop(ctx.author)
                 changed = True
             except KeyError:
                 pass
         else:
             changed = True
-            overwrites[ctx.author] = PermissionOverwrite(connect=False,
-                                                         view_channel=False)
+            try:
+                voice_overwrites.pop(ctx.author)
+            except KeyError:
+                pass
+            chat_overwrites[ctx.author] = PermissionOverwrite(view_channel=False)
+
         if changed:
-            await document.voice.edit(overwrites=overwrites)
-            await document.chat.edit(overwrites=overwrites)
+            await document.voice.edit(overwrites=voice_overwrites)
+            await document.chat.edit(overwrites=chat_overwrites)
 
     async def check_tmpc_channel(self, member: Member, _id: int, is_mod: bool = False, everyone: bool = False) \
             -> Union[GamingChannel, StudyChannel]:
