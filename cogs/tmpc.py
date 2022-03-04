@@ -14,6 +14,7 @@ from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, NameDuplicationError, \
     LeaveOwnChannelError
+from core.error.error_reply import send_error
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
@@ -516,6 +517,16 @@ class Tmpc(Cog):
                 voice_overwrites[mention] = PermissionOverwrite(connect=True,
                                                                 view_channel=True)
                 chat_overwrites[mention] = PermissionOverwrite(view_channel=True)
+            else:
+                if document.chat.overwrites_for(mention).view_channel:
+                    await send_error(ctx.message.channel, "Invitation",
+                                     f"{mention.mention} can already see your channels",
+                                     f"Noting", ctx.author)
+                else:  # could only be false or none
+                    await send_error(ctx.message.channel, "Invitation",
+                                     f"{mention.mention} used the left command on this channel",
+                                     f"If {mention.mention} wants to join again {mention.mention} must use one of "
+                                     f"the other common join methods", ctx.author, None)
         if changed:
             await document.voice.edit(overwrites=voice_overwrites)
             await document.chat.edit(overwrites=chat_overwrites)
