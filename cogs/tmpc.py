@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound, PermissionOverwrite
+from discord.abc import GuildChannel
 from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType, \
     max_concurrency
 from discord.ext.tasks import loop
@@ -381,16 +382,47 @@ class Tmpc(Cog):
 
            member: The member to kick
         """
-        guild: Guild = ctx.guild
-        member: Union[User, Member] = guild.get_member(member.id)
-        document = await self.check_tmpc_channel(ctx, is_mod=True)
-        await document.voice.set_permissions(member, overwrite=None)
-        await document.chat.set_permissions(member, overwrite=None)
-        if member in document.voice.members:
-            await member.move_to(None)
-        embed: Embed = Embed(title="Kick",
-                             description=f"{member.mention} was kicked.")
-        await ctx.reply(embed=embed)
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, is_mod=True)
+
+        msg: Message = ctx.message
+        overwrites: dict = document.voice.overwrites
+        changed = False
+        kicked = ""
+        for mention in msg.mentions:
+            mention: Member
+            if mention in document.chat.members:
+                # noinspection PyBroadException
+                try:
+                    overwrites.pop(mention)
+                    changed = True
+                    kicked += mention.mention + "\n"
+                except KeyError:
+                    pass
+
+        if changed:
+            await document.voice.edit(overwrite=overwrites)
+            await document.chat.edit(overwrite=overwrites)
+            for mention in msg.mentions:
+                mention: Member
+                if mention in document.voice.members:
+                    await member.move_to(None)
+
+            embed: Embed = Embed(title="Kick")
+            embed.add_field(name="Kicked", value=kicked)
+            for member in document.chat.members:
+                member: Member
+                if moderator.item in member.roles:
+                    break
+            else:
+                category: GuildChannel = document.voice.category
+                overwrites[moderator.item] = category.overwrites[moderator.item]
+                await document.voice.edit(overwrite=overwrites)
+                await document.chat.edit(overwrite=overwrites)
+                embed.add_field(name="Moderator permissions",
+                                value="Since this chat cannot be moderated without a moderator, "
+                                      "the moderator rights will be restored.")
+
+            await ctx.reply(embed=embed)
 
     @tmpc.command(pass_context=True,
                   aliases=["remove", "rem", "rm"],
