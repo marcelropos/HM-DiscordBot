@@ -3,7 +3,7 @@ from typing import Union
 
 from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound, PermissionOverwrite
 from discord.abc import GuildChannel
-from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType, \
+from discord.ext.commands import Bot, group, Cog, Context, BadArgument, cooldown, BucketType, \
     max_concurrency
 from discord.ext.tasks import loop
 from discord_components import DiscordComponents, Interaction, SelectOption, Select
@@ -18,8 +18,8 @@ from core.error.error_reply import send_error
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
-from mongo.temp_channels import TempChannels, TempChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
+from mongo.temp_channels import TempChannels, TempChannel
 
 bot_channels: set[TextChannel] = set()
 moderator = Placeholder()
