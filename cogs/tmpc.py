@@ -570,13 +570,14 @@ class Tmpc(Cog):
                         components=[options])
 
         res: Interaction = await self.bot.wait_for("select_option",
-                                                   check=lambda x: self.check(x, options, ctx.author),
+                                                   check=lambda x: self.check(x, [channel.chat.name for channel in
+                                                                                  channels], ctx.author),
                                                    timeout=120)
         await res.respond(content=f"I received your input.")
         return pool[res.values[0]]
 
     @staticmethod
-    def check(x, options: Select, author: Member) -> bool:
+    def check(x, options: list[str], author: Member) -> bool:
         return x.values[0] in options and x.user.id == author.id
 
 
