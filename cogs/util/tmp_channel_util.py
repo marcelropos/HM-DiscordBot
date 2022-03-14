@@ -372,7 +372,7 @@ class TmpChannelUtil:
         deleted_channels: list[TempChannel] = [document for document in await db.find({}) if
                                                not document.voice or not document.chat]
         for deleted in deleted_channels:
-            await db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
+            await db.delete_one({DBKeyWrapperEnum.ID.value: deleted.id})
 
         return {document.voice for document in await db.find({})}, default_channel_name
 
