@@ -22,6 +22,10 @@ class TempChannel(MongoDocument):
     messages: list[Message]
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def owner_id(self) -> int:
         return self.owner.id
 
