@@ -275,7 +275,7 @@ class TmpChannelUtil:
             if document.voice is None and document.chat is None:
                 return True
 
-            if type(document) == TempChannel or not document.deleteAt or (
+            if not document.deleteAt or (
                     not reset_delete_at[0] and datetime.now() > document.deleteAt):
                 try:
                     await document.voice.delete(reason="No longer used")
