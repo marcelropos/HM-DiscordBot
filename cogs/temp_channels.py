@@ -17,7 +17,6 @@ from mongo.temp_channels import TempChannels, JoinTempChannels, JoinTempChannel
 
 bot_channels: set[TextChannel] = set()
 event = namedtuple("DeleteTime", ["hour", "min"])
-default_study_channel_name = "Study-{0:02d}"
 temp_channels: set[VoiceChannel] = set()
 first_init = True
 
@@ -44,16 +43,13 @@ class StudyTmpChannels(Cog):
         """
         Loads the configuration for the module.
         """
-        global temp_channels, default_study_channel_name, bot_channels
+        global temp_channels, bot_channels
         # noinspection PyTypeChecker
         async with AinitManager(bot=self.bot, loop=self.ainit, need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:
             if need_init:
                 temp_channels, default_study_channel_name \
-                    = await TmpChannelUtil.ainit_helper(self.db,
-                                                        self.config_db,
-                                                        ConfigurationNameEnum.DEFAULT_STUDY_NAME,
-                                                        default_study_channel_name)
+                    = await TmpChannelUtil.ainit_helper(self.db)
 
                 key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
                 default_keep_time = await self.config_db.find_one({key: {"$exists": True}})
@@ -97,7 +93,7 @@ class StudyTmpChannels(Cog):
         if member.bot:
             return
 
-        global temp_channels, default_study_channel_name
+        global temp_channels
         guild: Guild = self.bot.guilds[0]
 
         event_type: EventType = EventType.status(before, after)
@@ -111,7 +107,7 @@ class StudyTmpChannels(Cog):
 
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
             await TmpChannelUtil.joined_voice_channel(self.db, temp_channels, after.channel, guild,
-                                                      default_study_channel_name, member,
+                                                      member,
                                                       logger, self.bot, self.join_db)
 
     @group(pass_context=True,
@@ -130,7 +126,7 @@ class StudyTmpChannels(Cog):
                           brief="Sets a join channel.",
                           help="Joining the chosen channel will create a tmp channel.\n"
                                "The channel must be given as an int value.")
-    async def study_channel_join_add(self, ctx: Context, channel: VoiceChannel, persistent: bool):
+    async def study_channel_join_add(self, ctx: Context, channel: VoiceChannel, pattern: str, persistent: bool):
         """
         Saves enter point of tmp study channels:
 
@@ -139,9 +135,11 @@ class StudyTmpChannels(Cog):
 
             channel: The voice_channel id.
 
+            pattern: The pattern of the default name: Example: Study-{0:02d}.
+
             persistent: The possibility that the created channel may persist.
         """
-        await self.join_db.insert_one((channel, persistent))
+        await self.join_db.insert_one((channel, pattern, persistent))
         indicator = "" if persistent else "none"
         await ctx.reply(f"You can now create {indicator} persistent channels with {channel.category}:{channel.name}.")
 
@@ -179,8 +177,6 @@ class StudyTmpChannels(Cog):
             ctx: The command context provided by the discord.py wrapper.
 
             channel: The voice_channel id.
-
-            persistent: The possibility that the created channel may persist.
         """
         channel: Optional[JoinTempChannel] = await self.join_db.find_one({DBKeyWrapperEnum.VOICE.value: channel.id})
         if channel:

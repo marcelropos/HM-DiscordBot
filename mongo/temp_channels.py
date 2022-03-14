@@ -115,11 +115,13 @@ class TempChannels(MongoCollection):
 @dataclass
 class JoinTempChannel(MongoDocument):
     voice: VoiceChannel
+    default_channel_name: str
     persistent: bool
 
     def document(self) -> dict[str: typing.Any]:
         return {
             DBKeyWrapperEnum.VOICE.value: self.voice.id,
+            DBKeyWrapperEnum.DEFAULT_CHANNEL_NAME.value: self.default_channel_name,
             DBKeyWrapperEnum.PERSIST.value: self.persistent
         }
 
@@ -134,14 +136,16 @@ class JoinTempChannels(MongoCollection):
             guild: Guild = self.bot.guilds[0]
             return JoinTempChannel(
                 guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
+                result[DBKeyWrapperEnum.DEFAULT_CHANNEL_NAME.value],
                 result[DBKeyWrapperEnum.PERSIST.value]
             )
 
-    async def insert_one(self, entry: tuple[VoiceChannel, bool]) -> JoinTempChannel:
-        voice, persist, = entry
+    async def insert_one(self, entry: tuple[VoiceChannel, str, bool]) -> JoinTempChannel:
+        voice, name, persist, = entry
 
         document = {
             DBKeyWrapperEnum.VOICE.value: voice.id,
+            DBKeyWrapperEnum.DEFAULT_CHANNEL_NAME.value: name,
             DBKeyWrapperEnum.PERSIST.value: persist,
         }
 
