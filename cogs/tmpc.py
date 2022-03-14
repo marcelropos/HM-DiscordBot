@@ -6,14 +6,14 @@ from discord.abc import GuildChannel
 from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType, \
     max_concurrency
 from discord.ext.tasks import loop
-from discord_components import DiscordComponents
+from discord_components import DiscordComponents, Interaction, SelectOption, Select
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, NameDuplicationError, \
-    LeaveOwnChannelError
+from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, \
+    NameDuplicationError, LeaveOwnChannelError, TempChannelMayNotPersistError, YouOwnNoChannelsError
 from core.error.error_reply import send_error
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
@@ -84,8 +84,9 @@ class Tmpc(Cog):
         Makes a Study Channel stay for a longer time.
         """
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
-        if type(document) == TempChannel:
-            raise BotMissingPermissions(["Channel needs to be Study Channel"])
+
+        if not document.persist:
+            raise TempChannelMayNotPersistError()
 
         key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
         time_difference: tuple[int, int] = (await self.config_db.find_one({key: {"$exists": True}}))[key]
@@ -110,8 +111,9 @@ class Tmpc(Cog):
         Deletes the channel after leaving.
         """
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
-        if type(document) == TempChannel:
-            raise BotMissingPermissions(["Channel needs to be Study Channel"])
+
+        if not document.persist:
+            raise TempChannelMayNotPersistError()
 
         document.deleteAt = None
         embed = Embed(title="Turned off keep",
@@ -274,12 +276,8 @@ class Tmpc(Cog):
                         Attention the place Command only works for Study Channels.
         """
         if mode.lower() == "place":
-            document: TempChannel = await self.channel_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
-            if not document:
-                embed: Embed = Embed(title="Could not find Channel",
-                                     description="I could not find any Study that you are the owner of")
-                await ctx.reply(embed=embed)
-                return
+            document: TempChannel = await self.get_temp_channel(ctx)
+
             embed: Embed = Embed(title="Study Channel Invite",
                                  description="")
             embed.add_field(name="Creator",
@@ -295,17 +293,10 @@ class Tmpc(Cog):
             message: Message = await ctx.send(embed=embed)
             await ctx.message.delete()
             await message.add_reaction(emoji="🔓")
-            new_document = {
-                DBKeyWrapperEnum.OWNER.value: document.owner_id,
-                DBKeyWrapperEnum.CHAT.value: document.channel_id,
-                DBKeyWrapperEnum.VOICE.value: document.voice_id,
-                DBKeyWrapperEnum.TOKEN.value: document.token,
-                DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt,
-                DBKeyWrapperEnum.MESSAGES.value: document.messages + [message]
-            }
-            new_document[DBKeyWrapperEnum.MESSAGES.value] = [(message.channel.id, message.id) for message in
-                                                             new_document[DBKeyWrapperEnum.MESSAGES.value]]
-            await self.channel_db.update_one(document.document, new_document)
+            replace = {DBKeyWrapperEnum.MESSAGES.value: document.messages + [message]}
+            replace[DBKeyWrapperEnum.MESSAGES.value] = [(message.channel.id, message.id) for message in
+                                                        replace[DBKeyWrapperEnum.MESSAGES.value]]
+            await self.channel_db.update_one(document.document, replace)
             return
 
         if mode.lower() == "show":
@@ -315,21 +306,15 @@ class Tmpc(Cog):
         elif mode.lower() == "gen":
             document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
             new_token = TmpChannelUtil.create_token()
-            new_document = {
-                DBKeyWrapperEnum.OWNER.value: document.owner_id,
-                DBKeyWrapperEnum.CHAT.value: document.channel_id,
-                DBKeyWrapperEnum.VOICE.value: document.voice_id,
-                DBKeyWrapperEnum.TOKEN.value: new_token,
-            }
+            new_document = {DBKeyWrapperEnum.TOKEN.value: new_token}
 
-            new_document.update({DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt,
-                                 DBKeyWrapperEnum.MESSAGES.value: list()})
+            new_document.update({DBKeyWrapperEnum.MESSAGES.value: list()})
             for message in document.messages:
                 try:
                     await message.delete()
                 except NotFound:
                     pass
-            await self.channel_db.update_one({DBKeyWrapperEnum.ID.value: document._id}, new_document)
+            await self.channel_db.update_one({DBKeyWrapperEnum.ID.value: document.id}, new_document)
 
             embed: Embed = Embed(title="Token",
                                  description=f"`!tmpc join {new_token}`")
@@ -353,8 +338,6 @@ class Tmpc(Cog):
         """
         key = DBKeyWrapperEnum.TOKEN.value
         document = await self.channel_db.find_one({key: token})
-        if not document:
-            document = await self.channel_db.find_one({key: token})
 
         if not document:
             raise CouldNotFindToken
@@ -456,7 +439,7 @@ class Tmpc(Cog):
                 await message.delete()
             except (NotFound, AttributeError):
                 pass
-        await self.channel_db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
+        await self.channel_db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
 
         logger.info(f"Deleted Tmp Channel {document.voice.name} on user command")
 
@@ -491,14 +474,9 @@ class Tmpc(Cog):
                        "- This command can be used 3/hour/user\n"
                        "- The invite command is limited to 10 user at once")
     @cooldown(3, 3600, BucketType.user)
-    async def invite(self, ctx: Context, study_channel: bool):
+    async def invite(self, ctx: Context):
 
-        if study_channel:
-            channel = await self.channel_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
-        else:
-            channel = await self.channel_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
-        channel: TempChannel
-        document = await self.check_tmpc_channel(ctx.author, channel.chat.id)
+        document = await self.get_temp_channel(ctx)
 
         voice_overwrites = document.voice.overwrites
         chat_overwrites = document.chat.overwrites
@@ -573,6 +551,33 @@ class Tmpc(Cog):
                 (is_mod and moderator.item in member.roles):
             return document
         raise NotOwnerError(is_mod=is_mod, owner=document.owner.mention)
+
+    async def get_temp_channel(self, ctx: Context) -> TempChannel:
+
+        channels: list[TempChannel] = await self.channel_db.find({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
+        if not channels:
+            raise YouOwnNoChannelsError()
+        elif len(channels) == 1:
+            return channels.pop()
+
+        pool = {channel.chat.name: channel for channel in channels}
+
+        options = Select(
+            placeholder="Select your group",
+            options=[SelectOption(label=channel.chat.name, value=channel.chat.name) for channel in channels])
+
+        await ctx.reply(content="Please select **one** of the following groups.",
+                        components=[options])
+
+        res: Interaction = await self.bot.wait_for("select_option",
+                                                   check=lambda x: self.check(x, options, ctx.author),
+                                                   timeout=120)
+        await res.respond(content=f"I received your input.")
+        return pool[res.values[0]]
+
+    @staticmethod
+    def check(x, options: Select, author: Member) -> bool:
+        return x.values[0] in options and x.user.id == author.id
 
 
 def setup(bot: Bot):

@@ -15,8 +15,8 @@ class CollectionEnum(Enum):
     LOGGER = "logger"
     COOLDOWN = "cooldown"
     GROUP_SUBJECT_RELATION = "groupSubjectRelation"
-    STUDY_CHANNELS = "studyChannels"
-    GAMING_CHANNELS = "gamingChannels"
+    TEMP_CHANNELS = "tempChannels"
+    JOIN_TEMP_CHANNELS = "joinTempChannels"
     TEMP_CHANNELS_CONFIGURATION = "channelConfiguration"
 
 

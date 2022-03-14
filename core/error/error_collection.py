@@ -94,6 +94,14 @@ class LeaveOwnChannelError(CommandError):
     pass
 
 
+class TempChannelMayNotPersistError(CommandError):
+    pass
+
+
+class YouOwnNoChannelsError(CommandError):
+    pass
+
+
 ####################
 # PREDICATE ERRORS #
 ####################

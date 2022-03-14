@@ -1,21 +1,20 @@
 import logging
 from asyncio import Lock
 from datetime import datetime, timedelta
-from typing import Union
+from typing import Union, Optional
 
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
     NotFound
 from discord.ext.commands import Context, Bot
 
-from cogs.util.assign_variables import assign_category, assign_chat, assign_accepted_chats
-from cogs.util.placeholder import Placeholder
+from cogs.util.assign_variables import assign_chat, assign_accepted_chats
 from core.discord_limits import CATEGORY_CHANNEL_LIMIT, GLOBAL_CHANNEL_LIMIT
 from core.error.error_collection import BrokenConfigurationError, HitDiscordLimitsError
 from core.error.error_reply import send_error
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
-from mongo.temp_channels import TempChannels, TempChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
+from mongo.temp_channels import TempChannels, TempChannel, JoinTempChannels, JoinTempChannel
 
 
 class Locker:
@@ -36,13 +35,12 @@ class TmpChannelUtil:
     async def get_server_objects(guild: Guild,
                                  name_format: str,
                                  member: Union[Member, User],
-                                 db: TempChannels) -> TempChannel:
+                                 db: TempChannels,
+                                 join_channel: JoinTempChannel) -> TempChannel:
         """
         Creates a new tmp_channel voice and text channel, saves it and places it correctly.
 
         Args:
-            category_key: The category under which the chat should appear.
-
             guild: The server on which the bot is.
 
             name_format: The format string for the name of the channels
@@ -50,6 +48,8 @@ class TmpChannelUtil:
             member: The User creating this channel
 
             db: The database connection to be used.
+
+            join_channel: The Join Channel which triggered the action
 
         Returns:
             A TempChannel or StudyChannel which contains the created pair.
@@ -137,9 +137,8 @@ class TmpChannelUtil:
                                                                        nsfw=False,
                                                                        reason="")
 
-        # TODO: check for persistence
         entry: TempChannel = await db.insert_one(
-            (member, text_channel, voice_channel, TmpChannelUtil.create_token(), True, None)
+            (member, text_channel, voice_channel, TmpChannelUtil.create_token(), join_channel.persistent, None)
         )
 
         # noinspection PyBroadException
@@ -236,24 +235,6 @@ class TmpChannelUtil:
         await document.chat.send(content=document.owner.mention, embed=embed)
 
     @staticmethod
-    async def update_category_and_voice_channel(value: int,
-                                                ctx: Context,
-                                                db: PrimitiveMongoData,
-                                                key: ConfigurationNameEnum,
-                                                msg: str):
-        """
-        Updates a db entry.
-        """
-        find = {key.value: {"$exists": True}}
-        if await db.find_one(find):
-            await db.update_one(find, {key.value: value})
-        else:
-            await db.insert_one({key.value: value})
-        embed = Embed(title="Tmp channels",
-                      description=f"Set {msg} successfully!")
-        await ctx.reply(embed=embed)
-
-    @staticmethod
     def create_token() -> int:
         secret = pyotp.random_base32()
         totp = pyotp.TOTP(secret)
@@ -317,12 +298,14 @@ class TmpChannelUtil:
 
     @staticmethod
     async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
-                                   voice_channel: VoiceChannel, join_voice_channel: VoiceChannel, guild: Guild,
+                                   voice_channel: VoiceChannel, guild: Guild,
                                    default_channel_name: str, member: Union[Member, User],
-                                   logger: logging.Logger, bot: Bot):
+                                   logger: logging.Logger, bot: Bot, join_db: JoinTempChannels):
         async with Locker():
             try:
-                if voice_channel is join_voice_channel:  # TODO: make this to a set
+                join_channel: Optional[JoinTempChannel] = await join_db.find_one(
+                    {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+                if join_channel:
                     temp_channel: list[TempChannel] = await db.find({DBKeyWrapperEnum.OWNER.value: member.id})
                     my_channel: set[TempChannel] = {channel for channel in temp_channel
                                                     if channel.voice.category.id == member.voice.channel.category.id}
@@ -332,7 +315,8 @@ class TmpChannelUtil:
                         return
 
                     channels.add((await TmpChannelUtil.get_server_objects(guild,
-                                                                          default_channel_name, member, db)).voice)
+                                                                          default_channel_name, member, db,
+                                                                          join_channel)).voice)
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
                 if voice_channel in channels:
@@ -355,13 +339,10 @@ class TmpChannelUtil:
                         await send_error(chat, "CreateTempChannel", e.cause, e.solution, member)
 
     @staticmethod
-    async def ainit_helper(bot: Bot, db: TempChannels,
-                           config_db: PrimitiveMongoData, join_voice_channel: Placeholder,
-                           join_channel: ConfigurationNameEnum,
+    async def ainit_helper(db: TempChannels,
+                           config_db: PrimitiveMongoData,
                            default_name_key: ConfigurationNameEnum,
                            default_channel_name: str) -> tuple[set[VoiceChannel], str]:
-
-        join_voice_channel.item = await assign_chat(bot, join_channel)
 
         default_channel_name_tmp = await config_db.find_one({default_name_key.value: {"$exists": True}})
         if default_channel_name_tmp:
