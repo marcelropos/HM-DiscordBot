@@ -121,6 +121,7 @@ class TmpChannelUtil:
             except KeyError:
                 pass
 
+        # noinspection PyBroadException
         try:
             key = ConfigurationNameEnum.TMP_STUDENTY.value
             tmp_verified = guild.get_role(
@@ -142,6 +143,7 @@ class TmpChannelUtil:
             (member, text_channel, voice_channel, TmpChannelUtil.create_token(), True, None)
         )
 
+        # noinspection PyBroadException
         try:
             await member.move_to(voice_channel, reason="Create Tmp Channel")
         except Exception:
@@ -150,6 +152,7 @@ class TmpChannelUtil:
         await TmpChannelUtil.make_welcome_embed(entry)
         return entry
 
+    # noinspection PyArgumentEqualDefault
     @staticmethod
     async def make_welcome_embed(document: TempChannel):
         embed = Embed(title="Your tmpc channel",
