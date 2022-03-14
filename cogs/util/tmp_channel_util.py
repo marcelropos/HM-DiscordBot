@@ -6,7 +6,7 @@ from typing import Union, Optional
 import pyotp
 from discord import Guild, CategoryChannel, PermissionOverwrite, Member, User, TextChannel, VoiceChannel, Embed, \
     NotFound
-from discord.ext.commands import Context, Bot
+from discord.ext.commands import Bot
 
 from cogs.util.assign_variables import assign_chat, assign_accepted_chats
 from core.discord_limits import CATEGORY_CHANNEL_LIMIT, GLOBAL_CHANNEL_LIMIT
