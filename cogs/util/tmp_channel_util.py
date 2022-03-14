@@ -328,7 +328,7 @@ class TmpChannelUtil:
                         await member.move_to(temp_channel.voice, reason="Member has already a temp channel")
                         return
 
-                    channels.add((await TmpChannelUtil.get_server_objects(category, guild,
+                    channels.add((await TmpChannelUtil.get_server_objects(guild,
                                                                           default_channel_name, member, db)).voice)
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
