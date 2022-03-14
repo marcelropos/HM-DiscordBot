@@ -33,8 +33,7 @@ class Locker:
 class TmpChannelUtil:
 
     @staticmethod
-    async def get_server_objects(category_key: ConfigurationNameEnum,
-                                 guild: Guild,
+    async def get_server_objects(guild: Guild,
                                  name_format: str,
                                  member: Union[Member, User],
                                  db: TempChannels) -> TempChannel:
@@ -293,7 +292,7 @@ class TmpChannelUtil:
                     except NotFound:
                         pass
 
-                await db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
+                await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
 
                 logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
                 return True
@@ -320,7 +319,7 @@ class TmpChannelUtil:
     async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
                                    voice_channel: VoiceChannel, join_voice_channel: VoiceChannel, guild: Guild,
                                    default_channel_name: str, member: Union[Member, User],
-                                   category: ConfigurationNameEnum, logger: logging.Logger, bot: Bot):
+                                   logger: logging.Logger, bot: Bot):
         async with Locker():
             try:
                 if voice_channel is join_voice_channel:  # TODO: make this to a set

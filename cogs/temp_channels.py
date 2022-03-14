@@ -117,7 +117,7 @@ class StudyTmpChannels(Cog):
             await TmpChannelUtil.joined_voice_channel(self.db, temp_channels, after.channel,
                                                       study_join_voice_channel.item, guild,
                                                       default_study_channel_name, member,
-                                                      ConfigurationNameEnum.STUDY_CATEGORY, logger, self.bot)
+                                                      logger, self.bot)
 
     @group(pass_context=True,
            name="studyChannel",
