@@ -139,8 +139,10 @@ class TmpChannelUtil:
                                                                        nsfw=False,
                                                                        reason="")
 
+        # TODO: check for persistence
         entry: TempChannel = await db.insert_one(
-            (member, text_channel, voice_channel, TmpChannelUtil.create_token(), None))
+            (member, text_channel, voice_channel, TmpChannelUtil.create_token(), True, None)
+        )
 
         try:
             await member.move_to(voice_channel, reason="Create Tmp Channel")

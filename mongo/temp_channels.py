@@ -73,14 +73,18 @@ class TempChannels(MongoCollection):
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
                                             int,
+                                            bool,
                                             Optional[datetime.datetime]]) -> TempChannel:
-        owner, chat, voice, token, delete_at = entry
+        owner, chat, voice, token, persist, delete_at = entry
 
         document = {
             DBKeyWrapperEnum.OWNER.value: owner.id,
             DBKeyWrapperEnum.CHAT.value: chat.id,
             DBKeyWrapperEnum.VOICE.value: voice.id,
             DBKeyWrapperEnum.TOKEN.value: token,
+            DBKeyWrapperEnum.PERSIST.value: persist,
+            DBKeyWrapperEnum.DELETE_AT.value: delete_at,
+            DBKeyWrapperEnum.MESSAGES.value: list()
         }
 
         await self.collection.insert_one(document)
