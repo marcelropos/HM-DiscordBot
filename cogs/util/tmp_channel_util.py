@@ -61,9 +61,7 @@ class TmpChannelUtil:
         if len(guild.channels) + 2 > GLOBAL_CHANNEL_LIMIT:
             raise HitDiscordLimitsError("Hit server channel limit", "you can do nothing about this")
 
-        channel_category: CategoryChannel = guild.get_channel(
-            (await PrimitiveMongoData(CollectionEnum.CATEGORIES).find_one({category_key.value: {"$exists": True}}))[
-                category_key.value])
+        channel_category: CategoryChannel = member.voice.channel.category
 
         if len(channel_category.channels) + 2 > CATEGORY_CHANNEL_LIMIT:
             raise HitDiscordLimitsError("To many temporary channels",
