@@ -299,7 +299,7 @@ class TmpChannelUtil:
     @staticmethod
     async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
                                    voice_channel: VoiceChannel, guild: Guild,
-                                   default_channel_name: str, member: Union[Member, User],
+                                   member: Union[Member, User],
                                    logger: logging.Logger, bot: Bot, join_db: JoinTempChannels):
         async with Locker():
             try:
@@ -315,7 +315,7 @@ class TmpChannelUtil:
                         return
 
                     channels.add((await TmpChannelUtil.get_server_objects(guild,
-                                                                          default_channel_name, member, db,
+                                                                          join_channel.default_channel_name, member, db,
                                                                           join_channel)).voice)
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
@@ -339,23 +339,14 @@ class TmpChannelUtil:
                         await send_error(chat, "CreateTempChannel", e.cause, e.solution, member)
 
     @staticmethod
-    async def ainit_helper(db: TempChannels,
-                           config_db: PrimitiveMongoData,
-                           default_name_key: ConfigurationNameEnum,
-                           default_channel_name: str) -> tuple[set[VoiceChannel], str]:
-
-        default_channel_name_tmp = await config_db.find_one({default_name_key.value: {"$exists": True}})
-        if default_channel_name_tmp:
-            default_channel_name = default_channel_name_tmp[default_name_key.value]
-        else:
-            await config_db.insert_one({default_name_key.value: default_channel_name})
+    async def ainit_helper(db: TempChannels) -> set:
 
         deleted_channels: list[TempChannel] = [document for document in await db.find({}) if
                                                not document.voice or not document.chat]
         for deleted in deleted_channels:
             await db.delete_one({DBKeyWrapperEnum.ID.value: deleted.id})
 
-        return {document.voice for document in await db.find({})}, default_channel_name
+        return {document.voice for document in await db.find({})}
 
     @staticmethod
     async def database_illegal_state(bot: Bot, wrong_voice_channel: VoiceChannel, logger: logging.Logger):
