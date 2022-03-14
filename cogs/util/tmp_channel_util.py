@@ -270,7 +270,7 @@ class TmpChannelUtil:
 
             document: TempChannel = document[0]
 
-            if document.voice == None and document.chat == None:
+            if document.voice is None and document.chat is None:
                 return True
 
             if type(document) == TempChannel or not document.deleteAt or (
