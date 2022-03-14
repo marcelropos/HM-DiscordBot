@@ -14,9 +14,8 @@ from core.discord_limits import CATEGORY_CHANNEL_LIMIT, GLOBAL_CHANNEL_LIMIT
 from core.error.error_collection import BrokenConfigurationError, HitDiscordLimitsError
 from core.error.error_reply import send_error
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
-from mongo.gaming_channels import GamingChannels, GamingChannel
+from mongo.temp_channels import TempChannels, TempChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
-from mongo.study_channels import StudyChannels, StudyChannel
 
 
 class Locker:
@@ -38,7 +37,7 @@ class TmpChannelUtil:
                                  guild: Guild,
                                  name_format: str,
                                  member: Union[Member, User],
-                                 db: Union[GamingChannels, StudyChannels]) -> Union[GamingChannel, StudyChannel]:
+                                 db: TempChannels) -> TempChannel:
         """
         Creates a new tmp_channel voice and text channel, saves it and places it correctly.
 
@@ -54,7 +53,7 @@ class TmpChannelUtil:
             db: The database connection to be used.
 
         Returns:
-            A GamingChannel or StudyChannel which contains the created pair.
+            A TempChannel or StudyChannel which contains the created pair.
 
         Raises:
             Forbidden,ServerSelectionTimeoutError
@@ -140,7 +139,7 @@ class TmpChannelUtil:
                                                                        nsfw=False,
                                                                        reason="")
 
-        entry: Union[GamingChannel, StudyChannel] = await db.insert_one(
+        entry: TempChannel = await db.insert_one(
             (member, text_channel, voice_channel, TmpChannelUtil.create_token(), None))
 
         try:
@@ -152,10 +151,10 @@ class TmpChannelUtil:
         return entry
 
     @staticmethod
-    async def make_welcome_embed(document: Union[GamingChannel, StudyChannel]):
+    async def make_welcome_embed(document: TempChannel):
         embed = Embed(title="Your tmpc channel",
                       description="Here you can find all commands that you can use to manage your channel:")
-        if type(document) is StudyChannel:
+        if document.persist:
             embed.add_field(name="Make Channel persistent:",
                             value="With"
                                   "```!tmpc keep```"
@@ -259,22 +258,22 @@ class TmpChannelUtil:
         return int(totp.now())
 
     @staticmethod
-    async def check_delete_channel(voice_channel: VoiceChannel, db: Union[GamingChannels, StudyChannels],
+    async def check_delete_channel(voice_channel: VoiceChannel, db: TempChannels,
                                    logger: logging.Logger,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
         if len({member for member in voice_channel.members if not member.bot}) == 0:
-            document: list[Union[StudyChannel, GamingChannel]] = await db.find(
+            document: list[TempChannel] = await db.find(
                 {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
             if not document:
                 return True
 
-            document: Union[StudyChannel, GamingChannel] = document[0]
+            document: TempChannel = document[0]
 
             if document.voice == None and document.chat == None:
                 return True
 
-            if type(document) == GamingChannel or not document.deleteAt or (
+            if type(document) == TempChannel or not document.deleteAt or (
                     not reset_delete_at[0] and datetime.now() > document.deleteAt):
                 try:
                     await document.voice.delete(reason="No longer used")
@@ -285,12 +284,11 @@ class TmpChannelUtil:
                 except NotFound:
                     pass
 
-                if type(document) == StudyChannel:
-                    for message in document.messages:
-                        try:
-                            await message.delete()
-                        except NotFound:
-                            pass
+                for message in document.messages:
+                    try:
+                        await message.delete()
+                    except NotFound:
+                        pass
 
                 await db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
 
@@ -316,13 +314,13 @@ class TmpChannelUtil:
         return False
 
     @staticmethod
-    async def joined_voice_channel(db: Union[GamingChannels, StudyChannels], channels: set[VoiceChannel],
+    async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
                                    voice_channel: VoiceChannel, join_voice_channel: VoiceChannel, guild: Guild,
                                    default_channel_name: str, member: Union[Member, User],
                                    category: ConfigurationNameEnum, logger: logging.Logger, bot: Bot):
         async with Locker():
             try:
-                if voice_channel is join_voice_channel:
+                if voice_channel is join_voice_channel:  # TODO: make this to a set
                     temp_channel = await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id})
                     if temp_channel:
                         await member.move_to(temp_channel.voice, reason="Member has already a temp channel")
@@ -333,14 +331,14 @@ class TmpChannelUtil:
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
                 if voice_channel in channels:
-                    document: list[Union[GamingChannel, StudyChannel]] = await db.find(
+                    document: list[TempChannel] = await db.find(
                         {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
                     if not document:
                         await TmpChannelUtil.database_illegal_state(bot, voice_channel, logger)
                         return
 
-                    document: Union[GamingChannel, StudyChannel] = document[0]
+                    document: TempChannel = document[0]
                     await document.chat.set_permissions(member, view_channel=True)
                     await document.voice.set_permissions(member, view_channel=True, connect=True)
             except HitDiscordLimitsError as e:
@@ -352,7 +350,7 @@ class TmpChannelUtil:
                         await send_error(chat, "CreateTempChannel", e.cause, e.solution, member)
 
     @staticmethod
-    async def ainit_helper(bot: Bot, db: Union[GamingChannels, StudyChannels],
+    async def ainit_helper(bot: Bot, db: TempChannels,
                            config_db: PrimitiveMongoData, join_voice_channel: Placeholder,
                            category: ConfigurationNameEnum, join_channel: ConfigurationNameEnum,
                            default_name_key: ConfigurationNameEnum,
@@ -366,8 +364,8 @@ class TmpChannelUtil:
         else:
             await config_db.insert_one({default_name_key.value: default_channel_name})
 
-        deleted_channels: list[Union[GamingChannel, StudyChannel]] = [document for document in await db.find({}) if
-                                                                      not document.voice or not document.chat]
+        deleted_channels: list[TempChannel] = [document for document in await db.find({}) if
+                                               not document.voice or not document.chat]
         for deleted in deleted_channels:
             await db.delete_one({DBKeyWrapperEnum.ID.value: deleted._id})
 

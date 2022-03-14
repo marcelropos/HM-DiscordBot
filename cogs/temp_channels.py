@@ -13,14 +13,14 @@ from cogs.util.voice_state_change import EventType
 from core.global_enum import CollectionEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat
+from mongo.temp_channels import TempChannels
 from mongo.primitive_mongo_data import PrimitiveMongoData
-from mongo.study_channels import StudyChannels
 
 bot_channels: set[TextChannel] = set()
 event = namedtuple("DeleteTime", ["hour", "min"])
 study_join_voice_channel: Placeholder = Placeholder()
 default_study_channel_name = "Study-{0:02d}"
-study_channels: set[VoiceChannel] = set()
+temp_channels: set[VoiceChannel] = set()
 first_init = True
 
 logger = get_discord_child_logger("StudyChannels")
@@ -34,7 +34,7 @@ class StudyTmpChannels(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
         self.config_db: PrimitiveMongoData = PrimitiveMongoData(CollectionEnum.TEMP_CHANNELS_CONFIGURATION)
-        self.db: StudyChannels = StudyChannels(self.bot)
+        self.db: TempChannels = TempChannels(self.bot)
         self.need_init = True
         if not first_init:
             self.ainit.start()
@@ -45,12 +45,12 @@ class StudyTmpChannels(Cog):
         """
         Loads the configuration for the module.
         """
-        global study_join_voice_channel, study_channels, default_study_channel_name, bot_channels
+        global study_join_voice_channel, temp_channels, default_study_channel_name, bot_channels
         # noinspection PyTypeChecker
         async with AinitManager(bot=self.bot, loop=self.ainit, need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:
             if need_init:
-                study_channels, default_study_channel_name \
+                temp_channels, default_study_channel_name \
                     = await TmpChannelUtil.ainit_helper(self.bot, self.db,
                                                         self.config_db,
                                                         study_join_voice_channel,
@@ -101,20 +101,20 @@ class StudyTmpChannels(Cog):
         if member.bot:
             return
 
-        global study_join_voice_channel, study_channels, default_study_channel_name
+        global study_join_voice_channel, temp_channels, default_study_channel_name
         guild: Guild = self.bot.guilds[0]
 
         event_type: EventType = EventType.status(before, after)
 
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
-            if voice_channel in study_channels:
+            if voice_channel in temp_channels:
                 if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger,
                                                              reset_delete_at=(True, self.config_db)):
-                    study_channels.remove(voice_channel)
+                    temp_channels.remove(voice_channel)
 
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
-            await TmpChannelUtil.joined_voice_channel(self.db, study_channels, after.channel,
+            await TmpChannelUtil.joined_voice_channel(self.db, temp_channels, after.channel,
                                                       study_join_voice_channel.item, guild,
                                                       default_study_channel_name, member,
                                                       ConfigurationNameEnum.STUDY_CATEGORY, logger, self.bot)
@@ -172,10 +172,10 @@ class StudyTmpChannels(Cog):
 
     @loop(minutes=10)
     async def delete_old_channels(self):
-        channels = study_channels.copy()
+        channels = temp_channels.copy()
         for voice_channel in channels:
             if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
-                study_channels.remove(voice_channel)
+                temp_channels.remove(voice_channel)
 
 
 def setup(bot: Bot):

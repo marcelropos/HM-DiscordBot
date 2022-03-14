@@ -35,7 +35,7 @@ class ConfigurationNameEnum(Enum):
     STUDY_CATEGORY = "studyCategory"
     GAMING_CATEGORY = "gamingCategory"
     STUDY_JOIN_VOICE_CHANNEL = "studyVoiceChannel"
-    GAMING_JOIN_VOICE_CHANNEL = "gamingVoiceChannel"
+#    GAMING_JOIN_VOICE_CHANNEL = "gamingVoiceChannel"
     NERD_VOICE_CHANNEL = "NerdVoiceChannel"
     ENABLED = "enabled"
     DEADLINE = "deadline"
@@ -62,6 +62,7 @@ class DBKeyWrapperEnum(Enum):
     SUBJECT = "subject"
     DEFAULT = "default"
     MESSAGES = "messages"
+    PERSIST = "PERSIST"
 
 
 class LoggingLevel(Enum):
