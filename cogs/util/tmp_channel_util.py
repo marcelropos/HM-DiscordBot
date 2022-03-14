@@ -323,9 +323,12 @@ class TmpChannelUtil:
         async with Locker():
             try:
                 if voice_channel is join_voice_channel:  # TODO: make this to a set
-                    temp_channel = await db.find_one({DBKeyWrapperEnum.OWNER.value: member.id})
-                    if temp_channel:
-                        await member.move_to(temp_channel.voice, reason="Member has already a temp channel")
+                    temp_channel: list[TempChannel] = await db.find({DBKeyWrapperEnum.OWNER.value: member.id})
+                    my_channel: set[TempChannel] = {channel for channel in temp_channel
+                                                    if channel.voice.category.id == member.voice.channel.category.id}
+                    if my_channel:
+                        channel: TempChannel = my_channel.pop()
+                        await member.move_to(channel.voice, reason="Member has already a temp channel in this category")
                         return
 
                     channels.add((await TmpChannelUtil.get_server_objects(guild,
