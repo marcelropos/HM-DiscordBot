@@ -32,8 +32,6 @@ class ConfigurationNameEnum(Enum):
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
     GROUP_CATEGORY = "groupCategory"
     SUBJECTS_CATEGORY = "subjectsCategory"
-    STUDY_CATEGORY = "studyCategory"
-    GAMING_CATEGORY = "gamingCategory"
     STUDY_JOIN_VOICE_CHANNEL = "studyVoiceChannel"
 #    GAMING_JOIN_VOICE_CHANNEL = "gamingVoiceChannel"
     NERD_VOICE_CHANNEL = "NerdVoiceChannel"

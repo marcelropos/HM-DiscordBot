@@ -54,7 +54,6 @@ class StudyTmpChannels(Cog):
                     = await TmpChannelUtil.ainit_helper(self.bot, self.db,
                                                         self.config_db,
                                                         study_join_voice_channel,
-                                                        ConfigurationNameEnum.STUDY_CATEGORY,
                                                         ConfigurationNameEnum.STUDY_JOIN_VOICE_CHANNEL,
                                                         ConfigurationNameEnum.DEFAULT_STUDY_NAME,
                                                         default_study_channel_name)
@@ -129,26 +128,6 @@ class StudyTmpChannels(Cog):
             raise BadArgument
         member: Union[Member, User] = ctx.author
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
-
-    @study_channel.command(pass_context=True,
-                           name="category",
-                           brief="Sets the category.",
-                           help="The tmp channels will be found under this category.\n"
-                                "The category must be given as an int value.")
-    async def study_channel_category(self, ctx: Context, category: int):
-        """
-        Saves the category of the tmp study channels:
-
-        Args:
-            ctx: The command context provided by the discord.py wrapper.
-
-            category: The category id for the channels.
-        """
-
-        db = PrimitiveMongoData(CollectionEnum.CATEGORIES)
-        key = ConfigurationNameEnum.STUDY_CATEGORY
-        msg = "category"
-        await TmpChannelUtil.update_category_and_voice_channel(category, ctx, db, key, msg)
 
     @study_channel.command(pass_context=True,
                            name="join",

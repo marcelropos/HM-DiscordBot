@@ -357,10 +357,10 @@ class TmpChannelUtil:
     @staticmethod
     async def ainit_helper(bot: Bot, db: TempChannels,
                            config_db: PrimitiveMongoData, join_voice_channel: Placeholder,
-                           category: ConfigurationNameEnum, join_channel: ConfigurationNameEnum,
+                           join_channel: ConfigurationNameEnum,
                            default_name_key: ConfigurationNameEnum,
                            default_channel_name: str) -> tuple[set[VoiceChannel], str]:
-        await assign_category(bot, category)
+
         join_voice_channel.item = await assign_chat(bot, join_channel)
 
         default_channel_name_tmp = await config_db.find_one({default_name_key.value: {"$exists": True}})
