@@ -48,8 +48,7 @@ class StudyTmpChannels(Cog):
         async with AinitManager(bot=self.bot, loop=self.ainit, need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:
             if need_init:
-                temp_channels, default_study_channel_name \
-                    = await TmpChannelUtil.ainit_helper(self.db)
+                temp_channels = await TmpChannelUtil.ainit_helper(self.db)
 
                 key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
                 default_keep_time = await self.config_db.find_one({key: {"$exists": True}})
