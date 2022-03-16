@@ -462,6 +462,7 @@ class Tmpc(Cog):
                        "- This command can be used 3/hour/user\n"
                        "- The invite command is limited to 10 user at once")
     @cooldown(3, 3600, BucketType.user)
+    @bot_chat(bot_channels)
     async def invite(self, ctx: Context):
 
         document = await self.get_temp_channel(ctx)
