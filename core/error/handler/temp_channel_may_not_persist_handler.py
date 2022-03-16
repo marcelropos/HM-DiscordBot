@@ -14,7 +14,7 @@ class TempChannelMayNotPersistHandler(BaseHandler):
 
     @property
     def cause(self) -> str:
-        return "Your temp channel has not persistent flag"
+        return "Your temp channel has no persistent flag"
 
     @property
     async def solution(self) -> str:
