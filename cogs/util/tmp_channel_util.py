@@ -75,7 +75,7 @@ class TmpChannelUtil:
 
         if name_format.format(0) != name_format:
             i = 1
-            channels = {channel.name for channel in channel_category.voice_channels}
+            channels = {channel.name for channel in guild.channels}
             while name_format.format(i) in channels:
                 i += 1
             name = name_format.format(i)
