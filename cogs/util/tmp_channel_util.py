@@ -249,7 +249,6 @@ class TmpChannelUtil:
 
     @staticmethod
     async def check_delete_channel(voice_channel: VoiceChannel, db: TempChannels,
-                                   logger: logging.Logger,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
         if len({member for member in voice_channel.members if not member.bot}) == 0:
             document: list[TempChannel] = await db.find(
@@ -331,7 +330,7 @@ class TmpChannelUtil:
                         {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
                     if not document:
-                        await TmpChannelUtil.database_illegal_state(bot, voice_channel, logger)
+                        await TmpChannelUtil.database_illegal_state(bot, voice_channel)
                         return
 
                     document: TempChannel = document[0]
