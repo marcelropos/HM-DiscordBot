@@ -1,3 +1,4 @@
+from asyncio import sleep
 from collections import namedtuple
 from typing import Union, Optional
 
@@ -12,7 +13,7 @@ from cogs.util.voice_state_change import EventType
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.predicates import bot_chat
 from mongo.primitive_mongo_data import PrimitiveMongoData
-from mongo.temp_channels import TempChannels, JoinTempChannels, JoinTempChannel
+from mongo.temp_channels import TempChannels, JoinTempChannels, JoinTempChannel, TempChannel
 
 bot_channels: set[TextChannel] = set()
 event = namedtuple("DeleteTime", ["hour", "min"])
@@ -53,6 +54,7 @@ class StudyTmpChannels(Cog):
                 default_keep_time = await self.config_db.find_one({key: {"$exists": True}})
                 if not default_keep_time:
                     await self.config_db.insert_one({key: event(hour=24, min=0)})
+            self.need_init = False
 
     def cog_unload(self):
         self.delete_old_channels.stop()
@@ -71,6 +73,8 @@ class StudyTmpChannels(Cog):
         member: Union[Member, User] = payload.member
         if member.bot:
             return
+        await self.wait_for_init()
+
         document = [document for document in await self.db.find({}) if payload.message_id in document.message_ids]
 
         if not document:
@@ -90,6 +94,7 @@ class StudyTmpChannels(Cog):
     async def on_voice_state_update(self, member: Union[Member, User], before: VoiceState, after: VoiceState):
         if member.bot:
             return
+        await self.wait_for_init()
 
         global temp_channels
         guild: Guild = self.bot.guilds[0]
