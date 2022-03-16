@@ -308,10 +308,13 @@ class TmpChannelUtil:
                                    member: Union[Member, User],
                                    bot: Bot, join_db: JoinTempChannels):
         async with Locker():
+            # noinspection PyBroadException
             try:
                 join_channel: Optional[JoinTempChannel] = await join_db.find_one(
                     {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
                 if join_channel:
+                    logger.info(
+                        f'User="{member.name}#{member.discriminator}({member.id})" joinChannel="{voice_channel.name}"')
                     temp_channel: list[TempChannel] = await db.find({DBKeyWrapperEnum.OWNER.value: member.id})
                     my_channel: set[TempChannel] = {channel for channel in temp_channel
                                                     if channel.voice.category.id == member.voice.channel.category.id}
@@ -326,16 +329,18 @@ class TmpChannelUtil:
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
                 if voice_channel in channels:
-                    document: list[TempChannel] = await db.find(
+                    document: Optional[TempChannel] = await db.find_one(
                         {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
                     if not document:
                         await TmpChannelUtil.database_illegal_state(bot, voice_channel)
                         return
 
-                    document: TempChannel = document[0]
-                    await document.chat.set_permissions(member, view_channel=True)
-                    await document.voice.set_permissions(member, view_channel=True, connect=True)
+                    logger.info(
+                        f'User="{member.name}#{member.discriminator}({member.id})" tempChannel="{voice_channel.name}"')
+                    reason = "Joined TempChannel"
+                    await document.chat.set_permissions(member, view_channel=True, reason=reason)
+                    await document.voice.set_permissions(member, view_channel=True, connect=True, reason=reason)
             except HitDiscordLimitsError as e:
                 bot_chats = set()
                 await assign_accepted_chats(bot, bot_chats)
@@ -343,6 +348,14 @@ class TmpChannelUtil:
                     chat: TextChannel
                     if member in chat.members:
                         await send_error(chat, "CreateTempChannel", e.cause, e.solution, member)
+            except Exception as e:
+                logger.exception("Unhandled exception during channel creation occurred!")
+                bot_chats = set()
+                await assign_accepted_chats(bot, bot_chats)
+                for chat in bot_chats:
+                    chat: TextChannel
+                    if member in chat.members:
+                        await send_error(chat, "CreateTempChannel", str(e), "Notify the administrator", member)
 
     @staticmethod
     async def ainit_helper(db: TempChannels) -> set:

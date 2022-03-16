@@ -60,7 +60,7 @@ class TempChannels(MongoCollection):
         super().__init__(CollectionEnum.TEMP_CHANNELS.value)
         self.bot = bot
 
-    async def _create_temp_channel(self, result):
+    async def _create_temp_channel(self, result) -> Optional[TempChannel]:
         if result:
             guild: Guild = self.bot.guilds[0]
             return TempChannel(
@@ -94,7 +94,7 @@ class TempChannels(MongoCollection):
         await self.collection.insert_one(document)
         return await self.find_one(document)
 
-    async def find_one(self, find_params: dict) -> TempChannel:
+    async def find_one(self, find_params: dict) -> Optional[TempChannel]:
         result = await self.collection.find_one(find_params)
         return await self._create_temp_channel(result)
 
