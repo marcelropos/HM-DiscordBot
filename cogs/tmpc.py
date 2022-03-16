@@ -25,7 +25,7 @@ bot_channels: set[TextChannel] = set()
 moderator = Placeholder()
 first_init = True
 
-logger = get_discord_child_logger("Subjects")
+logger = get_discord_child_logger("TempChannels")
 
 
 class Tmpc(Cog):
