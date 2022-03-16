@@ -292,9 +292,8 @@ class Tmpc(Cog):
             message: Message = await ctx.send(embed=embed)
             await ctx.message.delete()
             await message.add_reaction(emoji="🔓")
-            replace = {DBKeyWrapperEnum.MESSAGES.value: document.messages + [message]}
-            replace[DBKeyWrapperEnum.MESSAGES.value] = [(message.channel.id, message.id) for message in
-                                                        replace[DBKeyWrapperEnum.MESSAGES.value]]
+            replace = {DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in
+                                                         document.messages + [message]]}
             await self.channel_db.update_one(document.document, replace)
             return
 
