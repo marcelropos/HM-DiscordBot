@@ -194,6 +194,10 @@ class StudyTmpChannels(Cog):
             if await TmpChannelUtil.check_delete_channel(voice_channel, self.db):
                 temp_channels.remove(voice_channel)
 
+    async def wait_for_init(self):
+        while self.need_init:
+            await sleep(2)
+
 
 def setup(bot: Bot):
     bot.add_cog(StudyTmpChannels(bot))
