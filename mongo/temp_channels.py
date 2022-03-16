@@ -51,7 +51,7 @@ class TempChannel(MongoDocument):
             DBKeyWrapperEnum.TOKEN.value: self.token,
             DBKeyWrapperEnum.PERSIST.value: self.persist,
             DBKeyWrapperEnum.DELETE_AT.value: self.deleteAt,
-            DBKeyWrapperEnum.MESSAGES.value: self.messages
+            DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in self.messages]
         }
 
 
