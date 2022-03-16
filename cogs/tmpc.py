@@ -274,8 +274,23 @@ class Tmpc(Cog):
                     place: place an embed in the channel so that user can easily join the Study Channel.
                         Attention the place Command only works for Study Channels.
         """
-        if mode.lower() == "place":
-            document: TempChannel = await self.get_temp_channel(ctx)
+        if mode.lower() == "gen":
+            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
+            new_token = TmpChannelUtil.create_token()
+
+            for message in document.messages:
+                try:
+                    await message.delete()
+                except NotFound:
+                    pass
+
+            replace = {DBKeyWrapperEnum.TOKEN.value: new_token, DBKeyWrapperEnum.MESSAGES.value: list()}
+            await self.channel_db.update_one({DBKeyWrapperEnum.ID.value: document.id}, replace)
+        if mode.lower() == "place" or mode.lower() == "gen":
+            if mode.lower() == "place":
+                document: TempChannel = await self.get_temp_channel(ctx)
+            else:
+                document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
 
             embed: Embed = Embed(title="Study Channel Invite",
                                  description="")
@@ -295,31 +310,8 @@ class Tmpc(Cog):
             replace = {DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in
                                                          document.messages + [message]]}
             await self.channel_db.update_one(document.document, replace)
-            return
-
-        if mode.lower() == "show":
-            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, everyone=True)
-            embed: Embed = Embed(title="Token",
-                                 description=f"`!tmpc join {document.token}`")
-        elif mode.lower() == "gen":
-            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
-            new_token = TmpChannelUtil.create_token()
-            new_document = {DBKeyWrapperEnum.TOKEN.value: new_token}
-
-            new_document.update({DBKeyWrapperEnum.MESSAGES.value: list()})
-            for message in document.messages:
-                try:
-                    await message.delete()
-                except NotFound:
-                    pass
-            await self.channel_db.update_one({DBKeyWrapperEnum.ID.value: document.id}, new_document)
-
-            embed: Embed = Embed(title="Token",
-                                 description=f"`!tmpc join {new_token}`")
         else:
             raise BadArgument
-
-        await ctx.reply(embed=embed)
 
     @tmpc.command(pass_context=True,
                   brief="Join a tmp channel.",
