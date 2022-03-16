@@ -43,7 +43,7 @@ class TmpChannelUtil:
                                  name_format: str,
                                  member: Union[Member, User],
                                  db: TempChannels,
-                                 join_channel: JoinTempChannel) -> TempChannel:
+                                 join_channel: JoinTempChannel, bot: Bot) -> TempChannel:
         """
         Creates a new tmp_channel voice and text channel, saves it and places it correctly.
 
@@ -154,12 +154,12 @@ class TmpChannelUtil:
         except Exception:
             pass
 
-        await TmpChannelUtil.make_welcome_embed(entry)
+        await TmpChannelUtil.make_welcome_embed(entry, bot)
         return entry
 
     # noinspection PyArgumentEqualDefault
     @staticmethod
-    async def make_welcome_embed(document: TempChannel):
+    async def make_welcome_embed(document: TempChannel, bot: Bot):
         embed = Embed(title="Your tmpc channel",
                       description="Here you can find all commands that you can use to manage your channel:")
         if document.persist:
@@ -219,21 +219,22 @@ class TmpChannelUtil:
                               "```!tmpc delete```"
                               "you can force delete this channel even if someone is currently in the voice chat.",
                         inline=True)
-        embed.add_field(name="Restrictions:",
-                        value="All commands except `tmpc token place` and `tmpc join <token>` need to be written in "
-                              "this channel.",
-                        inline=False)
         embed.add_field(name="Join this channel:",
-                        value=f"With `!tmpc join {document.token}` members can join this channel even when locked.",
+                        value=f"With `!tmpc join {document.token}` members can join this channel even when locked.\n"
+                              f"This command must be used in a bot command chat or via dm to {bot.user.mention}.",
                         inline=False)
         embed.add_field(name="Invite member",
                         value="With `!tmpc invite <@members>` "
-                              "you can add up to ten members to the channel.",
+                              "you can add up to ten members to the channel.\n"
+                              "This command must be used in a bot command chat.",
                         inline=True)
         embed.add_field(name="Leave channel",
                         value="With `!tmpc leave` you can leave the channel.\n"
                               "The owner will not be able to invite you after that. ",
                         inline=True)
+        embed.add_field(name="Restrictions:",
+                        value="As long as nothing is specified, all commands must be written to this chat.",
+                        inline=False)
         await document.chat.send(content=document.owner.mention, embed=embed)
 
     @staticmethod
@@ -320,7 +321,7 @@ class TmpChannelUtil:
 
                     channels.add((await TmpChannelUtil.get_server_objects(guild,
                                                                           join_channel.default_channel_name, member, db,
-                                                                          join_channel)).voice)
+                                                                          join_channel, bot)).voice)
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
                 if voice_channel in channels:
