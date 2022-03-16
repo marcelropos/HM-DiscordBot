@@ -16,7 +16,6 @@ from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindTok
     NameDuplicationError, LeaveOwnChannelError, TempChannelMayNotPersistError, YouOwnNoChannelsError
 from core.error.error_reply import send_error
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
-from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.temp_channels import TempChannels, TempChannel
@@ -25,7 +24,7 @@ bot_channels: set[TextChannel] = set()
 moderator = Placeholder()
 first_init = True
 
-logger = get_discord_child_logger("TempChannels")
+logger = TmpChannelUtil.logger()
 
 
 class Tmpc(Cog):
@@ -102,7 +101,7 @@ class Tmpc(Cog):
             topic=f"Owner: {document.owner.display_name}\n"
                   f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
                   f"{datetime.now().astimezone().tzinfo}")
-        await TmpChannelUtil.check_delete_channel(document.voice, self.channel_db, logger)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.channel_db)
 
     @tmpc.command(pass_context=True,
                   help="Deletes the channel after leaving.")
@@ -121,7 +120,7 @@ class Tmpc(Cog):
 
         await self.channel_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
-        await TmpChannelUtil.check_delete_channel(document.voice, self.channel_db, logger)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.channel_db)
 
     @tmpc.command(pass_context=True,
                   brief="Hides the channel",

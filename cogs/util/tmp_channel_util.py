@@ -13,8 +13,11 @@ from core.discord_limits import CATEGORY_CHANNEL_LIMIT, GLOBAL_CHANNEL_LIMIT
 from core.error.error_collection import BrokenConfigurationError, HitDiscordLimitsError
 from core.error.error_reply import send_error
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
+from core.logger import get_discord_child_logger
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.temp_channels import TempChannels, TempChannel, JoinTempChannels, JoinTempChannel
+
+logger = get_discord_child_logger("TempChannels")
 
 
 class Locker:
@@ -30,6 +33,10 @@ class Locker:
 
 
 class TmpChannelUtil:
+    @staticmethod
+    def logger():
+        global logger
+        return logger
 
     @staticmethod
     async def get_server_objects(guild: Guild,
@@ -300,7 +307,7 @@ class TmpChannelUtil:
     async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
                                    voice_channel: VoiceChannel, guild: Guild,
                                    member: Union[Member, User],
-                                   logger: logging.Logger, bot: Bot, join_db: JoinTempChannels):
+                                   bot: Bot, join_db: JoinTempChannels):
         async with Locker():
             try:
                 join_channel: Optional[JoinTempChannel] = await join_db.find_one(
@@ -349,7 +356,7 @@ class TmpChannelUtil:
         return {document.voice for document in await db.find({})}
 
     @staticmethod
-    async def database_illegal_state(bot: Bot, wrong_voice_channel: VoiceChannel, logger: logging.Logger):
+    async def database_illegal_state(bot: Bot, wrong_voice_channel: VoiceChannel):
         bot_channel = await assign_chat(bot, ConfigurationNameEnum.DEBUG_CHAT)
         embed = Embed(title=f"Error occurred for {wrong_voice_channel.mention}")
         embed.add_field(name="Cause", value="The database is in an illegal state", inline=False)

@@ -10,7 +10,6 @@ from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from cogs.util.voice_state_change import EventType
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
-from core.logger import get_discord_child_logger
 from core.predicates import bot_chat
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.temp_channels import TempChannels, JoinTempChannels, JoinTempChannel
@@ -20,7 +19,7 @@ event = namedtuple("DeleteTime", ["hour", "min"])
 temp_channels: set[VoiceChannel] = set()
 first_init = True
 
-logger = get_discord_child_logger("StudyChannels")
+logger = TmpChannelUtil.logger()
 
 
 class StudyTmpChannels(Cog):
@@ -100,14 +99,14 @@ class StudyTmpChannels(Cog):
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
             if voice_channel in temp_channels:
-                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger,
+                logger.info("Some user has left a temp channel.")
+                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db,
                                                              reset_delete_at=(True, self.config_db)):
                     temp_channels.remove(voice_channel)
 
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
             await TmpChannelUtil.joined_voice_channel(self.db, temp_channels, after.channel, guild,
-                                                      member,
-                                                      logger, self.bot, self.join_db)
+                                                      member, self.bot, self.join_db)
 
     @group(pass_context=True,
            name="tempChannel",
@@ -187,7 +186,7 @@ class StudyTmpChannels(Cog):
     async def delete_old_channels(self):
         channels = temp_channels.copy()
         for voice_channel in channels:
-            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db, logger):
+            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db):
                 temp_channels.remove(voice_channel)
 
 
