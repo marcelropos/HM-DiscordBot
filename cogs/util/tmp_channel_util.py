@@ -186,11 +186,6 @@ class TmpChannelUtil:
                               "you can lock or unlock so that non invited member can't join the VC but will still be "
                               "able to see you.",
                         inline=True)
-        embed.add_field(name="Show token:",
-                        value="With"
-                              "```!tmpc token show```"
-                              "the bot will post the join token of the channel.",
-                        inline=True)
         embed.add_field(name="Place token in channel:",
                         value="By using"
                               "```!tmpc token place```"
