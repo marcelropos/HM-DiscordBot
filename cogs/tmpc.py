@@ -457,10 +457,7 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   brief="Invite a user to your temp channel",
-                  help="The first argument must be <true|false>\n"
-                       "True: StudyChannel mode\n"
-                       "False: TempChannel mode\n"
-                       "Member must be invited by mentions.\n"
+                  help="Member must be invited by mentions.\n"
                        "Limitations:\n"
                        "- This command can be used 3/hour/user\n"
                        "- The invite command is limited to 10 user at once")
