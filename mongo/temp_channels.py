@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from discord import Member, TextChannel, VoiceChannel, User, Guild, Message
+from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound
 from discord.ext.commands import Bot
 
 from core.global_enum import DBKeyWrapperEnum, CollectionEnum
@@ -63,6 +63,13 @@ class TempChannels(MongoCollection):
     async def _create_temp_channel(self, result) -> Optional[TempChannel]:
         if result:
             guild: Guild = self.bot.guilds[0]
+            messages = []
+            for channel, message in result[DBKeyWrapperEnum.MESSAGES.value]:
+                try:
+                    messages.append(await guild.get_channel(channel).fetch_message(message))
+                except (NotFound, AttributeError):
+                    pass
+
             return TempChannel(
                 result[DBKeyWrapperEnum.ID.value],
                 await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
@@ -71,7 +78,7 @@ class TempChannels(MongoCollection):
                 result[DBKeyWrapperEnum.TOKEN.value],
                 result[DBKeyWrapperEnum.PERSIST.value],
                 result[DBKeyWrapperEnum.DELETE_AT.value],
-                result[DBKeyWrapperEnum.MESSAGES.value]
+                messages
             )
 
     async def insert_one(self, entry: tuple[Union[Member, User],
