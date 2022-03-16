@@ -339,8 +339,11 @@ class TmpChannelUtil:
                     logger.info(
                         f'User="{member.name}#{member.discriminator}({member.id})" tempChannel="{voice_channel.name}"')
                     reason = "Joined TempChannel"
-                    await document.chat.set_permissions(member, view_channel=True, reason=reason)
-                    await document.voice.set_permissions(member, view_channel=True, connect=True, reason=reason)
+                    if not document.chat.overwrites_for(member).view_channel:
+                        await document.chat.set_permissions(member, view_channel=True, reason=reason)
+                    if not (document.voice.overwrites_for(member).view_channel and document.voice.overwrites_for(
+                            member).connect):
+                        await document.voice.set_permissions(member, view_channel=True, connect=True, reason=reason)
             except HitDiscordLimitsError as e:
                 bot_chats = set()
                 await assign_accepted_chats(bot, bot_chats)
