@@ -495,7 +495,7 @@ class Tmpc(Cog):
                 if document.chat.overwrites_for(mention).view_channel:
                     await send_error(ctx.message.channel, "Invitation",
                                      f"{mention.mention} can already see your channels",
-                                     f"Noting", ctx.author)
+                                     f"No Action required", ctx.author)
                 else:  # could only be false or none
                     await send_error(ctx.message.channel, "Invitation",
                                      f"{mention.mention} used the left command on this channel",
