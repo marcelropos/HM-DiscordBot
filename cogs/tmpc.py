@@ -81,7 +81,7 @@ class Tmpc(Cog):
                   help="Keeps the channel after leaving.")
     async def keep(self, ctx: Context):
         """
-        Makes a Study Channel stay for a longer time.
+        Makes a temp channel persistent for some time.
         """
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
 
@@ -346,6 +346,7 @@ class Tmpc(Cog):
         await document.chat.set_permissions(ctx.author, view_channel=True)
         await ctx.message.delete()
 
+        # noinspection PyBroadException
         try:
             await ctx.author.move_to(document.voice, reason="Joined via Token")
         except Exception:
