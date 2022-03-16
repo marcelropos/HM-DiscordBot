@@ -30,7 +30,7 @@ logger = get_discord_child_logger("Subjects")
 
 class Tmpc(Cog):
     """
-    Manages the gaming/study tmp channels.
+    Manages temp channels.
     """
 
     def __init__(self, bot: Bot):
