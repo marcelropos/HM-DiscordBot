@@ -15,7 +15,8 @@ from core.error.error_reply import send_error
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from mongo.primitive_mongo_data import PrimitiveMongoData
-from mongo.temp_channels import TempChannels, TempChannel, JoinTempChannels, JoinTempChannel
+from mongo.temp_channels import TempChannels, TempChannel
+from mongo.join_temp_channels import JoinTempChannel, JoinTempChannels
 
 logger = get_discord_child_logger("TempChannels")
 

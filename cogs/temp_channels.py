@@ -12,8 +12,9 @@ from cogs.util.tmp_channel_util import TmpChannelUtil
 from cogs.util.voice_state_change import EventType
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.predicates import bot_chat
+from mongo.join_temp_channels import JoinTempChannel, JoinTempChannels
 from mongo.primitive_mongo_data import PrimitiveMongoData
-from mongo.temp_channels import TempChannels, JoinTempChannels, JoinTempChannel, TempChannel
+from mongo.temp_channels import TempChannels
 
 bot_channels: set[TextChannel] = set()
 event = namedtuple("DeleteTime", ["hour", "min"])
