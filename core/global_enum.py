@@ -59,7 +59,7 @@ class DBKeyWrapperEnum(Enum):
     SUBJECT = "subject"
     DEFAULT = "default"
     MESSAGES = "messages"
-    PERSIST = "PERSIST"
+    PERSIST = "persist"
 
 
 class LoggingLevel(Enum):
