@@ -10,6 +10,7 @@ from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from cogs.util.voice_state_change import EventType
+from core.error.error_collection import IsAlreadyAJoinChannelError
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.predicates import bot_chat
 from mongo.join_temp_channels import JoinTempChannel, JoinTempChannels
@@ -143,6 +144,8 @@ class StudyTmpChannels(Cog):
 
             persistent: The possibility that the created channel may persist.
         """
+        if self.join_db.find_one({DBKeyWrapperEnum.VOICE.value: channel.id}):
+            raise IsAlreadyAJoinChannelError(channel)
         await self.join_db.insert_one((channel, pattern, persistent))
         indicator = "" if persistent else "none"
         await ctx.reply(f"You can now create {indicator} persistent channels with {channel.category}:{channel.mention}.")

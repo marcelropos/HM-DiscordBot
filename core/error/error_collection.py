@@ -1,6 +1,6 @@
 from typing import Union
 
-from discord import TextChannel, Role, Member, User
+from discord import TextChannel, Role, Member, User, VoiceChannel
 from discord.ext.commands import CommandError, Context
 
 from core.global_enum import CollectionEnum, SubjectsOrGroupsEnum
@@ -69,6 +69,11 @@ class YouNeedAStudyGroupError(CommandError):
 ###############
 # TMPC ERRORS #
 ###############
+
+class IsAlreadyAJoinChannelError(CommandError):
+    def __init__(self, channel: VoiceChannel):
+        assert isinstance(channel, VoiceChannel)
+        self.channel = channel
 
 
 class CouldNotFindToken(CommandError):
