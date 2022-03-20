@@ -530,8 +530,6 @@ class Tmpc(Cog):
             -> TempChannel:
         key = DBKeyWrapperEnum.CHAT.value
         document: TempChannel = await self.channel_db.find_one({key: _id})
-        if not document:
-            document = await self.channel_db.find_one({key: _id})
 
         if not document:
             raise WrongChatForCommandTmpc
