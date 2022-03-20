@@ -144,7 +144,7 @@ class StudyTmpChannels(Cog):
         """
         await self.join_db.insert_one((channel, pattern, persistent))
         indicator = "" if persistent else "none"
-        await ctx.reply(f"You can now create {indicator} persistent channels with {channel.category}:{channel.name}.")
+        await ctx.reply(f"You can now create {indicator} persistent channels with {channel.category}:{channel.mention}.")
 
     @temp_channel.command(pass_context=True,
                           name="join-edit",
@@ -164,7 +164,7 @@ class StudyTmpChannels(Cog):
         await self.join_db.update_one({DBKeyWrapperEnum.VOICE.value: channel.id},
                                       {DBKeyWrapperEnum.PERSIST.value: persistent})
         indicator = "" if persistent else "only none"
-        await ctx.reply(f"{channel.category}:{channel.name} allows now {indicator} persistent temp channel creation")
+        await ctx.reply(f"{channel.category}:{channel.mention} allows now {indicator} persistent temp channel creation")
 
     @temp_channel.command(pass_context=True,
                           name="join-remove",
