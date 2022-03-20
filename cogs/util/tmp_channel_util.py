@@ -59,7 +59,7 @@ class TmpChannelUtil:
             join_channel: The Join Channel which triggered the action
 
         Returns:
-            A TempChannel or StudyChannel which contains the created pair.
+            A TempChannel which contains the created pair.
 
         Raises:
             Forbidden,ServerSelectionTimeoutError
