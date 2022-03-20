@@ -130,7 +130,7 @@ class StudyTmpChannels(Cog):
                           brief="Sets a join channel.",
                           help="Joining the chosen channel will create a tmp channel.\n"
                                "The channel must be given as an int value.")
-    async def study_channel_join_add(self, ctx: Context, channel: VoiceChannel, pattern: str, persistent: bool):
+    async def temp_channel_join_add(self, ctx: Context, channel: VoiceChannel, pattern: str, persistent: bool):
         """
         Saves enter point of tmp study channels:
 
@@ -151,7 +151,7 @@ class StudyTmpChannels(Cog):
                           name="join-edit",
                           brief="Edits a join channel.",
                           help="The persistent indicator can be set to influence the possible behavior after exiting.")
-    async def study_channel_join_edit(self, ctx: Context, channel: VoiceChannel, persistent: bool):
+    async def temp_channel_join_edit(self, ctx: Context, channel: VoiceChannel, persistent: bool):
         """
         Edits enter point of tmp study channels:
 
@@ -173,7 +173,7 @@ class StudyTmpChannels(Cog):
                           brief="Deletes a join channel.",
                           help="You will no longer be able to create channels.\n"
                                "This command does not delete the join channel itself.")
-    async def study_channel_join_remove(self, ctx: Context, channel: VoiceChannel):
+    async def temp_channel_join_remove(self, ctx: Context, channel: VoiceChannel):
         """
         Edits enter point of tmp study channels:
 
