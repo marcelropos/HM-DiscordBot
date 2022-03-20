@@ -274,8 +274,8 @@ class Tmpc(Cog):
                     place: place an embed in the channel so that user can easily join the Study Channel.
                         Attention the place Command only works for Study Channels.
         """
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
         if mode.lower() == "gen":
-            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
             new_token = TmpChannelUtil.create_token()
 
             for message in document.messages:
@@ -286,11 +286,12 @@ class Tmpc(Cog):
 
             replace = {DBKeyWrapperEnum.TOKEN.value: new_token, DBKeyWrapperEnum.MESSAGES.value: list()}
             await self.channel_db.update_one({DBKeyWrapperEnum.ID.value: document.id}, replace)
-        if mode.lower() == "place" or mode.lower() == "gen":
-            if mode.lower() == "place":
-                document: TempChannel = await self.get_temp_channel(ctx)
-            else:
-                document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
+        elif mode.lower() == "show" or mode.lower() == "gen":
+            embed: Embed = Embed(title="Token",
+                                 description=f"`!tmpc join {document.token}`")
+            await ctx.send(embed=embed)
+        elif mode.lower() == "place":
+            document: TempChannel = await self.get_temp_channel(ctx)
 
             embed: Embed = Embed(title="Study Channel Invite",
                                  description="")
