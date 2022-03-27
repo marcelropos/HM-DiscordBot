@@ -144,7 +144,7 @@ class StudyTmpChannels(Cog):
 
             persistent: The possibility that the created channel may persist.
         """
-        if self.join_db.find_one({DBKeyWrapperEnum.VOICE.value: channel.id}):
+        if await self.join_db.find_one({DBKeyWrapperEnum.VOICE.value: channel.id}):
             raise IsAlreadyAJoinChannelError(channel)
         await self.join_db.insert_one((channel, pattern, persistent))
         indicator = "" if persistent else "none"
