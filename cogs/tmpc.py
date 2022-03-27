@@ -484,7 +484,7 @@ class Tmpc(Cog):
             else:
                 if document.chat.overwrites_for(mention).view_channel:
                     await send_error(ctx.message.channel, "Invitation",
-                                     f"{mention.mention} can already see your channels",
+                                     f"{mention.mention} can already see your channel.",
                                      f"No Action required", ctx.author)
                 else:  # could only be false or none
                     await send_error(ctx.message.channel, "Invitation",
