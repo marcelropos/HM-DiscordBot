@@ -257,47 +257,49 @@ class TmpChannelUtil:
         if not document:
             return True
 
-        if document.voice is None and document.chat is None:
-            return True
+        async with Locker():
 
-        if not document.deleteAt or (
-                not reset_delete_at[0] and datetime.now() > document.deleteAt):
-            try:
-                await document.voice.delete(reason="No longer used")
-            except NotFound:
-                pass
-            try:
-                await document.chat.delete(reason="No longer used")
-            except NotFound:
-                pass
+            if document.voice is None and document.chat is None:
+                return True
 
-            for message in document.messages:
+            if not document.deleteAt or (
+                    not reset_delete_at[0] and datetime.now() > document.deleteAt):
                 try:
-                    await message.delete()
+                    await document.voice.delete(reason="No longer used")
+                except NotFound:
+                    pass
+                try:
+                    await document.chat.delete(reason="No longer used")
                 except NotFound:
                     pass
 
-            await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
+                for message in document.messages:
+                    try:
+                        await message.delete()
+                    except NotFound:
+                        pass
 
-            logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
-            return True
-        elif reset_delete_at[0] and document.deleteAt:
+                await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
 
-            key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
-            time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[
-                key]
+                logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+                return True
+            elif reset_delete_at[0] and document.deleteAt:
 
-            new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+                key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+                time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[
+                    key]
 
-            document.deleteAt = new_deadline
-            await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+                new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
 
-            diff: timedelta = document.deleteAt - datetime.now()
-            if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
-                await document.chat.edit(
-                    topic=f"Owner: {document.owner.display_name}\n"
-                          f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
-                          f"{datetime.now().astimezone().tzinfo}")
+                document.deleteAt = new_deadline
+                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+
+                diff: timedelta = document.deleteAt - datetime.now()
+                if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
+                    await document.chat.edit(
+                        topic=f"Owner: {document.owner.display_name}\n"
+                              f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                              f"{datetime.now().astimezone().tzinfo}")
         return False
 
     @staticmethod
