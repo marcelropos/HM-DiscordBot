@@ -3,42 +3,39 @@ from typing import Union
 
 from discord import Member, User, Embed, Guild, TextChannel, Message, NotFound, PermissionOverwrite
 from discord.abc import GuildChannel
-from discord.ext.commands import Bot, group, Cog, Context, BadArgument, BotMissingPermissions, cooldown, BucketType, \
+from discord.ext.commands import Bot, group, Cog, Context, BadArgument, cooldown, BucketType, \
     max_concurrency
 from discord.ext.tasks import loop
-from discord_components import DiscordComponents
+from discord_components import DiscordComponents, Interaction, SelectOption, Select
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.placeholder import Placeholder
 from cogs.util.tmp_channel_util import TmpChannelUtil
-from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, NameDuplicationError, \
-    LeaveOwnChannelError
+from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, \
+    NameDuplicationError, LeaveOwnChannelError, TempChannelMayNotPersistError, YouOwnNoChannelsError
 from core.error.error_reply import send_error
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
-from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
-from mongo.gaming_channels import GamingChannels, GamingChannel
 from mongo.primitive_mongo_data import PrimitiveMongoData
-from mongo.study_channels import StudyChannels, StudyChannel
+from mongo.temp_channels import TempChannels, TempChannel
 
 bot_channels: set[TextChannel] = set()
 moderator = Placeholder()
 first_init = True
 
-logger = get_discord_child_logger("Subjects")
+logger = TmpChannelUtil.logger()
 
 
 class Tmpc(Cog):
     """
-    Manages the gaming/study tmp channels.
+    Manages temp channels.
     """
 
     def __init__(self, bot: Bot):
         self.bot = bot
         self.config_db: PrimitiveMongoData = PrimitiveMongoData(CollectionEnum.TEMP_CHANNELS_CONFIGURATION)
-        self.study_db: StudyChannels = StudyChannels(self.bot)
-        self.gaming_db: GamingChannels = GamingChannels(self.bot)
+        self.channel_db: TempChannels = TempChannels(self.bot)
         self.need_init = True
         if not first_init:
             self.ainit.start()
@@ -83,11 +80,12 @@ class Tmpc(Cog):
                   help="Keeps the channel after leaving.")
     async def keep(self, ctx: Context):
         """
-        Makes a Study Channel stay for a longer time.
+        Makes a temp channel persistent for some time.
         """
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
-        if type(document) == GamingChannel:
-            raise BotMissingPermissions(["Channel needs to be Study Channel"])
+
+        if not document.persist:
+            raise TempChannelMayNotPersistError()
 
         key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
         time_difference: tuple[int, int] = (await self.config_db.find_one({key: {"$exists": True}}))[key]
@@ -97,13 +95,13 @@ class Tmpc(Cog):
                                   f"minutes, after everyone has left.\n"
                                   f"Please check the channel topic for the exact deletion time.")
 
-        await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+        await self.channel_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
         await document.chat.edit(
             topic=f"Owner: {document.owner.display_name}\n"
                   f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
                   f"{datetime.now().astimezone().tzinfo}")
-        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.channel_db)
 
     @tmpc.command(pass_context=True,
                   help="Deletes the channel after leaving.")
@@ -112,16 +110,17 @@ class Tmpc(Cog):
         Deletes the channel after leaving.
         """
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
-        if type(document) == GamingChannel:
-            raise BotMissingPermissions(["Channel needs to be Study Channel"])
+
+        if not document.persist:
+            raise TempChannelMayNotPersistError()
 
         document.deleteAt = None
         embed = Embed(title="Turned off keep",
                       description=f"This channel will no longer stay after everyone leaves")
 
-        await self.study_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+        await self.channel_db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
         await ctx.reply(embed=embed)
-        await TmpChannelUtil.check_delete_channel(document.voice, self.study_db, logger)
+        await TmpChannelUtil.check_delete_channel(document.voice, self.channel_db)
 
     @tmpc.command(pass_context=True,
                   brief="Hides the channel",
@@ -275,13 +274,25 @@ class Tmpc(Cog):
                     place: place an embed in the channel so that user can easily join the Study Channel.
                         Attention the place Command only works for Study Channels.
         """
-        if mode.lower() == "place":
-            document: StudyChannel = await self.study_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
-            if not document:
-                embed: Embed = Embed(title="Could not find Channel",
-                                     description="I could not find any Study that you are the owner of")
-                await ctx.reply(embed=embed)
-                return
+        document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
+        if mode.lower() == "gen":
+            new_token = TmpChannelUtil.create_token()
+
+            for message in document.messages:
+                try:
+                    await message.delete()
+                except NotFound:
+                    pass
+
+            replace = {DBKeyWrapperEnum.TOKEN.value: new_token, DBKeyWrapperEnum.MESSAGES.value: list()}
+            await self.channel_db.update_one({DBKeyWrapperEnum.ID.value: document.id}, replace)
+        elif mode.lower() == "show" or mode.lower() == "gen":
+            embed: Embed = Embed(title="Token",
+                                 description=f"`!tmpc join {document.token}`")
+            await ctx.send(embed=embed)
+        elif mode.lower() == "place":
+            document: TempChannel = await self.get_temp_channel(ctx)
+
             embed: Embed = Embed(title="Study Channel Invite",
                                  description="")
             embed.add_field(name="Creator",
@@ -297,49 +308,11 @@ class Tmpc(Cog):
             message: Message = await ctx.send(embed=embed)
             await ctx.message.delete()
             await message.add_reaction(emoji="🔓")
-            new_document = {
-                DBKeyWrapperEnum.OWNER.value: document.owner_id,
-                DBKeyWrapperEnum.CHAT.value: document.channel_id,
-                DBKeyWrapperEnum.VOICE.value: document.voice_id,
-                DBKeyWrapperEnum.TOKEN.value: document.token,
-                DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt,
-                DBKeyWrapperEnum.MESSAGES.value: document.messages + [message]
-            }
-            new_document[DBKeyWrapperEnum.MESSAGES.value] = [(message.channel.id, message.id) for message in
-                                                             new_document[DBKeyWrapperEnum.MESSAGES.value]]
-            await self.study_db.update_one(document.document, new_document)
-            return
-
-        if mode.lower() == "show":
-            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, everyone=True)
-            embed: Embed = Embed(title="Token",
-                                 description=f"`!tmpc join {document.token}`")
-        elif mode.lower() == "gen":
-            document = await self.check_tmpc_channel(ctx.author, ctx.channel.id)
-            new_token = TmpChannelUtil.create_token()
-            new_document = {
-                DBKeyWrapperEnum.OWNER.value: document.owner_id,
-                DBKeyWrapperEnum.CHAT.value: document.channel_id,
-                DBKeyWrapperEnum.VOICE.value: document.voice_id,
-                DBKeyWrapperEnum.TOKEN.value: new_token,
-            }
-            if type(document) == StudyChannel:
-                new_document.update({DBKeyWrapperEnum.DELETE_AT.value: document.deleteAt,
-                                     DBKeyWrapperEnum.MESSAGES.value: list()})
-                for message in document.messages:
-                    try:
-                        await message.delete()
-                    except NotFound:
-                        pass
-                await self.study_db.update_one({DBKeyWrapperEnum.ID.value: document._id}, new_document)
-            else:
-                await self.gaming_db.update_one(document.document, new_document)
-            embed: Embed = Embed(title="Token",
-                                 description=f"`!tmpc join {new_token}`")
+            replace = {DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in
+                                                         document.messages + [message]]}
+            await self.channel_db.update_one(document.document, replace)
         else:
             raise BadArgument
-
-        await ctx.reply(embed=embed)
 
     @tmpc.command(pass_context=True,
                   brief="Join a tmp channel.",
@@ -355,9 +328,7 @@ class Tmpc(Cog):
             token: The token for the Channel
         """
         key = DBKeyWrapperEnum.TOKEN.value
-        document = await self.study_db.find_one({key: token})
-        if not document:
-            document = await self.gaming_db.find_one({key: token})
+        document = await self.channel_db.find_one({key: token})
 
         if not document:
             raise CouldNotFindToken
@@ -366,6 +337,7 @@ class Tmpc(Cog):
         await document.chat.set_permissions(ctx.author, view_channel=True)
         await ctx.message.delete()
 
+        # noinspection PyBroadException
         try:
             await ctx.author.move_to(document.voice, reason="Joined via Token")
         except Exception:
@@ -410,6 +382,7 @@ class Tmpc(Cog):
             for mention in msg.mentions:
                 mention: Member
                 if mention in document.voice.members:
+                    # noinspection PyUnresolvedReferences
                     await member.move_to(None)
 
             embed: Embed = Embed(title="Kick")
@@ -453,15 +426,12 @@ class Tmpc(Cog):
         except (NotFound, AttributeError):
             pass
 
-        if type(document) == StudyChannel:
-            for message in document.messages:
-                try:
-                    await message.delete()
-                except (NotFound, AttributeError):
-                    pass
-            await self.study_db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
-        else:
-            await self.gaming_db.delete_one({DBKeyWrapperEnum.ID.value: document._id})
+        for message in document.messages:
+            try:
+                await message.delete()
+            except (NotFound, AttributeError):
+                pass
+        await self.channel_db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
 
         logger.info(f"Deleted Tmp Channel {document.voice.name} on user command")
 
@@ -488,22 +458,15 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   brief="Invite a user to your temp channel",
-                  help="The first argument must be <true|false>\n"
-                       "True: StudyChannel mode\n"
-                       "False: GamingChannel mode\n"
-                       "Member must be invited by mentions.\n"
+                  help="Member must be invited by mentions.\n"
                        "Limitations:\n"
                        "- This command can be used 3/hour/user\n"
                        "- The invite command is limited to 10 user at once")
     @cooldown(3, 3600, BucketType.user)
-    async def invite(self, ctx: Context, study_channel: bool):
+    @bot_chat(bot_channels)
+    async def invite(self, ctx: Context):
 
-        if study_channel:
-            channel = await self.study_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
-        else:
-            channel = await self.gaming_db.find_one({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
-        channel: Union[GamingChannel, StudyChannel]
-        document = await self.check_tmpc_channel(ctx.author, channel.chat.id)
+        document = await self.get_temp_channel(ctx)
 
         voice_overwrites = document.voice.overwrites
         chat_overwrites = document.chat.overwrites
@@ -522,7 +485,7 @@ class Tmpc(Cog):
                 if document.chat.overwrites_for(mention).view_channel:
                     await send_error(ctx.message.channel, "Invitation",
                                      f"{mention.mention} can already see your channels",
-                                     f"Noting", ctx.author)
+                                     f"No Action required", ctx.author)
                 else:  # could only be false or none
                     await send_error(ctx.message.channel, "Invitation",
                                      f"{mention.mention} used the left command on this channel",
@@ -565,11 +528,9 @@ class Tmpc(Cog):
             await document.chat.edit(overwrites=chat_overwrites)
 
     async def check_tmpc_channel(self, member: Member, _id: int, is_mod: bool = False, everyone: bool = False) \
-            -> Union[GamingChannel, StudyChannel]:
+            -> TempChannel:
         key = DBKeyWrapperEnum.CHAT.value
-        document: Union[GamingChannel, StudyChannel] = await self.study_db.find_one({key: _id})
-        if not document:
-            document = await self.gaming_db.find_one({key: _id})
+        document: TempChannel = await self.channel_db.find_one({key: _id})
 
         if not document:
             raise WrongChatForCommandTmpc
@@ -578,6 +539,34 @@ class Tmpc(Cog):
                 (is_mod and moderator.item in member.roles):
             return document
         raise NotOwnerError(is_mod=is_mod, owner=document.owner.mention)
+
+    async def get_temp_channel(self, ctx: Context) -> TempChannel:
+
+        channels: list[TempChannel] = await self.channel_db.find({DBKeyWrapperEnum.OWNER.value: ctx.author.id})
+        if not channels:
+            raise YouOwnNoChannelsError()
+        elif len(channels) == 1:
+            return channels.pop()
+
+        pool = {channel.chat.name: channel for channel in channels}
+
+        options = Select(
+            placeholder="Select your group",
+            options=[SelectOption(label=channel.chat.name, value=channel.chat.name) for channel in channels])
+
+        await ctx.reply(content="Please select **one** of the following groups.",
+                        components=[options])
+
+        res: Interaction = await self.bot.wait_for("select_option",
+                                                   check=lambda x: self.check(x, [channel.chat.name for channel in
+                                                                                  channels], ctx.author),
+                                                   timeout=120)
+        await res.respond(content=f"I received your input.")
+        return pool[res.values[0]]
+
+    @staticmethod
+    def check(x, options: list[str], author: Member) -> bool:
+        return x.values[0] in options and x.user.id == author.id
 
 
 def setup(bot: Bot):

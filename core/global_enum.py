@@ -15,8 +15,8 @@ class CollectionEnum(Enum):
     LOGGER = "logger"
     COOLDOWN = "cooldown"
     GROUP_SUBJECT_RELATION = "groupSubjectRelation"
-    STUDY_CHANNELS = "studyChannels"
-    GAMING_CHANNELS = "gamingChannels"
+    TEMP_CHANNELS = "tempChannels"
+    JOIN_TEMP_CHANNELS = "joinTempChannels"
     TEMP_CHANNELS_CONFIGURATION = "channelConfiguration"
 
 
@@ -32,10 +32,6 @@ class ConfigurationNameEnum(Enum):
     SUBJECTS_SEPARATOR_ROLE = "subjectsSeparator"
     GROUP_CATEGORY = "groupCategory"
     SUBJECTS_CATEGORY = "subjectsCategory"
-    STUDY_CATEGORY = "studyCategory"
-    GAMING_CATEGORY = "gamingCategory"
-    STUDY_JOIN_VOICE_CHANNEL = "studyVoiceChannel"
-    GAMING_JOIN_VOICE_CHANNEL = "gamingVoiceChannel"
     NERD_VOICE_CHANNEL = "NerdVoiceChannel"
     ENABLED = "enabled"
     DEADLINE = "deadline"
@@ -55,6 +51,7 @@ class DBKeyWrapperEnum(Enum):
     OWNER = "owner"
     CHAT = "chat"
     VOICE = "voice"
+    DEFAULT_CHANNEL_NAME = "defaultChannelName"
     TOKEN = "token"
     DELETE_AT = "deleteAt"
     ROLE = "role"
@@ -62,6 +59,7 @@ class DBKeyWrapperEnum(Enum):
     SUBJECT = "subject"
     DEFAULT = "default"
     MESSAGES = "messages"
+    PERSIST = "persist"
 
 
 class LoggingLevel(Enum):
