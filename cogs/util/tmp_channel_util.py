@@ -247,56 +247,59 @@ class TmpChannelUtil:
     @staticmethod
     async def check_delete_channel(voice_channel: VoiceChannel, db: TempChannels,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
-        if len({member for member in voice_channel.members if not member.bot}) == 0:
-            document: list[TempChannel] = await db.find(
-                {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
-            if not document:
-                return True
+        if len({member for member in voice_channel.members if not member.bot}) != 0:
+            return True
 
-            document: TempChannel = document[0]
+        document: list[TempChannel] = await db.find(
+            {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
-            if document.voice is None and document.chat is None:
-                return True
+        if not document:
+            return True
 
-            if not document.deleteAt or (
-                    not reset_delete_at[0] and datetime.now() > document.deleteAt):
+        document: TempChannel = document[0]
+
+        if document.voice is None and document.chat is None:
+            return True
+
+        if not document.deleteAt or (
+                not reset_delete_at[0] and datetime.now() > document.deleteAt):
+            try:
+                await document.voice.delete(reason="No longer used")
+            except NotFound:
+                pass
+            try:
+                await document.chat.delete(reason="No longer used")
+            except NotFound:
+                pass
+
+            for message in document.messages:
                 try:
-                    await document.voice.delete(reason="No longer used")
+                    await message.delete()
                 except NotFound:
                     pass
-                try:
-                    await document.chat.delete(reason="No longer used")
-                except NotFound:
-                    pass
 
-                for message in document.messages:
-                    try:
-                        await message.delete()
-                    except NotFound:
-                        pass
+            await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
 
-                await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
+            logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+            return True
+        elif reset_delete_at[0] and document.deleteAt:
 
-                logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
-                return True
-            elif reset_delete_at[0] and document.deleteAt:
+            key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+            time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[
+                key]
 
-                key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
-                time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[
-                    key]
+            new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
 
-                new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+            document.deleteAt = new_deadline
+            await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
 
-                document.deleteAt = new_deadline
-                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
-
-                diff: timedelta = document.deleteAt - datetime.now()
-                if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
-                    await document.chat.edit(
-                        topic=f"Owner: {document.owner.display_name}\n"
-                              f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
-                              f"{datetime.now().astimezone().tzinfo}")
+            diff: timedelta = document.deleteAt - datetime.now()
+            if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
+                await document.chat.edit(
+                    topic=f"Owner: {document.owner.display_name}\n"
+                          f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                          f"{datetime.now().astimezone().tzinfo}")
         return False
 
     @staticmethod
