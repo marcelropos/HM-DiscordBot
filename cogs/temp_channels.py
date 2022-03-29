@@ -19,7 +19,6 @@ from mongo.temp_channels import TempChannels
 
 bot_channels: set[TextChannel] = set()
 event = namedtuple("DeleteTime", ["hour", "min"])
-temp_channels: set[VoiceChannel] = set()
 first_init = True
 
 logger = TmpChannelUtil.logger()
@@ -45,13 +44,11 @@ class StudyTmpChannels(Cog):
         """
         Loads the configuration for the module.
         """
-        global temp_channels, bot_channels
+        global bot_channels
         # noinspection PyTypeChecker
         async with AinitManager(bot=self.bot, loop=self.ainit, need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:
             if need_init:
-                temp_channels = await TmpChannelUtil.ainit_helper(self.db)
-
                 key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
                 default_keep_time = await self.config_db.find_one({key: {"$exists": True}})
                 if not default_keep_time:
@@ -98,22 +95,17 @@ class StudyTmpChannels(Cog):
             return
         await self.wait_for_init()
 
-        global temp_channels
-        guild: Guild = self.bot.guilds[0]
-
         event_type: EventType = EventType.status(before, after)
 
         if event_type == EventType.LEFT or event_type == EventType.SWITCHED:
             voice_channel: VoiceChannel = before.channel
-            if voice_channel in temp_channels:
+            if voice_channel in [document.voice for document in await self.db.find({})]:
                 logger.info("Some user has left a temp channel.")
-                if await TmpChannelUtil.check_delete_channel(voice_channel, self.db,
-                                                             reset_delete_at=(True, self.config_db)):
-                    temp_channels.remove(voice_channel)
+                await TmpChannelUtil.check_delete_channel(voice_channel, self.db,
+                                                          reset_delete_at=(True, self.config_db))
 
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
-            await TmpChannelUtil.joined_voice_channel(self.db, temp_channels, after.channel, guild,
-                                                      member, self.bot, self.join_db)
+            await TmpChannelUtil.joined_voice_channel(self.db, after.channel, member, self.bot, self.join_db)
 
     @group(pass_context=True,
            name="tempChannel",
@@ -148,7 +140,8 @@ class StudyTmpChannels(Cog):
             raise IsAlreadyAJoinChannelError(channel)
         await self.join_db.insert_one((channel, pattern, persistent))
         indicator = "" if persistent else "none"
-        await ctx.reply(f"You can now create {indicator} persistent channels with {channel.category}:{channel.mention}.")
+        await ctx.reply(
+            f"You can now create {indicator} persistent channels with {channel.category}:{channel.mention}.")
 
     @temp_channel.command(pass_context=True,
                           name="join-edit",
@@ -193,10 +186,11 @@ class StudyTmpChannels(Cog):
 
     @loop(minutes=10)
     async def delete_old_channels(self):
-        channels = temp_channels.copy()
-        for voice_channel in channels:
-            if await TmpChannelUtil.check_delete_channel(voice_channel, self.db):
-                temp_channels.remove(voice_channel)
+        for voice_channel in [document.voice for document in await self.db.find({})]:
+            await TmpChannelUtil.check_delete_channel(voice_channel, self.db)
+        for document in [document for document in await self.db.find({}) if
+                         document.voice is None or document.chat is None]:
+            await TmpChannelUtil.delete_channel(self.db, document)
 
     async def wait_for_init(self):
         while self.need_init:

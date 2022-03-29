@@ -313,9 +313,8 @@ class TmpChannelUtil:
         return True
 
     @staticmethod
-    async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
-                                   voice_channel: VoiceChannel, guild: Guild,
-                                   member: Union[Member, User],
+    async def joined_voice_channel(db: TempChannels,
+                                   voice_channel: VoiceChannel, member: Union[Member, User],
                                    bot: Bot, join_db: JoinTempChannels):
         async with Locker():
             # noinspection PyBroadException
@@ -333,18 +332,11 @@ class TmpChannelUtil:
                         await member.move_to(channel.voice, reason="Member has already a temp channel in this category")
                         return
 
-                    channels.add((await TmpChannelUtil.get_server_objects(guild,
-                                                                          join_channel.default_channel_name, member, db,
-                                                                          join_channel, bot)).voice)
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
-                if voice_channel in channels:
-                    document: Optional[TempChannel] = await db.find_one(
-                        {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
-
-                    if not document:
-                        await TmpChannelUtil.database_illegal_state(bot, voice_channel)
-                        return
+                documents: list[TempChannel] = await db.find({})
+                if voice_channel in [document.voice for document in documents]:
+                    document = [document for document in documents if document.voice == voice_channel].pop()
 
                     logger.info(
                         f'User="{member.name}#{member.discriminator}({member.id})" tempChannel="{voice_channel.name}"')
@@ -354,6 +346,7 @@ class TmpChannelUtil:
                     if not (document.voice.overwrites_for(member).view_channel and document.voice.overwrites_for(
                             member).connect):
                         await document.voice.set_permissions(member, view_channel=True, connect=True, reason=reason)
+
             except HitDiscordLimitsError as e:
                 bot_chats = set()
                 await assign_accepted_chats(bot, bot_chats)
