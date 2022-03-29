@@ -39,11 +39,11 @@ class TmpChannelUtil:
         return logger
 
     @staticmethod
-    async def get_server_objects(guild: Guild,
-                                 name_format: str,
-                                 member: Union[Member, User],
-                                 db: TempChannels,
-                                 join_channel: JoinTempChannel, bot: Bot) -> TempChannel:
+    async def create_temp_channel(guild: Guild,
+                                  name_format: str,
+                                  member: Union[Member, User],
+                                  db: TempChannels,
+                                  join_channel: JoinTempChannel, bot: Bot):
         """
         Creates a new tmp_channel voice and text channel, saves it and places it correctly.
 
@@ -157,7 +157,6 @@ class TmpChannelUtil:
             pass
 
         await TmpChannelUtil.make_welcome_embed(entry, bot)
-        return entry
 
     # noinspection PyArgumentEqualDefault
     @staticmethod
@@ -312,7 +311,7 @@ class TmpChannelUtil:
     @staticmethod
     async def joined_voice_channel(db: TempChannels,
                                    voice_channel: VoiceChannel, member: Union[Member, User],
-                                   bot: Bot, join_db: JoinTempChannels):
+                                   bot: Bot, join_db: JoinTempChannels, guild: Guild):
         async with Locker():
             # noinspection PyBroadException
             try:
@@ -329,6 +328,9 @@ class TmpChannelUtil:
                         await member.move_to(channel.voice, reason="Member has already a temp channel in this category")
                         return
 
+                    await TmpChannelUtil.create_temp_channel(guild,
+                                                             join_channel.default_channel_name, member, db,
+                                                             join_channel, bot)
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
                 documents: list[TempChannel] = await db.find({})

@@ -2,7 +2,7 @@ from asyncio import sleep
 from collections import namedtuple
 from typing import Union, Optional
 
-from discord import VoiceState, Member, User, VoiceChannel, TextChannel, RawReactionActionEvent, HTTPException
+from discord import VoiceState, Member, User, VoiceChannel, TextChannel, RawReactionActionEvent, HTTPException, Guild
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
 
@@ -103,8 +103,9 @@ class StudyTmpChannels(Cog):
                 await TmpChannelUtil.check_delete_channel(voice_channel, self.db,
                                                           reset_delete_at=(True, self.config_db))
 
+        guild: Guild = self.bot.guilds[0]
         if event_type == EventType.JOINED or event_type == EventType.SWITCHED:
-            await TmpChannelUtil.joined_voice_channel(self.db, after.channel, member, self.bot, self.join_db)
+            await TmpChannelUtil.joined_voice_channel(self.db, after.channel, member, self.bot, self.join_db, guild)
 
     @group(pass_context=True,
            name="tempChannel",
