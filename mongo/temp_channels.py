@@ -7,7 +7,10 @@ from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, Not
 from discord.ext.commands import Bot
 
 from core.global_enum import DBKeyWrapperEnum, CollectionEnum
+from core.logger import get_mongo_child_logger
 from mongo.mongo_collection import MongoCollection, MongoDocument
+
+logger = get_mongo_child_logger("TempChannelDB")
 
 
 @dataclass
@@ -83,6 +86,9 @@ class TempChannels(MongoCollection):
                 )
             except HTTPException:
                 pass
+            except KeyError:
+                logger.exception(f"Invalid document deleting: {result}")
+                await self.delete_one(result)
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
