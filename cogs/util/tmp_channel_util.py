@@ -253,10 +253,11 @@ class TmpChannelUtil:
                 return
 
             document: TempChannel = await db.find_one({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
-        except AttributeError:
-            return
 
-        if len({member for member in voice_channel.members if not member.bot}) != 0:
+            if len({member for member in voice_channel.members if not member.bot}) != 0:
+                return
+
+        except AttributeError:
             return
 
         if not document:
