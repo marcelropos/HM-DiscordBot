@@ -58,8 +58,6 @@ class TmpChannelUtil:
 
             join_channel: The Join Channel which triggered the action
 
-            bot: The bot instance.
-
         Returns:
             A TempChannel which contains the created pair.
 
@@ -251,11 +249,13 @@ class TmpChannelUtil:
 
         try:
             if len({member for member in voice_channel.members if not member.bot}) != 0:
-                return True
+                return False
 
             document: TempChannel = await db.find_one({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
         except AttributeError:
             return True
+        if len({member for member in voice_channel.members if not member.bot}) != 0:
+            return False
 
         if not document:
             return True
