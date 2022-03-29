@@ -262,24 +262,7 @@ class TmpChannelUtil:
 
             if not document.deleteAt or (
                     not reset_delete_at[0] and datetime.now() > document.deleteAt):
-                try:
-                    await document.voice.delete(reason="No longer used")
-                except NotFound:
-                    pass
-                try:
-                    await document.chat.delete(reason="No longer used")
-                except NotFound:
-                    pass
-
-                for message in document.messages:
-                    try:
-                        await message.delete()
-                    except NotFound:
-                        pass
-
-                await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
-
-                logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
+                await TmpChannelUtil.delete_channel(db, document, voice_channel)
                 return True
             elif reset_delete_at[0] and document.deleteAt:
 
@@ -299,6 +282,24 @@ class TmpChannelUtil:
                               f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
                               f"{datetime.now().astimezone().tzinfo}")
         return False
+
+    @staticmethod
+    async def delete_channel(db, document, voice_channel):
+        try:
+            await document.voice.delete(reason="No longer used")
+        except NotFound:
+            pass
+        try:
+            await document.chat.delete(reason="No longer used")
+        except NotFound:
+            pass
+        for message in document.messages:
+            try:
+                await message.delete()
+            except NotFound:
+                pass
+        await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
+        logger.info(f"Deleted Tmp Study Channel {voice_channel.name}")
 
     @staticmethod
     async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
