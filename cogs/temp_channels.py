@@ -188,6 +188,7 @@ class StudyTmpChannels(Cog):
     async def delete_old_channels(self):
         for voice_channel in [document.voice for document in await self.db.find({})]:
             await TmpChannelUtil.check_delete_channel(voice_channel, self.db)
+        # New db call is needed because db could change between above and below
         for document in [document for document in await self.db.find({}) if
                          document.voice is None or document.chat is None]:
             await TmpChannelUtil.delete_channel(self.db, document)
