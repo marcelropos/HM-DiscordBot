@@ -58,6 +58,8 @@ class TmpChannelUtil:
 
             join_channel: The Join Channel which triggered the action
 
+            bot: The bot instance.
+
         Returns:
             A TempChannel which contains the created pair.
 
