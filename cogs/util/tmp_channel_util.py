@@ -250,8 +250,7 @@ class TmpChannelUtil:
         if len({member for member in voice_channel.members if not member.bot}) != 0:
             return True
 
-        document: TempChannel = await db.find_one(
-            {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+        document: TempChannel = await db.find_one({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
         if not document:
             return True
