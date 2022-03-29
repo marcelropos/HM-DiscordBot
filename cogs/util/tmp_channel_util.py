@@ -265,24 +265,24 @@ class TmpChannelUtil:
                 await TmpChannelUtil.delete_channel(db, document)
                 return True
 
-            elif reset_delete_at[0] and document.deleteAt:
+            if reset_delete_at[0] and document.deleteAt:
+                await TmpChannelUtil.update_channel_deadline(db, document, reset_delete_at)
 
-                key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
-                time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[
-                    key]
-
-                new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
-
-                document.deleteAt = new_deadline
-                await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
-
-                diff: timedelta = document.deleteAt - datetime.now()
-                if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
-                    await document.chat.edit(
-                        topic=f"Owner: {document.owner.display_name}\n"
-                              f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
-                              f"{datetime.now().astimezone().tzinfo}")
         return False
+
+    @staticmethod
+    async def update_channel_deadline(db, document, reset_delete_at):
+        key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+        time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[key]
+        new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+        document.deleteAt = new_deadline
+        await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+        diff: timedelta = document.deleteAt - datetime.now()
+        if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
+            await document.chat.edit(
+                topic=f"Owner: {document.owner.display_name}\n"
+                      f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                      f"{datetime.now().astimezone().tzinfo}")
 
     @staticmethod
     async def delete_channel(db, document):
