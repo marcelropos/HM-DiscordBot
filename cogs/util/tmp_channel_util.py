@@ -248,7 +248,7 @@ class TmpChannelUtil:
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
 
         if len({member for member in voice_channel.members if not member.bot}) != 0:
-            return True
+            return False
 
         document: TempChannel = await db.find_one(
             {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
