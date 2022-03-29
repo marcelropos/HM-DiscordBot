@@ -246,13 +246,16 @@ class TmpChannelUtil:
         return int(totp.now())
 
     @staticmethod
-    async def check_delete_channel(voice_channel: VoiceChannel, db: TempChannels,
+    async def check_delete_channel(voice_channel: Optional[VoiceChannel], db: TempChannels,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
 
-        if len({member for member in voice_channel.members if not member.bot}) != 0:
-            return True
+        try:
+            if len({member for member in voice_channel.members if not member.bot}) != 0:
+                return True
 
-        document: TempChannel = await db.find_one({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+            document: TempChannel = await db.find_one({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+        except AttributeError:
+            return True
 
         if not document:
             return True
