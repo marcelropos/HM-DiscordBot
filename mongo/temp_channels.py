@@ -112,13 +112,11 @@ class TempChannels(MongoCollection):
         cursor = self.collection.find(find_params)
         if sort:
             cursor = cursor.sort(self)
-
-        return [await self._create_temp_channel(entry) for entry in await cursor.to_list(limit)]
+        documents = [await self._create_temp_channel(entry) for entry in await cursor.to_list(limit)]
+        return [document for document in documents if document]
 
     async def update_one(self, find_params: dict, replace: dict) -> TempChannel:
         await self.collection.update_one(find_params, {"$set": replace})
         document = find_params.copy()
         document.update(replace)
         return await self.find_one(document)
-
-
