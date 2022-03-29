@@ -2,7 +2,7 @@ from asyncio import sleep
 from collections import namedtuple
 from typing import Union, Optional
 
-from discord import VoiceState, Member, User, VoiceChannel, Guild, TextChannel, RawReactionActionEvent
+from discord import VoiceState, Member, User, VoiceChannel, TextChannel, RawReactionActionEvent, HTTPException
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
 
@@ -81,12 +81,11 @@ class StudyTmpChannels(Cog):
 
         document = document[0]
 
-        await document.voice.set_permissions(member, view_channel=True, connect=True)
-        await document.chat.set_permissions(member, view_channel=True)
-
         try:
+            await document.voice.set_permissions(member, view_channel=True, connect=True)
+            await document.chat.set_permissions(member, view_channel=True)
             await member.move_to(document.voice, reason="Joined via Token")
-        except Exception:
+        except HTTPException:
             pass
 
     @listener()
