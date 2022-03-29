@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound
+from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound, Forbidden, HTTPException
 from discord.ext.commands import Bot
 
 from core.global_enum import DBKeyWrapperEnum, CollectionEnum
@@ -70,16 +70,19 @@ class TempChannels(MongoCollection):
                 except (NotFound, AttributeError):
                     pass
 
-            return TempChannel(
-                result[DBKeyWrapperEnum.ID.value],
-                await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
-                guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
-                guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
-                result[DBKeyWrapperEnum.TOKEN.value],
-                result[DBKeyWrapperEnum.PERSIST.value],
-                result[DBKeyWrapperEnum.DELETE_AT.value],
-                messages
-            )
+            try:
+                return TempChannel(
+                    result[DBKeyWrapperEnum.ID.value],
+                    await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
+                    guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
+                    guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
+                    result[DBKeyWrapperEnum.TOKEN.value],
+                    result[DBKeyWrapperEnum.PERSIST.value],
+                    result[DBKeyWrapperEnum.DELETE_AT.value],
+                    messages
+                )
+            except HTTPException:
+                pass
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
