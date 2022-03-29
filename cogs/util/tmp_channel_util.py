@@ -260,12 +260,10 @@ class TmpChannelUtil:
         async with Locker():
 
             if document.voice is None or document.chat is None:
-                await TmpChannelUtil.delete_channel(db, document)
-                return True
+                return await TmpChannelUtil.delete_channel(db, document)
 
             if not document.deleteAt or (not reset_delete_at[0] and datetime.now() > document.deleteAt):
-                await TmpChannelUtil.delete_channel(db, document)
-                return True
+                return await TmpChannelUtil.delete_channel(db, document)
 
             if reset_delete_at[0] and document.deleteAt:
                 await TmpChannelUtil.update_channel_deadline(db, document, reset_delete_at)
@@ -287,7 +285,7 @@ class TmpChannelUtil:
                       f"{datetime.now().astimezone().tzinfo}")
 
     @staticmethod
-    async def delete_channel(db, document):
+    async def delete_channel(db, document) -> bool:
         try:
             await document.voice.delete(reason="No longer used")
         except (NotFound, AttributeError):
@@ -306,6 +304,7 @@ class TmpChannelUtil:
             logger.info(f"Deleted Tmp Study Channel {document.voice.name}")
         except AttributeError:
             logger.info("Delete a channel that no longer exists on the server.")
+        return True
 
     @staticmethod
     async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
