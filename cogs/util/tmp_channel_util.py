@@ -257,9 +257,6 @@ class TmpChannelUtil:
         except AttributeError:
             return True
 
-        if len({member for member in voice_channel.members if not member.bot}) != 0:
-            return False
-
         if not document:
             return True
 
