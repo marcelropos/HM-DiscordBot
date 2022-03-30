@@ -39,11 +39,11 @@ class TmpChannelUtil:
         return logger
 
     @staticmethod
-    async def get_server_objects(guild: Guild,
-                                 name_format: str,
-                                 member: Union[Member, User],
-                                 db: TempChannels,
-                                 join_channel: JoinTempChannel, bot: Bot) -> TempChannel:
+    async def create_temp_channel(guild: Guild,
+                                  name_format: str,
+                                  member: Union[Member, User],
+                                  db: TempChannels,
+                                  join_channel: JoinTempChannel, bot: Bot):
         """
         Creates a new tmp_channel voice and text channel, saves it and places it correctly.
 
@@ -247,73 +247,69 @@ class TmpChannelUtil:
 
     @staticmethod
     async def check_delete_channel(voice_channel: Optional[VoiceChannel], db: TempChannels,
-                                   reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
+                                   reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)):
 
         try:
             if len({member for member in voice_channel.members if not member.bot}) != 0:
-                return False
+                return
 
             document: TempChannel = await db.find_one({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
         except AttributeError:
-            return True
+            return
 
         if not document:
-            return True
+            return
 
-        async with Locker():
+        if document.voice is None or document.chat is None:
+            return await TmpChannelUtil.delete_channel(db, document)
 
-            if document.voice is None or document.chat is None:
-                return await TmpChannelUtil.delete_channel(db, document)
+        if not document.deleteAt or (not reset_delete_at[0] and datetime.now() > document.deleteAt):
+            return await TmpChannelUtil.delete_channel(db, document)
 
-            if not document.deleteAt or (not reset_delete_at[0] and datetime.now() > document.deleteAt):
-                return await TmpChannelUtil.delete_channel(db, document)
-
-            if reset_delete_at[0] and document.deleteAt:
-                await TmpChannelUtil.update_channel_deadline(db, document, reset_delete_at)
-
-        return False
+        if reset_delete_at[0] and document.deleteAt:
+            await TmpChannelUtil.update_channel_deadline(db, document, reset_delete_at)
 
     @staticmethod
     async def update_channel_deadline(db, document, reset_delete_at):
-        key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
-        time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[key]
-        new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
-        document.deleteAt = new_deadline
-        await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
-        diff: timedelta = document.deleteAt - datetime.now()
-        if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
-            await document.chat.edit(
-                topic=f"Owner: {document.owner.display_name}\n"
-                      f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
-                      f"{datetime.now().astimezone().tzinfo}")
+        async with Locker():
+            key = ConfigurationNameEnum.DEFAULT_KEEP_TIME.value
+            time_difference: tuple[int, int] = (await reset_delete_at[1].find_one({key: {"$exists": True}}))[key]
+            new_deadline = datetime.now() + timedelta(hours=time_difference[0], minutes=time_difference[1])
+            document.deleteAt = new_deadline
+            await db.update_one({DBKeyWrapperEnum.CHAT.value: document.channel_id}, document.document)
+            diff: timedelta = document.deleteAt - datetime.now()
+            if diff.seconds / 60 > 10 or datetime.now() > document.deleteAt:
+                await document.chat.edit(
+                    topic=f"Owner: {document.owner.display_name}\n"
+                          f"- This channel will be deleted at {document.deleteAt.strftime('%d.%m.%y %H:%M')} "
+                          f"{datetime.now().astimezone().tzinfo}")
 
     @staticmethod
-    async def delete_channel(db, document) -> bool:
-        try:
-            await document.voice.delete(reason="No longer used")
-        except (NotFound, AttributeError):
-            pass
-        try:
-            await document.chat.delete(reason="No longer used")
-        except (NotFound, AttributeError):
-            pass
-        for message in document.messages:
+    async def delete_channel(db, document):
+        async with Locker():
             try:
-                await message.delete()
+                await document.voice.delete(reason="No longer used")
             except (NotFound, AttributeError):
                 pass
-        await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
-        try:
-            logger.info(f"Deleted Tmp Study Channel {document.voice.name}")
-        except AttributeError:
-            logger.info("Delete a channel that no longer exists on the server.")
-        return True
+            try:
+                await document.chat.delete(reason="No longer used")
+            except (NotFound, AttributeError):
+                pass
+            for message in document.messages:
+                try:
+                    await message.delete()
+                except (NotFound, AttributeError):
+                    pass
+            await db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
+            try:
+                logger.info(f"Deleted Tmp Study Channel {document.voice.name}")
+            except AttributeError:
+                logger.info("Delete a channel that no longer exists on the server.")
 
     @staticmethod
-    async def joined_voice_channel(db: TempChannels, channels: set[VoiceChannel],
-                                   voice_channel: VoiceChannel, guild: Guild,
-                                   member: Union[Member, User],
-                                   bot: Bot, join_db: JoinTempChannels):
+    async def joined_voice_channel(db: TempChannels,
+                                   voice_channel: VoiceChannel, member: Union[Member, User],
+                                   bot: Bot, join_db: JoinTempChannels, guild: Guild):
         async with Locker():
             # noinspection PyBroadException
             try:
@@ -330,18 +326,14 @@ class TmpChannelUtil:
                         await member.move_to(channel.voice, reason="Member has already a temp channel in this category")
                         return
 
-                    channels.add((await TmpChannelUtil.get_server_objects(guild,
-                                                                          join_channel.default_channel_name, member, db,
-                                                                          join_channel, bot)).voice)
+                    await TmpChannelUtil.create_temp_channel(guild,
+                                                             join_channel.default_channel_name, member, db,
+                                                             join_channel, bot)
                     logger.info(f"Created Tmp Channel with the name '{voice_channel.name}'")
 
-                if voice_channel in channels:
-                    document: Optional[TempChannel] = await db.find_one(
-                        {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
-
-                    if not document:
-                        await TmpChannelUtil.database_illegal_state(bot, voice_channel)
-                        return
+                documents: list[TempChannel] = await db.find({})
+                if voice_channel in [document.voice for document in documents]:
+                    document = [document for document in documents if document.voice == voice_channel].pop()
 
                     logger.info(
                         f'User="{member.name}#{member.discriminator}({member.id})" tempChannel="{voice_channel.name}"')
@@ -351,6 +343,7 @@ class TmpChannelUtil:
                     if not (document.voice.overwrites_for(member).view_channel and document.voice.overwrites_for(
                             member).connect):
                         await document.voice.set_permissions(member, view_channel=True, connect=True, reason=reason)
+
             except HitDiscordLimitsError as e:
                 bot_chats = set()
                 await assign_accepted_chats(bot, bot_chats)

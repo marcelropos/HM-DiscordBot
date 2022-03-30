@@ -3,11 +3,14 @@ import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound
+from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound, Forbidden, HTTPException
 from discord.ext.commands import Bot
 
 from core.global_enum import DBKeyWrapperEnum, CollectionEnum
+from core.logger import get_mongo_child_logger
 from mongo.mongo_collection import MongoCollection, MongoDocument
+
+logger = get_mongo_child_logger("TempChannelDB")
 
 
 @dataclass
@@ -70,16 +73,22 @@ class TempChannels(MongoCollection):
                 except (NotFound, AttributeError):
                     pass
 
-            return TempChannel(
-                result[DBKeyWrapperEnum.ID.value],
-                await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
-                guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
-                guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
-                result[DBKeyWrapperEnum.TOKEN.value],
-                result[DBKeyWrapperEnum.PERSIST.value],
-                result[DBKeyWrapperEnum.DELETE_AT.value],
-                messages
-            )
+            try:
+                return TempChannel(
+                    result[DBKeyWrapperEnum.ID.value],
+                    await guild.fetch_member(result[DBKeyWrapperEnum.OWNER.value]),
+                    guild.get_channel(result[DBKeyWrapperEnum.CHAT.value]),
+                    guild.get_channel(result[DBKeyWrapperEnum.VOICE.value]),
+                    result[DBKeyWrapperEnum.TOKEN.value],
+                    result[DBKeyWrapperEnum.PERSIST.value],
+                    result[DBKeyWrapperEnum.DELETE_AT.value],
+                    messages
+                )
+            except HTTPException:
+                pass
+            except KeyError:
+                logger.exception(f"Invalid document deleting: {result}")
+                await self.delete_one(result)
 
     async def insert_one(self, entry: tuple[Union[Member, User],
                                             TextChannel, VoiceChannel,
@@ -109,13 +118,11 @@ class TempChannels(MongoCollection):
         cursor = self.collection.find(find_params)
         if sort:
             cursor = cursor.sort(self)
-
-        return [await self._create_temp_channel(entry) for entry in await cursor.to_list(limit)]
+        documents = [await self._create_temp_channel(entry) for entry in await cursor.to_list(limit)]
+        return [document for document in documents if document]
 
     async def update_one(self, find_params: dict, replace: dict) -> TempChannel:
         await self.collection.update_one(find_params, {"$set": replace})
         document = find_params.copy()
         document.update(replace)
         return await self.find_one(document)
-
-
