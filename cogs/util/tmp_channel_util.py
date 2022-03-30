@@ -157,6 +157,7 @@ class TmpChannelUtil:
             pass
 
         await TmpChannelUtil.make_welcome_embed(entry, bot)
+        return entry
 
     # noinspection PyArgumentEqualDefault
     @staticmethod
@@ -253,10 +254,6 @@ class TmpChannelUtil:
                 return
 
             document: TempChannel = await db.find_one({DBKeyWrapperEnum.VOICE.value: voice_channel.id})
-
-            if len({member for member in voice_channel.members if not member.bot}) != 0:
-                return
-
         except AttributeError:
             return
 
