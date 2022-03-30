@@ -1,4 +1,3 @@
-import logging
 from asyncio import Lock
 from datetime import datetime, timedelta
 from typing import Union, Optional
@@ -14,9 +13,9 @@ from core.error.error_collection import BrokenConfigurationError, HitDiscordLimi
 from core.error.error_reply import send_error
 from core.global_enum import ConfigurationNameEnum, CollectionEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
+from mongo.join_temp_channels import JoinTempChannel, JoinTempChannels
 from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.temp_channels import TempChannels, TempChannel
-from mongo.join_temp_channels import JoinTempChannel, JoinTempChannels
 
 logger = get_discord_child_logger("TempChannels")
 
@@ -247,14 +246,17 @@ class TmpChannelUtil:
     @staticmethod
     async def check_delete_channel(voice_channel: VoiceChannel, db: TempChannels,
                                    reset_delete_at: tuple[bool, PrimitiveMongoData] = (False, None)) -> bool:
-        if len({member for member in voice_channel.members if not member.bot}) == 0:
-            document: list[TempChannel] = await db.find(
-                {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
 
-            if not document:
-                return True
+        if len({member for member in voice_channel.members if not member.bot}) != 0:
+            return False
 
-            document: TempChannel = document[0]
+        document: TempChannel = await db.find_one(
+            {DBKeyWrapperEnum.VOICE.value: voice_channel.id})
+
+        if not document:
+            return True
+
+        async with Locker():
 
             if document.voice is None and document.chat is None:
                 return True
