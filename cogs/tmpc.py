@@ -378,12 +378,6 @@ class Tmpc(Cog):
                     pass
 
         if changed:
-            for mention in msg.mentions:
-                mention: Member
-                if mention in document.voice.members:
-                    # noinspection PyUnresolvedReferences
-                    await member.move_to(None)
-
             embed: Embed = Embed(title="Kick")
             embed.add_field(name="Kicked", value=kicked)
             for member in document.chat.members:
