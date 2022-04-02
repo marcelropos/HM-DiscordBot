@@ -360,8 +360,6 @@ class Tmpc(Cog):
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, is_mod=True)
 
         msg: Message = ctx.message
-        voice_overwrites: dict = document.voice.overwrites
-        chat_overwrites: dict = document.chat.overwrites
         changed = False
         kicked = ""
         for mention in msg.mentions:
@@ -369,16 +367,17 @@ class Tmpc(Cog):
             if mention in document.chat.members:
                 # noinspection PyBroadException
                 try:
-                    voice_overwrites.pop(mention)
-                    chat_overwrites.pop(mention)
+                    await document.voice.set_permissions(member, overwrite=None)
+                    await document.chat.set_permissions(member, overwrite=None)
+                    if mention in document.voice.members:
+                        # noinspection PyUnresolvedReferences
+                        await member.move_to(None)
                     changed = True
                     kicked += mention.mention + "\n"
                 except KeyError:
                     pass
 
         if changed:
-            await document.voice.edit(overwrite=voice_overwrites)
-            await document.chat.edit(overwrite=chat_overwrites)
             for mention in msg.mentions:
                 mention: Member
                 if mention in document.voice.members:
