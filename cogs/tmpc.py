@@ -345,17 +345,15 @@ class Tmpc(Cog):
 
     @tmpc.command(pass_context=True,
                   brief="Kicks user from tmpc",
-                  help="You can remove a user from the list of users that can still join/see the channels after"
-                       " you used tmpc hide of tmpc lock.")
+                  help="You can revoke users' permissions to your temporary channel by mentioning them.\n"
+                       "Be aware that they can rejoin if the channel is not locked or hidden.")
     @cooldown(1, 60, BucketType.channel)
-    async def kick(self, ctx: Context, member: User):
+    async def kick(self, ctx: Context):
         """
         Kicks a user from the tmpc channel
 
         Args:
            ctx: The command context provided by the discord.py wrapper.
-
-           member: The member to kick
         """
         document = await self.check_tmpc_channel(ctx.author, ctx.channel.id, is_mod=True)
 
@@ -367,11 +365,11 @@ class Tmpc(Cog):
             if mention in document.chat.members:
                 # noinspection PyBroadException
                 try:
-                    await document.voice.set_permissions(member, overwrite=None)
-                    await document.chat.set_permissions(member, overwrite=None)
+                    await document.voice.set_permissions(mention, overwrite=None)
+                    await document.chat.set_permissions(mention, overwrite=None)
                     if mention in document.voice.members:
                         # noinspection PyUnresolvedReferences
-                        await member.move_to(None)
+                        await mention.move_to(None)
                     changed = True
                     kicked += mention.mention + "\n"
                 except KeyError:
