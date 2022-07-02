@@ -162,6 +162,29 @@ class Admin(Cog):
         sleep(1)  # this sleep is there to avoid a Exception in asyncio
         logger.warning("All connections are closed. Hope you will activate me again soon.")
 
+    @command(brief="Toggle command",
+             help="Enables/Disables a command.")
+    @has_guild_permissions(administrator=True)
+    async def toggle(self, ctx: Context, *, cmd):
+        """Enables or disables an existing bot command."""
+        command = self.bot.get_command(cmd)
+        title = "Toggle command"
+
+        if command is None:
+            embed = Embed(title=title,
+                          description=f"Command not found!")
+            await ctx.reply(embed=embed)
+        elif ctx.command == command:
+            embed = Embed(title=title,
+                          description=f"Command not found!")
+            await ctx.reply(embed=embed)
+        else:
+            command.enabled = not command.enabled
+            x = "enabled" if command.enabled else "disabled"
+            embed = Embed(title=title,
+                          description=f"You {x} {command.qualified_name}")
+            await ctx.reply(embed=embed)
+
     # Static methods
 
     @staticmethod
