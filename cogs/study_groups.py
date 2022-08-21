@@ -332,5 +332,5 @@ class StudyGroups(Cog):
         return res.values[0] in collection and res.user.id == member.id
 
 
-def setup(bot: Bot):
-    bot.add_cog(StudyGroups(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(StudyGroups(bot))

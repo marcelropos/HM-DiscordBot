@@ -560,5 +560,5 @@ class Tmpc(Cog):
         return x.values[0] in options and x.user.id == author.id
 
 
-def setup(bot: Bot):
-    bot.add_cog(Tmpc(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Tmpc(bot))

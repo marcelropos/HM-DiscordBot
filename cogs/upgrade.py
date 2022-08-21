@@ -37,7 +37,7 @@ class Upgrade(Cog):
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py") and filename != "upgrade.py":
                 try:
-                    ctx.bot.unload_extension(f"cogs.{filename[:-3]}")
+                    await ctx.bot.unload_extension(f"cogs.{filename[:-3]}")
                     logger.info(f"Unloaded: cogs.{filename[:-3]}")
                 except ExtensionNotLoaded:
                     logger.info(f"Already Unloaded: cogs.{filename[:-3]}")
@@ -174,5 +174,5 @@ class Upgrade(Cog):
         await ctx.reply(content="Please restart the bot")
 
 
-def setup(bot: Bot):
-    bot.add_cog(Upgrade(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Upgrade(bot))

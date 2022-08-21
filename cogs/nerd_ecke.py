@@ -110,5 +110,5 @@ class NerdEcke(Cog):
         await ctx.reply(embed=embed)
 
 
-def setup(bot: Bot):
-    bot.add_cog(NerdEcke(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(NerdEcke(bot))

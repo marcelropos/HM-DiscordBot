@@ -86,5 +86,5 @@ class Logger(Cog):
         logging.getLogger(_logger.value).setLevel(level.value)
 
 
-def setup(bot: Bot):
-    bot.add_cog(Logger(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Logger(bot))

@@ -47,7 +47,7 @@ class Admin(Cog):
         Replies:
             A success message.
         """
-        self.bot.load_extension(f"cogs.{cog}")
+        await self.bot.load_extension(f"cogs.{cog}")
 
         embed = Embed(title="Cog", description=f"The {cog} cog was loaded successfully.")
         await ctx.reply(embed=embed)
@@ -65,8 +65,8 @@ class Admin(Cog):
         Replies:
             A success message.
         """
-        self.bot.unload_extension(f"cogs.{cog}")
-        self.bot.load_extension(f"cogs.{cog}")
+        await self.bot.unload_extension(f"cogs.{cog}")
+        await self.bot.load_extension(f"cogs.{cog}")
         embed = Embed(title="Cog", description=f"The {cog} cog was reloaded successfully.")
         await ctx.reply(embed=embed)
 
@@ -83,7 +83,7 @@ class Admin(Cog):
         Replies:
             A success message.
         """
-        self.bot.unload_extension(f"cogs.{cog}")
+        await self.bot.unload_extension(f"cogs.{cog}")
         embed = Embed(title="Cog", description=f"The {cog} cog was unloaded successfully.")
         await ctx.reply(embed=embed)
 
@@ -217,5 +217,5 @@ class Admin(Cog):
         return check
 
 
-def setup(bot: Bot):
-    bot.add_cog(Admin(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Admin(bot))

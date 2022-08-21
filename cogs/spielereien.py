@@ -175,5 +175,5 @@ class Spielereien(Cog):
             return priority, None
 
 
-def setup(bot: Bot):
-    bot.add_cog(Spielereien(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Spielereien(bot))

@@ -299,5 +299,5 @@ class Subjects(Cog):
         return result
 
 
-def setup(bot: Bot):
-    bot.add_cog(Subjects(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Subjects(bot))

@@ -216,5 +216,5 @@ class Linking(Cog):
         return study_role, subject_role
 
 
-def setup(bot: Bot):
-    bot.add_cog(Linking(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Linking(bot))

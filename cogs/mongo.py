@@ -234,5 +234,5 @@ class Mongo(Cog):
         return result
 
 
-def setup(bot: Bot):
-    bot.add_cog(Mongo(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Mongo(bot))

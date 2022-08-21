@@ -93,5 +93,5 @@ class Moderator(Cog):
                         embed=embed)
 
 
-def setup(bot: Bot):
-    bot.add_cog(Moderator(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Moderator(bot))

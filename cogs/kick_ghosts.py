@@ -453,5 +453,5 @@ class KickGhosts(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
 
-def setup(bot: Bot):
-    bot.add_cog(KickGhosts(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(KickGhosts(bot))

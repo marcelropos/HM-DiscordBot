@@ -61,10 +61,10 @@ class BotStatus(Cog):
         get_discord_child_logger(self.__class__.__name__).error("Bot is on no server, the bot must run on a server.")
 
 
-def setup(bot: Bot):
+async def setup(bot: Bot):
     """Setup this Cog for this file
 
     Args:
         bot: the bot Object
     """
-    bot.add_cog(BotStatus(bot))
+    await bot.add_cog(BotStatus(bot))
