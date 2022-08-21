@@ -18,7 +18,6 @@ class LeaveOwnChannelHandler(BaseHandler):
     async def solution(self) -> str:
         return "Delete the channel if you don't want it anymore"
 
-
-@property
-def logger(self) -> Callable[[str], Logger]:
-    pass
+    @property
+    def logger(self) -> Callable[[str], Logger]:
+        pass
