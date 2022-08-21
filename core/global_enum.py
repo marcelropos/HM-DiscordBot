@@ -18,6 +18,7 @@ class CollectionEnum(Enum):
     TEMP_CHANNELS = "tempChannels"
     JOIN_TEMP_CHANNELS = "joinTempChannels"
     TEMP_CHANNELS_CONFIGURATION = "channelConfiguration"
+    ALUMNI_ROLES = "alumni_roles"
 
 
 class ConfigurationNameEnum(Enum):
@@ -47,6 +48,8 @@ class ConfigurationNameEnum(Enum):
     IF7_PLUS_ROLE = "if7PlusRole"
     IB7_PLUS_ROLE = "ib7PlusRole"
     DC7_PLUS_ROLE = "dc7PlusRole"
+    ALUMNI_ROLE = "alumniRole"
+    GRADUATION_SEPARATOR_ROLE = "graduationSeparator"
 
 
 class DBKeyWrapperEnum(Enum):
