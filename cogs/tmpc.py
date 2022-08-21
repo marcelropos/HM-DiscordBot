@@ -390,8 +390,8 @@ class Tmpc(Cog):
                 voice_overwrites[moderator.item] = category.overwrites[moderator.item]
                 chat_overwrites = document.chat.overwrites
                 chat_overwrites[moderator.item] = category.overwrites[moderator.item]
-                await document.voice.edit(overwrite=voice_overwrites)
-                await document.chat.edit(overwrite=chat_overwrites)
+                await document.voice.edit(overwrites=voice_overwrites)
+                await document.chat.edit(overwrites=chat_overwrites)
                 embed.add_field(name="Moderator permissions",
                                 value="Since this chat cannot be moderated without a moderator, "
                                       "the moderator rights will be restored.")
