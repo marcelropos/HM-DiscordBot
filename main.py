@@ -26,7 +26,7 @@ async def load_cogs():
 
 
 @bot.event
-async def on_command_error(ctx: Context, error):
+async def on_command_error(ctx: Context, error, /):
     if isinstance(error, CommandInvokeError):
         error = error.original
     if isinstance(error, CommandNotFound):
