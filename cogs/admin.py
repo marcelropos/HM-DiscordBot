@@ -176,7 +176,7 @@ class Admin(Cog):
             await ctx.reply(embed=embed)
         elif ctx.command == command:
             embed = Embed(title=title,
-                          description=f"Command not found!")
+                          description=f"Can't disable the command to disable itself. You do see the problem don't you?")
             await ctx.reply(embed=embed)
         else:
             command.enabled = not command.enabled
