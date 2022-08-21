@@ -3,6 +3,7 @@ from typing import Callable
 
 from core.error.error_collection import LeaveOwnChannelError
 from core.error.handler.base_handler import BaseHandler
+from core.logger import get_discord_child_logger
 
 
 class LeaveOwnChannelHandler(BaseHandler):
@@ -20,4 +21,4 @@ class LeaveOwnChannelHandler(BaseHandler):
 
     @property
     def logger(self) -> Callable[[str], Logger]:
-        pass
+        return get_discord_child_logger
