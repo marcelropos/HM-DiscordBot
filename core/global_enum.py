@@ -44,6 +44,9 @@ class ConfigurationNameEnum(Enum):
     DEFAULT_KEEP_TIME = "defaultTime"
     DEFAULT_STUDY_NAME = "studyDefaultName"
     DEFAULT_GAMING_NAME = "gamingDefaultName"
+    IF7_PLUS_ROLE = "if7PlusRole"
+    IB7_PLUS_ROLE = "ib7PlusRole"
+    DC7_PLUS_ROLE = "dc7PlusRole"
 
 
 class DBKeyWrapperEnum(Enum):

@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 from typing import Union, Sequence
@@ -6,8 +7,9 @@ import discord
 from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
 from discord.ext.commands import Cog, Bot, Context, command, is_owner, has_guild_permissions, ExtensionNotLoaded
 
+from cogs.util.assign_variables import assign_role
 from core import global_enum
-from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum
+from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum, ConfigurationNameEnum
 from core.logger import get_discord_child_logger
 from mongo.study_subject_relation import StudySubjectRelations, StudySubjectRelation
 from mongo.subjects_or_groups import SubjectsOrGroups, SubjectOrGroup
@@ -48,6 +50,10 @@ class Upgrade(Cog):
 
         study_groups_db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP)
         study_groups_documents: list[SubjectOrGroup] = await study_groups_db.find({})
+        if7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.IF7_PLUS_ROLE)
+        ib7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.IB7_PLUS_ROLE)
+        dc7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.DC7_PLUS_ROLE)
+        plus_roles: dict[str, Role] = {"IF": if7_plus_role, "IB": ib7_plus_role, "DC": dc7_plus_role}
 
         subject_db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT)
         subjects_documents: list[SubjectOrGroup] = await subject_db.find({})
@@ -97,18 +103,35 @@ class Upgrade(Cog):
 
         # rename the study groups to one semester up
         logger.info("Starting to rename study groups")
+        documents_to_remove: list[SubjectOrGroup] = []
         for document in study_groups_documents:
             channel: TextChannel = document.chat
             role: Role = document.role
 
             study_master, study_semester = re.match(match, role.name).groups()
-            new_name = f"{study_master}{int(study_semester) + 1}"
+
+            if int(study_semester) == 7:
+                documents_to_remove.append(document)
+
+                # since the role and chat is deleted from the database here, it won't be renamed in the next upgrade
+                await study_groups_db.delete_one({DBKeyWrapperEnum.ID.value: document.id})
+
+                # add members of old XY7 Role to the XY7+ Role
+                for member in role.members:
+                    await member.add_roles(plus_roles[study_master], reason="upgrade")
+
+                year = (datetime.datetime.now().year - ((int(study_semester) - 1) // 2)) - 2000
+                new_name = f"{study_master} WS{year}/{year + 1}"
+            else:
+                new_name = f"{study_master}{int(study_semester) + 1}"
 
             logger.info(f"Renamed {role.name} to {new_name}")
 
             await channel.edit(name=new_name, reason="upgrade")
             await role.edit(name=new_name, reason="upgrade")
 
+        study_groups_documents = [document for document in study_groups_documents if
+                                  document not in documents_to_remove]
         logger.info("Finished renaming study groups")
 
         # create 1st semester study groups

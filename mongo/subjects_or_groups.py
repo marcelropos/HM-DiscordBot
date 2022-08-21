@@ -17,6 +17,10 @@ class SubjectOrGroup(MongoDocument):
     role: Role
 
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def role_name(self):
         return self.role.name
 
