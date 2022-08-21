@@ -70,9 +70,10 @@ class Upgrade(Cog):
         logger.info("Starting to recreate the subject text channels")
         for document in subjects_documents:
             channel: TextChannel = document.chat
-            if len([message async for message in channel.history(limit=1)]) == 0:
-                continue
             name = channel.name
+            if len([message async for message in channel.history(limit=1)]) == 0:
+                logger.info(f"Don't need the recreate {name} channel")
+                continue
             category = channel.category
             permissions = channel.overwrites
             new_channel = await guild.create_text_channel(name=name,
