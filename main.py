@@ -22,9 +22,7 @@ async def load_cogs():
             if filename.endswith(".py") and filename != "upgrade.py":
                 await bot.load_extension(f"cogs.{filename[:-3]}")
                 logger.get_discord_child_logger("cogs").info(f"Loaded: cogs.{filename[:-3]}")
-
-
-asyncio.run(load_cogs())
+        await bot.start(os.environ["TOKEN"])
 
 
 @bot.event
@@ -46,4 +44,4 @@ async def on_command_error(ctx: Context, error):
     await error_handler(ctx, error)
 
 
-bot.run(os.environ["TOKEN"])
+asyncio.run(load_cogs())
