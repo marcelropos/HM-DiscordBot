@@ -32,6 +32,7 @@ class StudySubjectRelation(MongoDocument):
 
 class StudySubjectRelations(MongoCollection):
     def __init__(self, bot: Bot):
+        # noinspection PyTypeChecker
         super().__init__(CollectionEnum.GROUP_SUBJECT_RELATION.value)
         self.bot = bot
 

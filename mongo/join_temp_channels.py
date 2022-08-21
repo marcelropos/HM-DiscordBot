@@ -25,6 +25,7 @@ class JoinTempChannel(MongoDocument):
 
 class JoinTempChannels(MongoCollection):
     def __init__(self, bot: Bot):
+        # noinspection PyTypeChecker
         super().__init__(CollectionEnum.JOIN_TEMP_CHANNELS.value)
         self.bot = bot
 

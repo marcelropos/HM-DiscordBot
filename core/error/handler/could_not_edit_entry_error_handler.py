@@ -20,6 +20,7 @@ class CouldNotEditEntryErrorHandler(BaseHandler):
 
     @property
     async def solution(self) -> str:
+        # noinspection PyTypeChecker
         return f"```md\n" \
                f"* Use: `!mongo add {self.error.collection.value} {self.error.key} {self.error.value}`\n" \
                f"* Try another collection\n" \

@@ -5,6 +5,7 @@ from mongo.mongo_collection import MongoCollection
 class PrimitiveMongoData(MongoCollection):
 
     def __init__(self, collection: CollectionEnum, database: str = None):
+        # noinspection PyTypeChecker
         super().__init__(collection.value, database)
 
     async def insert_one(self, document: dict) -> dict:

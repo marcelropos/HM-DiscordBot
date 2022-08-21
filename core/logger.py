@@ -94,6 +94,7 @@ def set_discord_log_level(level: LoggingLevel):
         level: The new Level of this logger
     """
     loggerInstance.loggerLogger.warning("Discord Logger set to new verbose level :" + level.name)
+    # noinspection PyTypeChecker
     loggerInstance.discordLogger.setLevel(level.value)
 
 
@@ -105,6 +106,7 @@ def set_mongo_log_level(level: LoggingLevel):
         level: The new Level of this logger
     """
     loggerInstance.loggerLogger.warning("Mongo Logger set to new verbose level :" + level.name)
+    # noinspection PyTypeChecker
     loggerInstance.mongoLogger.setLevel(level.value)
 
 
@@ -118,4 +120,5 @@ def set_logger_log_level(level: LoggingLevel):
         level: The new Level of this logger
     """
     loggerInstance.loggerLogger.warning("Logger Logger set to new logger level :" + level.name)  # ( ๑‾̀◡‾́)σ »
+    # noinspection PyTypeChecker
     loggerInstance.loggerLogger.setLevel(level.value)

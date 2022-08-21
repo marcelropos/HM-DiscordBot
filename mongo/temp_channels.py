@@ -60,6 +60,7 @@ class TempChannel(MongoDocument):
 
 class TempChannels(MongoCollection):
     def __init__(self, bot: Bot):
+        # noinspection PyTypeChecker
         super().__init__(CollectionEnum.TEMP_CHANNELS.value)
         self.bot = bot
 
