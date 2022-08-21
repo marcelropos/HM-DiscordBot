@@ -57,7 +57,8 @@ class StudySubjectRelations(MongoCollection):
                 _.role is group}:
             raise BadArgument
 
-        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT).find({}) if _.role is subject}:
+        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT).find({}) if
+                _.role is subject}:
             raise BadArgument
 
         document = {
