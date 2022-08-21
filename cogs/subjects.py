@@ -8,7 +8,7 @@ from discord.ext.tasks import loop
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_set_of_roles
+from cogs.util.assign_variables import assign_set_of_roles, assign_role
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import YouNeedAStudyGroupError
@@ -272,11 +272,22 @@ class Subjects(Cog):
         all_study_groups = await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP).find({})
         study_group: list[Role] = [document.role for document in all_study_groups if document.role in roles]
         if not study_group:
-            raise YouNeedAStudyGroupError()
-        study_group: Role = study_group[0]
-        study_master, study_semester = re.match(self.match, study_group.name).groups()
-        study_semester = int(study_semester)
-        compatible_study_groups: list[Role] = [study_group]
+            if7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.IF7_PLUS_ROLE)
+            ib7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.IB7_PLUS_ROLE)
+            dc7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.DC7_PLUS_ROLE)
+            plus_roles: list[Role] = [if7_plus_role, ib7_plus_role, dc7_plus_role]
+            if not [role for role in roles if role in plus_roles]:
+                raise YouNeedAStudyGroupError()
+
+            study_master: str = [role for role in roles if role in plus_roles][0].name[:2]
+            study_semester = 8
+            compatible_study_groups: list[Role] = []
+        else:
+            study_group: Role = study_group[0]
+            study_master, study_semester = re.match(self.match, study_group.name).groups()
+            study_semester = int(study_semester)
+            compatible_study_groups: list[Role] = [study_group]
+
         for i in range(study_semester):
             compatible_study_groups += [document.role for document in all_study_groups if
                                         document.role.name == study_master + str(i)]
