@@ -141,7 +141,7 @@ class Admin(Cog):
 
         after: datetime = datetime.strptime(after, '%d.%m.%y')
         message: Message = ctx.message
-        mentions: set[Union[Member, User]] = message.mentions
+        mentions: list[Union[Member, User]] = message.mentions
         check = self.purge_check(mentions)
         count = len(await ctx.channel.purge(after=after, check=check, bulk=True))
         embed = Embed(title=ctx.channel.name,
@@ -188,7 +188,7 @@ class Admin(Cog):
     # Static methods
 
     @staticmethod
-    def purge_check(mentions: set[Union[Member, User]]) -> Callable[[Message], bool]:
+    def purge_check(mentions: list[Union[Member, User]]) -> Callable[[Message], bool]:
         """
         Returns predicate for message deletion.
 
