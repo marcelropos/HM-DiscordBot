@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Union
+from typing import Union, Sequence
 
 import discord
 from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
@@ -44,7 +44,7 @@ class Upgrade(Cog):
         logger.info("Disabled all commands")
 
         guild: Guild = ctx.guild
-        members: list[Member] = guild.members
+        members: Sequence[Member] = guild.members
 
         study_groups_db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP)
         study_groups_documents: list[SubjectOrGroup] = await study_groups_db.find({})
