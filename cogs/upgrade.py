@@ -70,6 +70,8 @@ class Upgrade(Cog):
         logger.info("Starting to recreate the subject text channels")
         for document in subjects_documents:
             channel: TextChannel = document.chat
+            if len([message async for message in channel.history(limit=1)]) == 0:
+                continue
             name = channel.name
             category = channel.category
             permissions = channel.overwrites
