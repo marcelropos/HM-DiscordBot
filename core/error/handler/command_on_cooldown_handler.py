@@ -18,6 +18,7 @@ class CommandOnCooldownHandler(BaseHandler):
     @property
     def cause(self) -> str:
         # The self.error.type.name works because it uses the enum Class in the background
+        # noinspection PyUnresolvedReferences
         return f'The command limitation of `{self.error.cooldown.rate}` ' \
                f'per `{self.error.type.name}` within `{self.time(int(self.error.cooldown.per))}` was exceeded.'
 

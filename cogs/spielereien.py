@@ -126,7 +126,7 @@ class Spielereien(Cog):
         """
         column = ["name", "roles", "joined_at", "pending"]
         table = PrettyTable(column)
-        members = await ctx.guild.fetch_members(limit=None).flatten()
+        members = [member async for member in ctx.guild.fetch_members(limit=None)]
         for member in members:
             member: Union[Member, User]
 

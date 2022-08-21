@@ -6,7 +6,7 @@ from discord.ext.tasks import loop
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_role, assign_chat
+from cogs.util.assign_variables import assign_chat
 from cogs.util.placeholder import Placeholder
 from core.error.error_collection import MentionNotFoundError
 from core.global_enum import ConfigurationNameEnum

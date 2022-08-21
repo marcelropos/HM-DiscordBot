@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound, Forbidden, HTTPException
+from discord import Member, TextChannel, VoiceChannel, User, Guild, Message, NotFound, HTTPException
 from discord.ext.commands import Bot
 
 from core.global_enum import DBKeyWrapperEnum, CollectionEnum

@@ -159,7 +159,7 @@ class Admin(Cog):
         await discord.Client.change_presence(self=self.bot,
                                              status=discord.Status.offline)
         await self.bot.close()
-        sleep(1)  # this sleep is there to avoid a Exception in asyncio
+        sleep(1)  # this sleep is there to avoid an Exception in asyncio
         logger.warning("All connections are closed. Hope you will activate me again soon.")
 
     @command(brief="Toggle command",

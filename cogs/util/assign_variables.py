@@ -1,6 +1,6 @@
 from typing import Optional
 
-from discord import TextChannel, Role, Guild, CategoryChannel
+from discord import TextChannel, Role, CategoryChannel
 from discord.ext.commands import Bot
 
 from core.error.error_collection import BrokenConfigurationError
@@ -69,6 +69,7 @@ async def assign_role(bot: Bot, role_name: ConfigurationNameEnum) -> Optional[Ro
     return role
 
 
+# noinspection DuplicatedCode
 async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional[TextChannel]:
     """
     Loads the verified channel and takes care of possible errors.
@@ -100,6 +101,7 @@ async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional
     return channel
 
 
+# noinspection DuplicatedCode
 async def assign_category(bot: Bot, category_name: ConfigurationNameEnum) -> Optional[CategoryChannel]:
     """
     Loads the verified category and takes care of possible errors.
@@ -131,6 +133,6 @@ async def assign_category(bot: Bot, category_name: ConfigurationNameEnum) -> Opt
     return category
 
 
-async def assign_set_of_roles(guild: Guild, db: SubjectsOrGroups, roles: set[Role]):
+async def assign_set_of_roles(db: SubjectsOrGroups, roles: set[Role]):
     roles.clear()
     roles.update(document.role for document in await db.find({}))

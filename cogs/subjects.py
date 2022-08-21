@@ -63,7 +63,7 @@ class Subjects(Cog):
                                 verified=verified,
                                 moderator=moderator) as need_init:
             if need_init:
-                await assign_set_of_roles(self.bot.guilds[0], self.db, subjects_roles)
+                await assign_set_of_roles(self.db, subjects_roles)
 
     def cog_unload(self):
         logger.warning("Cog has been unloaded.")

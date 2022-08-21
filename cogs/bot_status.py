@@ -47,7 +47,7 @@ class BotStatus(Cog):
     async def close_bot(self):
         """Closes the bot"""
         await self.bot.close()
-        time.sleep(1)  # this sleep is there to avoid a Exception in asyncio
+        time.sleep(1)  # this sleep is there to avoid an Exception in asyncio
 
     def bot_is_in_multiple_guild(self):
         """Logs that the Bot is in multiple Guilds"""
