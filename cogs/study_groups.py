@@ -165,7 +165,7 @@ class StudyGroups(Cog):
     @_group.command(pass_context=True,
                     name="edit",
                     brief="Edits the role of a study group",
-                    help="The name must contain the tag and the semester number.")
+                    help="Replaces the study group in the database with the new role and chat")
     async def group_edit(self, ctx: Context, channel: TextChannel, role: Role, channel2: TextChannel):
         """
         Edits a study group
@@ -173,7 +173,11 @@ class StudyGroups(Cog):
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            name: The name of the role and the chat.
+            channel: The old chat.
+
+            role: the new role.
+
+            channel2: the new chat.
         """
         document = (await self.db.find({DBKeyWrapperEnum.CHAT.value: channel.id}))[0]
         if not document:
