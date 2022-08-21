@@ -143,7 +143,6 @@ class TmpChannelUtil:
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
                                                                        category=channel_category,
                                                                        overwrites=overwrites,
-                                                                       nsfw=False,
                                                                        reason="")
 
         entry: TempChannel = await db.insert_one(
