@@ -59,7 +59,8 @@ class Alumni(Cog):
                 if7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.IF7_PLUS_ROLE)
                 ib7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.IB7_PLUS_ROLE)
                 dc7_plus_role: Role = await assign_role(self.bot, ConfigurationNameEnum.DC7_PLUS_ROLE)
-                plus7_roles: set[Role] = {if7_plus_role, ib7_plus_role, dc7_plus_role}
+                plus7_roles.clear()
+                plus7_roles.union({if7_plus_role, ib7_plus_role, dc7_plus_role})
                 alumni_role.item = await assign_role(self.bot, ConfigurationNameEnum.ALUMNI_ROLE)
         logger.info(f"The cog is online.")
 
