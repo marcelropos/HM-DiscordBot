@@ -1,5 +1,6 @@
 import os
 import re
+from asyncio import sleep
 from typing import Union
 
 import discord
@@ -70,6 +71,7 @@ class Upgrade(Cog):
                 await member.remove_roles(*roles_to_remove, reason="upgrade")
             else:
                 logger.info(f"No roles to remove from {member.display_name}")
+            await sleep(120)
 
         logger.info("Finished removing subjects from everyone")
 
@@ -102,6 +104,7 @@ class Upgrade(Cog):
                 DBKeyWrapperEnum.ROLE.value: document.role_id
             }
             await subject_db.update_one(document.document, new_document)
+            await sleep(120)
         logger.info("Finished to recreate the subject text channels")
 
         # rename the study groups to one semester up
@@ -118,6 +121,7 @@ class Upgrade(Cog):
 
             await channel.edit(name=new_name, reason="upgrade")
             await role.edit(name=new_name, reason="upgrade")
+            await sleep(120)
 
         logger.info("Finished renaming study groups")
 
@@ -145,6 +149,7 @@ class Upgrade(Cog):
                 await study_groups_db.insert_one((channel, role))
                 await role.edit(position=document.role.position)
                 logger.info(f"Created {name} study group | {round((i + 1) / count * 100, 2)}%")
+                await sleep(120)
         logger.info("Created first semester study groups")
 
         study_groups_documents: list[SubjectOrGroup] = await study_groups_db.find({})
@@ -189,6 +194,7 @@ class Upgrade(Cog):
                 await member.add_roles(*roles_to_add, reason="upgrade")
             else:
                 logger.info(f"No roles to add to {member.display_name}")
+            await sleep(120)
 
         logger.info("Assigned everyone to their new subjects")
 
