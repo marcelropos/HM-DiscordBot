@@ -63,7 +63,7 @@ class Upgrade(Cog):
         for member in members:
             logger.info(f"Checking {member.display_name}")
 
-            roles_to_remove: list[Role] = [role for role in subject_roles]
+            roles_to_remove: set[Role] = {role for role in subject_roles}.intersection(set(member.roles))
             if roles_to_remove:
                 logger.info(f"remove {[role.name for role in roles_to_remove]} from {member.display_name}")
                 await member.remove_roles(*roles_to_remove, reason="upgrade")
