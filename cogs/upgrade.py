@@ -62,12 +62,14 @@ class Upgrade(Cog):
         logger.info("Starting to remove subjects from everyone")
         for member in members:
             logger.info(f"Checking {member.display_name}")
+
             roles_to_remove: list[Role] = [role for role in subject_roles]
             if roles_to_remove:
                 logger.info(f"remove {[role.name for role in roles_to_remove]} from {member.display_name}")
                 await member.remove_roles(*roles_to_remove, reason="upgrade")
             else:
                 logger.info(f"No roles to remove from {member.display_name}")
+
         logger.info("Finished removing subjects from everyone")
 
         # recreate subject channels:
@@ -172,11 +174,13 @@ class Upgrade(Cog):
             groups: list[Role] = [role for role in member.roles if role in study_groups_roles]
             roles_to_add = [document.subject for document in links_documents if
                             (document.group in groups and document.default)]
+
             if roles_to_add:
                 logger.info(f"add {[role.name for role in roles_to_add]} to {member.display_name}")
                 await member.add_roles(*roles_to_add, reason="upgrade")
             else:
                 logger.info(f"No roles to add to {member.display_name}")
+
         logger.info("Assigned everyone to their new subjects")
 
         logger.info("Finished upgrade")
