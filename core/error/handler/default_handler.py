@@ -15,6 +15,8 @@ class DefaultHandler(BaseHandler):
 
     @property
     def cause(self) -> str:
+        handler = get_discord_child_logger("DefaultHandler")
+        handler.error(f"{self.error.args}\n{self.error.__cause__}\n{self.error.__context__}")
         return self.error.args[0]
 
     @property
