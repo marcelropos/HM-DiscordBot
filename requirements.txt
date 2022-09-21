@@ -1,5 +1,5 @@
 #PyCharm may remove discord.py~=1.7.2
-discord.py~=1.7.3
+discord.py==1.7.3
 aiohttp==3.8.1
 prettytable==3.3.0
 pyotp~=2.6.0
