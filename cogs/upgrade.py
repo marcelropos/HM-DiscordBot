@@ -69,9 +69,9 @@ class Upgrade(Cog):
             if roles_to_remove:
                 logger.info(f"remove {[role.name for role in roles_to_remove]} from {member.display_name}")
                 await member.remove_roles(*roles_to_remove, reason="upgrade")
+                await sleep(120)
             else:
                 logger.info(f"No roles to remove from {member.display_name}")
-            await sleep(120)
 
         logger.info("Finished removing subjects from everyone")
 
