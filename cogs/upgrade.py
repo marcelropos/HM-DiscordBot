@@ -1,4 +1,3 @@
-import asyncio
 import os
 import re
 from typing import Union
@@ -64,17 +63,13 @@ class Upgrade(Cog):
         for member in members:
             logger.info(f"Checking {member.display_name}")
             roles_to_remove = [role for role in subject_roles]
-            if roles_to_remove:
-                await member.remove_roles(*roles_to_remove, reason="upgrade")
-                await asyncio.sleep(120)
+            await member.remove_roles(*roles_to_remove, reason="upgrade")
         logger.info("Finished removing subjects from everyone")
 
         # recreate subject channels:
         logger.info("Starting to recreate the subject text channels")
         for document in subjects_documents:
             channel: TextChannel = document.chat
-            if not await channel.history(limit=1).flatten():
-                continue
             name = channel.name
             category = channel.category
             permissions = channel.overwrites
@@ -95,7 +90,6 @@ class Upgrade(Cog):
                 DBKeyWrapperEnum.ROLE.value: document.role_id
             }
             await subject_db.update_one(document.document, new_document)
-            await asyncio.sleep(120)
         logger.info("Finished to recreate the subject text channels")
 
         # rename the study groups to one semester up
@@ -111,7 +105,6 @@ class Upgrade(Cog):
 
             await channel.edit(name=new_name, reason="upgrade")
             await role.edit(name=new_name, reason="upgrade")
-            await asyncio.sleep(120)
 
         logger.info("Finished renaming study groups")
 
@@ -138,7 +131,6 @@ class Upgrade(Cog):
                 await study_groups_db.insert_one((channel, role))
                 await role.edit(position=document.role.position)
                 logger.info(f"Created {name} study group")
-                await asyncio.sleep(120)
         logger.info("Created first semester study groups")
 
         study_groups_documents: list[SubjectOrGroup] = await study_groups_db.find({})
@@ -162,7 +154,6 @@ class Upgrade(Cog):
                     }
                     await links_db.update_one(link.document, new_link)
                     logger.info(f"Remapping {link.subject.name} from {link.group.name} to {lower_semester_role.name}")
-                    await asyncio.sleep(120)
         logger.info("Done remapping the links")
 
         links_documents: list[StudySubjectRelation] = await links_db.find({})
@@ -174,9 +165,7 @@ class Upgrade(Cog):
             groups: list[Role] = [role for role in member.roles if role in study_groups_roles]
             roles_to_add = [document.subject for document in links_documents if
                             (document.group in groups and document.default)]
-            if roles_to_add:
-                await member.add_roles(*roles_to_add, reason="upgrade")
-                await asyncio.sleep(120)
+            await member.add_roles(*roles_to_add, reason="upgrade")
         logger.info("Assigned everyone to their new subjects")
 
         logger.info("Finished upgrade")
