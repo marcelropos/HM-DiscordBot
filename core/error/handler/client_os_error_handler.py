@@ -16,11 +16,17 @@ class DefaultHandler(BaseHandler):
 
     @property
     def cause(self) -> str:
-        return self.error.args[0]
+        code = self.error.args[0]
+        if code == 104:
+            return "ConnectionResetError: Connection reset by peer."
+        return f"ClientOSError"
 
     @property
     async def solution(self) -> str:
-        return f"Read cause and fix it!"
+        code = self.error.args[0]
+        if code == 104:
+            return "Please wait a few minutes any try your command again."
+        return "Please wait a few minutes any try your command again."
 
     @property
     def logger(self) -> Callable[[str], Logger]:
