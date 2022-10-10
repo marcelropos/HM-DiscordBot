@@ -98,25 +98,43 @@ class Subjects(Cog):
         roles: list[Role] = member.roles
 
         subjects: set[int: Role] = await self.get_possible_subjects(roles)
+        checked_subjects: set[int:Role] = set()
 
         embed = Embed(title="Subjects",
                       description="You can opt-in/out one or more of the following subjects:")
-        subjects_text: str = ""
-        for number, subject in subjects.items():
-            if subject in roles:
-                subjects_text += f"`{number}: {subject}`\n"
 
-        if subjects_text:
-            embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
-                            inline=False)
-        subjects_text: str = ""
-        for number, subject in subjects.items():
-            if subject not in roles:
-                subjects_text += f"`{number}: {subject}`\n"
+        while subjects:
+            subjects_text: str = ""
+            while subjects:
+                number, subject = subjects.popitem()
+                entry = f"`{number}: {subject}`\n"
+                if len(subjects_text) + len(entry) <= 1024:
+                    subjects.update({(number, subject)})
+                    break
+                if subject in roles:
+                    subjects_text += entry
+                checked_subjects.add((number, subject))
 
-        if subjects_text:
-            embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
-                            inline=False)
+            if subjects_text:
+                embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
+                                inline=False)
+
+        subjects.update(checked_subjects)
+
+        while subjects:
+            subjects_text: str = ""
+            while subjects:
+                number, subject = subjects.popitem()
+                entry = f"`{number}: {subject}`\n"
+                if len(subjects_text) + len(entry) <= 1024:
+                    subjects.update({(number, subject)})
+                    break
+                if subject not in roles:
+                    subjects_text += entry
+
+            if subjects_text:
+                embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
+                                inline=False)
 
         embed.add_field(name="Add/Remove subjects", value="```!subject <add|remove> <names|numbers>```\n"
                                                           "Example:```"
