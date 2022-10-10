@@ -13,7 +13,7 @@ from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import YouNeedAStudyGroupError
-from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
+from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum, MagicNumber
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -108,7 +108,7 @@ class Subjects(Cog):
             while subjects:
                 number, subject = subjects.popitem()
                 entry = f"`{number}: {subject}`\n"
-                if len(subjects_text) + len(entry) <= 1024:
+                if len(subjects_text) + len(entry) <= MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
                     subjects.update({(number, subject)})
                     break
                 if subject in roles:
@@ -126,7 +126,7 @@ class Subjects(Cog):
             while subjects:
                 number, subject = subjects.popitem()
                 entry = f"`{number}: {subject}`\n"
-                if len(subjects_text) + len(entry) <= 1024:
+                if len(subjects_text) + len(entry) <= MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
                     subjects.update({(number, subject)})
                     break
                 if subject not in roles:

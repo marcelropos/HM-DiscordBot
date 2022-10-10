@@ -4,6 +4,10 @@ from enum import Enum
 import discord
 
 
+class MagicNumber(Enum):
+    DISCORD_EMBED_FIELD_LIMIT = 1024
+
+
 class CollectionEnum(Enum):
     ROLES = "roles"
     CHANNELS = "channels"
