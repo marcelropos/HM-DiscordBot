@@ -305,7 +305,7 @@ class Subjects(Cog):
             subjects_text = subjects_text[last_index + 1:]
         contents.append(subjects_text)
         while contents:
-            subjects_text = contents.pop()
+            subjects_text = contents.pop(0)
             if subjects_text:
                 embed.add_field(name=name, value=subjects_text, inline=False)
 
