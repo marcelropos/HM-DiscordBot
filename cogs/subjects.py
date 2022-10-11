@@ -110,7 +110,7 @@ class Subjects(Cog):
             while subjects and (datetime.date.today()-start).total_seconds() < 60:
                 number, subject = subjects.popitem()
                 entry = f"`{number}: {subject}`\n"
-                if len(subjects_text) + len(entry) <= MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
+                if len(subjects_text) + len(entry) > MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
                     subjects.update({(number, subject)})
                     break
                 if subject in roles:
@@ -129,7 +129,7 @@ class Subjects(Cog):
             while subjects and (datetime.date.today()-start).total_seconds() < 60:
                 number, subject = subjects.popitem()
                 entry = f"`{number}: {subject}`\n"
-                if len(subjects_text) + len(entry) <= MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
+                if len(subjects_text) + len(entry) > MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
                     subjects.update({(number, subject)})
                     break
                 if subject not in roles:
