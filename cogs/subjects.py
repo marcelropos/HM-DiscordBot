@@ -1,3 +1,4 @@
+import datetime
 import re
 from operator import attrgetter
 from typing import Union
@@ -103,9 +104,10 @@ class Subjects(Cog):
         embed = Embed(title="Subjects",
                       description="You can opt-in/out one or more of the following subjects:")
 
-        while subjects:
+        start = datetime.date.today()
+        while subjects and (datetime.date.today()-start).total_seconds() < 60:
             subjects_text: str = ""
-            while subjects:
+            while subjects and (datetime.date.today()-start).total_seconds() < 60:
                 number, subject = subjects.popitem()
                 entry = f"`{number}: {subject}`\n"
                 if len(subjects_text) + len(entry) <= MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
@@ -121,9 +123,10 @@ class Subjects(Cog):
 
         subjects.update(checked_subjects)
 
-        while subjects:
+        start = datetime.date.today()
+        while subjects and (datetime.date.today()-start).total_seconds() < 60:
             subjects_text: str = ""
-            while subjects:
+            while subjects and (datetime.date.today()-start).total_seconds() < 60:
                 number, subject = subjects.popitem()
                 entry = f"`{number}: {subject}`\n"
                 if len(subjects_text) + len(entry) <= MagicNumber.DISCORD_EMBED_FIELD_LIMIT.value:
