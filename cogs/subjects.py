@@ -13,7 +13,7 @@ from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import YouNeedAStudyGroupError
-from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
+from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum, MagicNumbers
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -299,8 +299,8 @@ class Subjects(Cog):
     async def build_embed_field(embed: Embed, subjects_text: str, name: str) -> None:
         subjects_text = subjects_text.replace("'", "`").replace(",", "\n")
         contents: list[str] = []
-        while len(subjects_text) > 1024:
-            last_index = subjects_text[:1024].rfind("\n")
+        while len(subjects_text) > MagicNumbers.DISCORD_FIELD_LENGTH_LIMIT.value:
+            last_index = subjects_text[:MagicNumbers.DISCORD_FIELD_LENGTH_LIMIT.value].rfind("\n")
             contents.append(subjects_text[:last_index])
             subjects_text = subjects_text[last_index + 1:]
         contents.append(subjects_text)
