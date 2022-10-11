@@ -13,7 +13,7 @@ from cogs.util.assign_variables import assign_set_of_roles
 from cogs.util.placeholder import Placeholder
 from cogs.util.study_subject_util import StudySubjectUtil
 from core.error.error_collection import YouNeedAStudyGroupError
-from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum
+from core.global_enum import SubjectsOrGroupsEnum, ConfigurationNameEnum, CollectionEnum, MagicNumbers
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, has_role_plus
 from mongo.primitive_mongo_data import PrimitiveMongoData
@@ -106,17 +106,14 @@ class Subjects(Cog):
             if subject in roles:
                 subjects_text += f"`{number}: {subject}`\n"
 
-        if subjects_text:
-            embed.add_field(name="Opt-out Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
-                            inline=False)
+        await self.build_embed_field(embed, subjects_text, "Opt-out Subjects")
+
         subjects_text: str = ""
         for number, subject in subjects.items():
             if subject not in roles:
                 subjects_text += f"`{number}: {subject}`\n"
 
-        if subjects_text:
-            embed.add_field(name="Opt-in Subjects", value=subjects_text.replace("'", "`").replace(",", "\n"),
-                            inline=False)
+        await self.build_embed_field(embed, subjects_text, "Opt-in Subjects")
 
         embed.add_field(name="Add/Remove subjects", value="```!subject <add|remove> <names|numbers>```\n"
                                                           "Example:```"
@@ -297,6 +294,20 @@ class Subjects(Cog):
                 role: Role = [role for role in possible_subjects.values() if role.name.lower() == subject][0]
                 result.append(role)
         return result
+
+    @staticmethod
+    async def build_embed_field(embed: Embed, subjects_text: str, name: str) -> None:
+        subjects_text = subjects_text.replace("'", "`").replace(",", "\n")
+        contents: list[str] = []
+        while len(subjects_text) > MagicNumbers.DISCORD_FIELD_LENGTH_LIMIT.value:
+            last_index = subjects_text[:MagicNumbers.DISCORD_FIELD_LENGTH_LIMIT.value].rfind("\n")
+            contents.append(subjects_text[:last_index])
+            subjects_text = subjects_text[last_index + 1:]
+        contents.append(subjects_text)
+        while contents:
+            subjects_text = contents.pop()
+            if subjects_text:
+                embed.add_field(name=name, value=subjects_text, inline=False)
 
 
 def setup(bot: Bot):
