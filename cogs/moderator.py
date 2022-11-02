@@ -65,7 +65,8 @@ class Moderator(Cog):
     @command(help="Verify a mentioned user")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
-    async def verify(self, ctx: Context, member):  # parameter only for pretty help.
+    # parameter only for pretty help.
+    async def verify(self, ctx: Context, member):
         """
         Assigns a role to the mentioned member.
 
@@ -76,7 +77,12 @@ class Moderator(Cog):
         """
         global verified
         try:
-            member: Union[Member, User] = ctx.message.mentions[0]
+            if ctx.message.mentions:
+                member: Union[Member, User] = ctx.message.mentions[0]
+            elif ctx.message.content.split(" ")[1].isnumeric():
+                member: Union[Member, User] = self.bot.get_user(
+                    int(ctx.message.content.split(" ")[1])
+                )
         except IndexError:
             raise MentionNotFoundError("member", member)
         await member.add_roles(*verified, reason=f"{str(ctx.author)}")
