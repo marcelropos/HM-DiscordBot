@@ -65,8 +65,7 @@ class Moderator(Cog):
     @command(help="Verify a mentioned user")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
-    # parameter only for pretty help.
-    async def verify(self, ctx: Context, member):
+    async def verify(self, ctx: Context, member):  # parameter only for pretty help.
         """
         Assigns a role to the mentioned member.
 
