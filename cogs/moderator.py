@@ -76,7 +76,12 @@ class Moderator(Cog):
         """
         global verified
         try:
-            member: Union[Member, User] = ctx.message.mentions[0]
+            if ctx.message.mentions:
+                member: Union[Member, User] = ctx.message.mentions[0]
+            elif ctx.message.content.split(" ")[1].isnumeric():
+                member: Union[Member, User] = self.bot.get_user(
+                    int(ctx.message.content.split(" ")[1])
+                )
         except IndexError:
             raise MentionNotFoundError("member", member)
         await member.add_roles(*verified, reason=f"{str(ctx.author)}")
