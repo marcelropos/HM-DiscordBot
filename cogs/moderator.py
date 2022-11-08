@@ -6,7 +6,7 @@ from discord.ext.tasks import loop
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_role, assign_chat
+from cogs.util.assign_variables import assign_chat
 from cogs.util.placeholder import Placeholder
 from core.error.error_collection import MentionNotFoundError
 from core.global_enum import ConfigurationNameEnum
@@ -65,7 +65,7 @@ class Moderator(Cog):
     @command(help="Verify a mentioned user")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
-    async def verify(self, ctx: Context, member):  # parameter only for pretty help.
+    async def verify(self, ctx: Context, member: int):
         """
         Assigns a role to the mentioned member.
 
@@ -75,17 +75,16 @@ class Moderator(Cog):
             member: The member who is to receive a role.
         """
         global verified
-        try:
-            if ctx.message.mentions:
-                member: Union[Member, User] = ctx.message.mentions[0]
-            elif ctx.message.content.split(" ")[1].isnumeric():
-                member: Union[Member, User] = self.bot.get_user(
-                    int(ctx.message.content.split(" ")[1])
-                )
-        except IndexError:
+
+        if ctx.message.mentions:
+            student: Union[Member, User] = ctx.message.mentions[0]
+        elif member:
+            student: Union[Member, User] = self.bot.get_user(member)
+        else:
             raise MentionNotFoundError("member", member)
+
         await member.add_roles(*verified, reason=f"{str(ctx.author)}")
-        logger.info(f"User {str(member)} was verified by {str(ctx.author)}")
+        logger.info(f"User {str(student)} was verified by {str(ctx.author)}")
 
     @command(brief="Write an anonymous message to the mods.",
              help="You can send an anonymous message to the mods twice an hour.")
