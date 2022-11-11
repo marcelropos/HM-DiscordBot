@@ -1,6 +1,6 @@
 from typing import Union
 
-from discord import TextChannel, User, Member, Embed, Role
+from discord import TextChannel, User, Member, Embed, Role, Guild
 from discord.ext.commands import Cog, Bot, command, Context, cooldown, BucketType
 from discord.ext.tasks import loop
 
@@ -65,7 +65,7 @@ class Moderator(Cog):
     @command(help="Verify a mentioned user")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
-    async def verify(self, ctx: Context, member: int):
+    async def verify(self, ctx: Context, member):
         """
         Assigns a role to the mentioned member.
 
@@ -79,11 +79,14 @@ class Moderator(Cog):
         if ctx.message.mentions:
             student: Union[Member, User] = ctx.message.mentions[0]
         elif member:
-            student: Union[Member, User] = self.bot.get_user(member)
+            guild: Guild = self.bot.guilds[0]
+            student: Union[Member, User] = guild.get_member(int(member))
+            if not student:
+                raise MentionNotFoundError("member", member)
         else:
             raise MentionNotFoundError("member", member)
 
-        await member.add_roles(*verified, reason=f"{str(ctx.author)}")
+        await student.add_roles(*verified, reason=f"{str(ctx.author)}")
         logger.info(f"User {str(student)} was verified by {str(ctx.author)}")
 
     @command(brief="Write an anonymous message to the mods.",
