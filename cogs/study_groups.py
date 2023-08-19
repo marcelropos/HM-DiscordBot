@@ -98,7 +98,7 @@ class StudyGroups(Cog):
              help="Select the member and choose the appropriate subject and semester in the interactive menu.")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
-    async def grant(self, ctx: Context, member: Member):  # parameter only for pretty help.
+    async def grant(self, ctx: Context, member):  # parameter only for pretty help.
         """
         Assigns a study role to the mentioned member.
 
