@@ -80,8 +80,11 @@ class Moderator(Cog):
             student: Union[Member, User] = ctx.message.mentions[0]
         elif member:
             guild: Guild = self.bot.guilds[0]
-            student: Union[Member, User] = guild.get_member(int(member))
-            if not student:
+            try:
+                student: Union[Member, User] = guild.get_member(int(member))
+                if not student:
+                    raise MentionNotFoundError("member", member)
+            except ValueError:
                 raise MentionNotFoundError("member", member)
         else:
             raise MentionNotFoundError("member", member)
