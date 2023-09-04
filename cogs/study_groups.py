@@ -1,4 +1,3 @@
-import asyncio
 import re
 from typing import Union
 
@@ -6,13 +5,13 @@ import discord
 from discord import Guild, Role, Member, User, TextChannel, Embed
 from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument, has_guild_permissions
 from discord.ext.tasks import loop
-from discord_components import DiscordComponents, Interaction, Select, \
-    SelectOption
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
 from cogs.util.assign_variables import assign_set_of_roles
+from cogs.util.custom_select import CustomSelect
 from cogs.util.placeholder import Placeholder
+from cogs.util.select_view import SelectRoleView
 from cogs.util.study_subject_util import StudySubjectUtil
 from core import global_enum
 from core.error.error_collection import FailedToGrantRoleError, MissingInteractionError
@@ -67,8 +66,7 @@ class StudyGroups(Cog):
                                 verified=verified,
                                 moderator=moderator) as need_init:
             if need_init:
-                DiscordComponents(self.bot)
-                await assign_set_of_roles(self.bot.guilds[0], self.db, study_groups)
+                await assign_set_of_roles(self.db, study_groups)
 
     def cog_unload(self):
         logger.warning("Cog has been unloaded.")
@@ -167,7 +165,7 @@ class StudyGroups(Cog):
     @_group.command(pass_context=True,
                     name="edit",
                     brief="Edits the role of a study group",
-                    help="The name must contain the tag and the semester number.")
+                    help="Replaces the study group in the database with the new role and chat")
     async def group_edit(self, ctx: Context, channel: TextChannel, role: Role, channel2: TextChannel):
         """
         Edits a study group
@@ -175,7 +173,11 @@ class StudyGroups(Cog):
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            name: The name of the role and the chat.
+            channel: The old chat.
+
+            role: the new role.
+
+            channel2: the new chat.
         """
         document = (await self.db.find({DBKeyWrapperEnum.CHAT.value: channel.id}))[0]
         if not document:
@@ -234,16 +236,27 @@ class StudyGroups(Cog):
                           member: Union[Member, User]):
         group_names = sorted({str((re.match(self.match, _role.name).groups())[0])
                               for _role in groups})
-        group_names_options = Select(
-            placeholder="Select your group",
-            options=[SelectOption(label=name, value=name) for name in group_names])
         group_semester = sorted({str((re.match(self.match, _role.name).groups())[1]) for _role in groups})
-        group_semester_options = Select(
-            placeholder="Select your semester",
-            options=[SelectOption(label=semester, value=semester) for semester in group_semester])
-        await ctx.reply(content="Please select **one** of the following groups.",
-                        components=[group_names_options, group_semester_options])
-        role: Role = await self.get_role(ctx.author, groups, group_names, group_semester)
+        custom_select1: CustomSelect = CustomSelect(0, "Select your group", group_names,
+                                                    "I received your group input.")
+        custom_select2: CustomSelect = CustomSelect(1, "Select your semester", group_semester,
+                                                    "I received your semester input.")
+        role_view: SelectRoleView = SelectRoleView([custom_select1, custom_select2])
+        await ctx.reply(content="Please select **one** of the following groups.", view=role_view)
+
+        if await role_view.wait():
+            raise MissingInteractionError
+        a: str = custom_select1.values[0]
+        b: str = custom_select2.values[0]
+
+        try:
+            role: Role = {role for role in groups if role.name == a + b}.pop()
+        except KeyError:
+            embed = Embed(title="Role not known",
+                          description=f"Dont know @{a + b} Role. Try again.")
+            await ctx.reply(content=member.mention, embed=embed)
+            return
+
         subjects = [document.subject for document in await StudySubjectRelations(self.bot).find(
             {DBKeyWrapperEnum.GROUP.value: role.id, DBKeyWrapperEnum.DEFAULT.value: True})]
         await member.add_roles(role, *subjects)
@@ -252,85 +265,6 @@ class StudyGroups(Cog):
                                   f"You also received the appropriate subjects for this study group.")
         await ctx.reply(content=member.mention, embed=embed)
 
-    async def get_role(self, author: Union[Member, User],
-                       groups: list[Role],
-                       group_names: list[str],
-                       group_semester: list[str]) -> Role:
-        """
-        Expects multiple inputs in unknown order processes them to an existing role.
 
-        Args:
-            author: The Member whose input is requested.
-
-            groups: All available groups.
-
-            group_semester: All available group names.
-
-            group_names: All available semester yrs.
-        """
-
-        a, b = await asyncio.gather(
-            self.wait_for_group(group_names, author),
-            self.wait_for_semester(group_semester, author),
-            return_exceptions=True
-        )
-        if isinstance(a, asyncio.TimeoutError) or isinstance(b, asyncio.TimeoutError):
-            raise MissingInteractionError
-        elif isinstance(a, Exception):
-            raise a
-        elif isinstance(b, Exception):
-            raise b
-        a: str
-        b: str
-
-        result = set()
-        result.update({role for role in groups if role.name == a + b})
-        result.update({role for role in groups if role.name == b + a})
-        # noinspection PyTypeChecker
-        return result.pop()
-
-    async def wait_for_group(self, group_names: list[str], member: Union[Member, User]) -> str:
-        """
-        Waits for a selection.
-
-        Args:
-            group_names: A set of all courses.
-
-            member: The Member whose input is requested.
-
-        Returns:
-            The course name.
-        """
-        res: Interaction = await self.bot.wait_for("select_option",
-                                                   check=lambda x: self.check(x, group_names, member),
-                                                   timeout=120)
-        await res.respond(content=f"I received your group input.")
-        # noinspection PyUnresolvedReferences
-        return res.values[0]
-
-    async def wait_for_semester(self, group_semester: list[str], member: Union[Member, User]) -> Union[str, int]:
-        """
-        Waits for a selection.
-
-        Args:
-            group_semester: A set of all  semester yrs.
-
-            member: The Member whose input is requested.
-
-        Returns:
-            Semester yr.
-        """
-        res: Interaction = await self.bot.wait_for("select_option",
-                                                   check=lambda x: self.check(x, group_semester, member),
-                                                   timeout=120)
-        await res.respond(content="I received your semester input.")
-        # noinspection PyUnresolvedReferences
-        return res.values[0]
-
-    @staticmethod
-    def check(res, collection: list[str], member: Member) -> bool:
-        return res.values[0] in collection and res.user.id == member.id
-
-
-def setup(bot: Bot):
-    bot.add_cog(StudyGroups(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(StudyGroups(bot))

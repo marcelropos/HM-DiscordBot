@@ -1,7 +1,7 @@
 import os
 import re
+from typing import Union, Sequence
 from asyncio import sleep
-from typing import Union
 
 import discord
 from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
@@ -38,14 +38,14 @@ class Upgrade(Cog):
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py") and filename != "upgrade.py":
                 try:
-                    ctx.bot.unload_extension(f"cogs.{filename[:-3]}")
+                    await ctx.bot.unload_extension(f"cogs.{filename[:-3]}")
                     logger.info(f"Unloaded: cogs.{filename[:-3]}")
                 except ExtensionNotLoaded:
                     logger.info(f"Already Unloaded: cogs.{filename[:-3]}")
         logger.info("Disabled all commands")
 
         guild: Guild = ctx.guild
-        members: list[Member] = guild.members
+        members: Sequence[Member] = guild.members
 
         study_groups_db = SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.GROUP)
         study_groups_documents: list[SubjectOrGroup] = await study_groups_db.find({})
@@ -204,5 +204,5 @@ class Upgrade(Cog):
         await ctx.reply(content="Please restart the bot")
 
 
-def setup(bot: Bot):
-    bot.add_cog(Upgrade(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Upgrade(bot))

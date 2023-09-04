@@ -103,7 +103,7 @@ class Mongo(Cog):
                    help="Edits a existing record.\n Throws: CouldNotEditEntryError if no entry was found to edit.")
     async def mongo_edit(self, ctx: Context, collection: CollectionEnum, key: str, *, value: str):
         """
-        Edits a existing record.
+        Edits an existing record.
 
         Args:
             ctx: The command context provided by the discord.py wrapper.
@@ -143,7 +143,7 @@ class Mongo(Cog):
         Args:
             ctx: The command context provided by the discord.py wrapper.
 
-            collection: The collection (you can say a database table) which shall not longer contain the key value pair.
+            collection: The collection (you can say a database table) which shall no longer contain the key value pair.
 
             key: The key which shall wiped out.
 
@@ -199,8 +199,8 @@ class Mongo(Cog):
         Converts text input data to storable objects and creates output text from objects.
 
         Text to object:
-            1. Text that represents a integer value is converted to an integer.
-            2. Text that represents a boolean value is converted to a boolean. (0 & 1 won't be convert to bool)
+            1. Text that represents an integer value is converted to an integer.
+            2. Text that represents a boolean value is converted to a boolean. (0 & 1 won't be converted to bool)
             3. Text representing a date & time is converted to a date object.
 
         Object to text:
@@ -234,5 +234,5 @@ class Mongo(Cog):
         return result
 
 
-def setup(bot: Bot):
-    bot.add_cog(Mongo(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Mongo(bot))

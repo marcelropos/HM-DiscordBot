@@ -198,5 +198,5 @@ class StudyTmpChannels(Cog):
             await sleep(2)
 
 
-def setup(bot: Bot):
-    bot.add_cog(StudyTmpChannels(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(StudyTmpChannels(bot))

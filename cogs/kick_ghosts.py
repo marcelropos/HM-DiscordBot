@@ -218,7 +218,7 @@ class KickGhosts(Cog):
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find_one({key: {"$exists": True}})
         safe_roles = set()
-        safe_roles.update(ctx.message.raw_role_mentions)
+        safe_roles.update(ctx.message.raw_role_mentions())
         if found:
             safe_roles.update(found[key])
             await self.db.update_one({key: {"$exists": True}}, {key: list(safe_roles)})
@@ -248,8 +248,9 @@ class KickGhosts(Cog):
        """
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find({key: {"$exists": True}})
+        # noinspection PyTypeChecker
         safe_roles: set[int] = set(found[key])
-        safe_roles.remove(ctx.message.raw_role_mentions)
+        safe_roles.difference_update(ctx.message.raw_role_mentions())
         await self.db.update_one({key: {"$exists": True}}, {key: safe_roles})
 
         embed = Embed(title="Safe Roles",
@@ -306,6 +307,7 @@ class KickGhosts(Cog):
 
         result = f"{warn_list}\n{kick_list}"
 
+        # noinspection PyTypeChecker
         await ctx.reply(
             file=discord.File(
                 fp=StringIO(result),
@@ -432,6 +434,7 @@ class KickGhosts(Cog):
         if None in safe_roles:
             logger.error("A non-existent role id was loaded. For security reasons, "
                          "the execution of the member kick was aborted.")
+            # noinspection PyTypeChecker
             raise BrokenConfigurationError(self.db.collection.name, key)
         return safe_roles
 
@@ -440,7 +443,7 @@ class KickGhosts(Cog):
         """
         Calculates how long a member is on the guild.
         """
-        return (datetime.now() - member.joined_at).days
+        return (discord.utils.utcnow() - member.joined_at).days
 
     @staticmethod
     def check_subcommand(ctx):
@@ -453,5 +456,5 @@ class KickGhosts(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
 
-def setup(bot: Bot):
-    bot.add_cog(KickGhosts(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(KickGhosts(bot))

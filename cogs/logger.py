@@ -83,8 +83,9 @@ class Logger(Cog):
         Sets the level and logs the change.
         """
         loggerInstance.loggerLogger.warning(f"{_logger.value} Logger set to new logger level :" + level.name)
+        # noinspection PyTypeChecker
         logging.getLogger(_logger.value).setLevel(level.value)
 
 
-def setup(bot: Bot):
-    bot.add_cog(Logger(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Logger(bot))

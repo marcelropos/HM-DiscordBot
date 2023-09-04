@@ -1,6 +1,6 @@
 from typing import Optional
 
-from discord import TextChannel, Role, Guild, CategoryChannel
+from discord import TextChannel, Role, CategoryChannel
 from discord.ext.commands import Bot
 
 from core.error.error_collection import BrokenConfigurationError
@@ -22,8 +22,10 @@ async def assign_accepted_chats(bot: Bot, channels: set[TextChannel]):
     channels.clear()
     db = PrimitiveMongoData(CollectionEnum.CHANNELS)
 
+    # noinspection PyTypeChecker
     command_key: str = ConfigurationNameEnum.BOT_COMMAND_CHAT.value
     command: Optional[dict] = await db.find_one({command_key: {"$exists": True}})
+    # noinspection PyTypeChecker
     debug_key: str = ConfigurationNameEnum.DEBUG_CHAT.value
     debug: Optional[dict] = await db.find_one({debug_key: {"$exists": True}})
 
@@ -61,11 +63,13 @@ async def assign_role(bot: Bot, role_name: ConfigurationNameEnum) -> Optional[Ro
         role = None
 
     if not role:
+        # noinspection PyTypeChecker
         raise BrokenConfigurationError(db.collection.name, role_key)
 
     return role
 
 
+# noinspection DuplicatedCode
 async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional[TextChannel]:
     """
     Loads the verified channel and takes care of possible errors.
@@ -91,11 +95,13 @@ async def assign_chat(bot: Bot, channel_name: ConfigurationNameEnum) -> Optional
         channel = None
 
     if not channel:
+        # noinspection PyTypeChecker
         raise BrokenConfigurationError(db.collection.name, role_key)
 
     return channel
 
 
+# noinspection DuplicatedCode
 async def assign_category(bot: Bot, category_name: ConfigurationNameEnum) -> Optional[CategoryChannel]:
     """
     Loads the verified category and takes care of possible errors.
@@ -121,11 +127,12 @@ async def assign_category(bot: Bot, category_name: ConfigurationNameEnum) -> Opt
         category = None
 
     if not category:
+        # noinspection PyTypeChecker
         raise BrokenConfigurationError(db.collection.name, category_key)
 
     return category
 
 
-async def assign_set_of_roles(guild: Guild, db: SubjectsOrGroups, roles: set[Role]):
+async def assign_set_of_roles(db: SubjectsOrGroups, roles: set[Role]):
     roles.clear()
     roles.update(document.role for document in await db.find({}))

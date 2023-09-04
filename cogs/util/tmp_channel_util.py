@@ -89,6 +89,7 @@ class TmpChannelUtil:
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
         if not verified:
+            # noinspection PyTypeChecker
             raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.STUDENTY.value)
 
         key = ConfigurationNameEnum.FRIEND.value
@@ -96,6 +97,7 @@ class TmpChannelUtil:
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
         if not friend:
+            # noinspection PyTypeChecker
             raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.FRIEND.value)
 
         key = ConfigurationNameEnum.MODERATOR_ROLE.value
@@ -103,6 +105,7 @@ class TmpChannelUtil:
             (await PrimitiveMongoData(CollectionEnum.ROLES).find_one({key: {"$exists": True}}))[key])
 
         if not moderator:
+            # noinspection PyTypeChecker
             raise BrokenConfigurationError(CollectionEnum.ROLES.value, ConfigurationNameEnum.MODERATOR_ROLE.value)
 
         overwrites = channel_category.overwrites
@@ -143,7 +146,6 @@ class TmpChannelUtil:
         voice_channel: VoiceChannel = await guild.create_voice_channel(name=name,
                                                                        category=channel_category,
                                                                        overwrites=overwrites,
-                                                                       nsfw=False,
                                                                        reason="")
 
         entry: TempChannel = await db.insert_one(

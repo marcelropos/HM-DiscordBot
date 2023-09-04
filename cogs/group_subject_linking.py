@@ -4,7 +4,6 @@ from typing import Union
 from discord import Role, TextChannel, Member, User, Embed
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
-from discord_components import DiscordComponents
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
@@ -52,7 +51,7 @@ class Linking(Cog):
                                 need_init=self.need_init,
                                 bot_channels=bot_channels) as need_init:
             if need_init:
-                DiscordComponents(self.bot)
+                pass  # FIXME: I don't remember what can be removed if nothing needs to be done here
         logger.info(f"The cog is online.")
 
     def cog_unload(self):
@@ -216,5 +215,5 @@ class Linking(Cog):
         return study_role, subject_role
 
 
-def setup(bot: Bot):
-    bot.add_cog(Linking(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Linking(bot))
