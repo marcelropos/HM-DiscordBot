@@ -5,7 +5,6 @@ from typing import Union
 from discord import Role, TextChannel, Member, User, Guild, Embed
 from discord.ext.commands import Cog, Bot, has_guild_permissions, group, Context, BadArgument
 from discord.ext.tasks import loop
-from discord_components import DiscordComponents
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
@@ -64,8 +63,7 @@ class Subjects(Cog):
                                 verified=verified,
                                 moderator=moderator) as need_init:
             if need_init:
-                DiscordComponents(self.bot)
-                await assign_set_of_roles(self.bot.guilds[0], self.db, subjects_roles)
+                await assign_set_of_roles(self.db, subjects_roles)
 
     def cog_unload(self):
         logger.warning("Cog has been unloaded.")
@@ -310,5 +308,5 @@ class Subjects(Cog):
                 embed.add_field(name=name, value=subjects_text, inline=False)
 
 
-def setup(bot: Bot):
-    bot.add_cog(Subjects(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Subjects(bot))

@@ -47,7 +47,7 @@ class Admin(Cog):
         Replies:
             A success message.
         """
-        self.bot.load_extension(f"cogs.{cog}")
+        await self.bot.load_extension(f"cogs.{cog}")
 
         embed = Embed(title="Cog", description=f"The {cog} cog was loaded successfully.")
         await ctx.reply(embed=embed)
@@ -65,8 +65,8 @@ class Admin(Cog):
         Replies:
             A success message.
         """
-        self.bot.unload_extension(f"cogs.{cog}")
-        self.bot.load_extension(f"cogs.{cog}")
+        await self.bot.unload_extension(f"cogs.{cog}")
+        await self.bot.load_extension(f"cogs.{cog}")
         embed = Embed(title="Cog", description=f"The {cog} cog was reloaded successfully.")
         await ctx.reply(embed=embed)
 
@@ -83,7 +83,7 @@ class Admin(Cog):
         Replies:
             A success message.
         """
-        self.bot.unload_extension(f"cogs.{cog}")
+        await self.bot.unload_extension(f"cogs.{cog}")
         embed = Embed(title="Cog", description=f"The {cog} cog was unloaded successfully.")
         await ctx.reply(embed=embed)
 
@@ -141,7 +141,7 @@ class Admin(Cog):
 
         after: datetime = datetime.strptime(after, '%d.%m.%y')
         message: Message = ctx.message
-        mentions: set[Union[Member, User]] = message.mentions
+        mentions: list[Union[Member, User]] = message.mentions
         check = self.purge_check(mentions)
         count = len(await ctx.channel.purge(after=after, check=check, bulk=True))
         embed = Embed(title=ctx.channel.name,
@@ -159,7 +159,7 @@ class Admin(Cog):
         await discord.Client.change_presence(self=self.bot,
                                              status=discord.Status.offline)
         await self.bot.close()
-        sleep(1)  # this sleep is there to avoid a Exception in asyncio
+        sleep(1)  # this sleep is there to avoid an Exception in asyncio
         logger.warning("All connections are closed. Hope you will activate me again soon.")
 
     @command(brief="Toggle command",
@@ -188,7 +188,7 @@ class Admin(Cog):
     # Static methods
 
     @staticmethod
-    def purge_check(mentions: set[Union[Member, User]]) -> Callable[[Message], bool]:
+    def purge_check(mentions: list[Union[Member, User]]) -> Callable[[Message], bool]:
         """
         Returns predicate for message deletion.
 
@@ -217,5 +217,5 @@ class Admin(Cog):
         return check
 
 
-def setup(bot: Bot):
-    bot.add_cog(Admin(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Admin(bot))

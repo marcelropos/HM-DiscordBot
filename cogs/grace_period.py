@@ -57,5 +57,5 @@ class GracePeriod(Cog):
             await member.add_roles(tmp_verified.item, reason="Grace Period")
 
 
-def setup(bot: Bot):
-    bot.add_cog(GracePeriod(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(GracePeriod(bot))

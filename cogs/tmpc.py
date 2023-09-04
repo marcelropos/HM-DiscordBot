@@ -6,14 +6,16 @@ from discord.abc import GuildChannel
 from discord.ext.commands import Bot, group, Cog, Context, BadArgument, cooldown, BucketType, \
     max_concurrency
 from discord.ext.tasks import loop
-from discord_components import DiscordComponents, Interaction, SelectOption, Select
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
+from cogs.util.custom_select import CustomSelect
 from cogs.util.placeholder import Placeholder
+from cogs.util.select_view import SelectRoleView
 from cogs.util.tmp_channel_util import TmpChannelUtil
 from core.error.error_collection import WrongChatForCommandTmpc, CouldNotFindToken, NotOwnerError, \
-    NameDuplicationError, LeaveOwnChannelError, TempChannelMayNotPersistError, YouOwnNoChannelsError
+    NameDuplicationError, LeaveOwnChannelError, TempChannelMayNotPersistError, YouOwnNoChannelsError, \
+    MissingInteractionError
 from core.error.error_reply import send_error
 from core.global_enum import CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.predicates import bot_chat, has_role_plus
@@ -61,7 +63,7 @@ class Tmpc(Cog):
                                 bot_channels=bot_channels,
                                 moderator=moderator) as need_init:
             if need_init:
-                DiscordComponents(self.bot)
+                pass  # FIXME: I don't remember what can be removed if nothing needs to be done here
 
     def cog_unload(self):
         logger.warning("Cog has been unloaded.")
@@ -307,7 +309,7 @@ class Tmpc(Cog):
                             inline=False)
             message: Message = await ctx.send(embed=embed)
             await ctx.message.delete()
-            await message.add_reaction(emoji="🔓")
+            await message.add_reaction("🔓")
             replace = {DBKeyWrapperEnum.MESSAGES.value: [(message.channel.id, message.id) for message in
                                                          document.messages + [message]]}
             await self.channel_db.update_one(document.document, replace)
@@ -388,8 +390,8 @@ class Tmpc(Cog):
                 voice_overwrites[moderator.item] = category.overwrites[moderator.item]
                 chat_overwrites = document.chat.overwrites
                 chat_overwrites[moderator.item] = category.overwrites[moderator.item]
-                await document.voice.edit(overwrite=voice_overwrites)
-                await document.chat.edit(overwrite=chat_overwrites)
+                await document.voice.edit(overwrites=voice_overwrites)
+                await document.chat.edit(overwrites=chat_overwrites)
                 embed.add_field(name="Moderator permissions",
                                 value="Since this chat cannot be moderated without a moderator, "
                                       "the moderator rights will be restored.")
@@ -539,26 +541,23 @@ class Tmpc(Cog):
         elif len(channels) == 1:
             return channels.pop()
 
-        pool = {channel.chat.name: channel for channel in channels}
+        custom_select: CustomSelect = CustomSelect(0, "Select the channel",
+                                                   [channel.chat.name for channel in channels],
+                                                   "I received your input.")
 
-        options = Select(
-            placeholder="Select your group",
-            options=[SelectOption(label=channel.chat.name, value=channel.chat.name) for channel in channels])
+        role_view: SelectRoleView = SelectRoleView([custom_select])
 
-        await ctx.reply(content="Please select **one** of the following groups.",
-                        components=[options])
+        await ctx.reply(content="Please select **one** of the following channels.", view=role_view)
 
-        res: Interaction = await self.bot.wait_for("select_option",
-                                                   check=lambda x: self.check(x, [channel.chat.name for channel in
-                                                                                  channels], ctx.author),
-                                                   timeout=120)
-        await res.respond(content=f"I received your input.")
-        return pool[res.values[0]]
+        if await role_view.wait():
+            raise MissingInteractionError
+
+        return [channel for channel in channels if channel.chat.name == custom_select.values[0]].pop()
 
     @staticmethod
     def check(x, options: list[str], author: Member) -> bool:
         return x.values[0] in options and x.user.id == author.id
 
 
-def setup(bot: Bot):
-    bot.add_cog(Tmpc(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Tmpc(bot))

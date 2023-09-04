@@ -32,6 +32,7 @@ class StudySubjectRelation(MongoDocument):
 
 class StudySubjectRelations(MongoCollection):
     def __init__(self, bot: Bot):
+        # noinspection PyTypeChecker
         super().__init__(CollectionEnum.GROUP_SUBJECT_RELATION.value)
         self.bot = bot
 
@@ -56,7 +57,8 @@ class StudySubjectRelations(MongoCollection):
                 _.role is group}:
             raise BadArgument
 
-        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT).find({}) if _.role is subject}:
+        if not {_ for _ in await SubjectsOrGroups(self.bot, SubjectsOrGroupsEnum.SUBJECT).find({}) if
+                _.role is subject}:
             raise BadArgument
 
         document = {

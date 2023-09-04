@@ -1,12 +1,12 @@
 from typing import Union
 
-from discord import TextChannel, User, Member, Embed, Role
+from discord import TextChannel, User, Member, Embed, Role, Guild
 from discord.ext.commands import Cog, Bot, command, Context, cooldown, BucketType
 from discord.ext.tasks import loop
 
 from cogs.bot_status import listener
 from cogs.util.ainit_ctx_mgr import AinitManager
-from cogs.util.assign_variables import assign_role, assign_chat
+from cogs.util.assign_variables import assign_chat
 from cogs.util.placeholder import Placeholder
 from core.error.error_collection import MentionNotFoundError
 from core.global_enum import ConfigurationNameEnum
@@ -65,7 +65,7 @@ class Moderator(Cog):
     @command(help="Verify a mentioned user")
     @bot_chat(bot_channels)
     @has_role_plus(moderator)
-    async def verify(self, ctx: Context, member):  # parameter only for pretty help.
+    async def verify(self, ctx: Context, member):
         """
         Assigns a role to the mentioned member.
 
@@ -75,12 +75,22 @@ class Moderator(Cog):
             member: The member who is to receive a role.
         """
         global verified
-        try:
-            member: Union[Member, User] = ctx.message.mentions[0]
-        except IndexError:
+
+        if ctx.message.mentions:
+            student: Union[Member, User] = ctx.message.mentions[0]
+        elif member:
+            guild: Guild = self.bot.guilds[0]
+            try:
+                student: Union[Member, User] = guild.get_member(int(member))
+                if not student:
+                    raise MentionNotFoundError("member", member)
+            except ValueError:
+                raise MentionNotFoundError("member", member)
+        else:
             raise MentionNotFoundError("member", member)
-        await member.add_roles(*verified, reason=f"{str(ctx.author)}")
-        logger.info(f"User {str(member)} was verified by {str(ctx.author)}")
+
+        await student.add_roles(*verified, reason=f"{str(ctx.author)}")
+        logger.info(f"User {str(student)} was verified by {str(ctx.author)}")
 
     @command(brief="Write an anonymous message to the mods.",
              help="You can send an anonymous message to the mods twice an hour.")
@@ -93,5 +103,5 @@ class Moderator(Cog):
                         embed=embed)
 
 
-def setup(bot: Bot):
-    bot.add_cog(Moderator(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Moderator(bot))

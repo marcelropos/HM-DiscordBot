@@ -39,6 +39,7 @@ class SubjectOrGroup(MongoDocument):
 
 class SubjectsOrGroups(MongoCollection):
     def __init__(self, bot: Bot, collection: SubjectsOrGroupsEnum):
+        # noinspection PyTypeChecker
         super().__init__(collection.value)
         self.bot = bot
 

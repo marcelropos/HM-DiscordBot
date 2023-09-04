@@ -20,7 +20,7 @@ async def error_reply(ctx: Context,
     embed.add_field(name="Command", value=f"`{command}`", inline=False)
     embed.add_field(name="Cause", value=cause, inline=False)
     embed.add_field(name="Solution", value=solution, inline=False)
-    embed.set_footer(text=user.name, icon_url=user.avatar_url)
+    embed.set_footer(text=user.name, icon_url=user.avatar.url)
     embed.timestamp = ctx.message.created_at
     try:
         await ctx.reply(embed=embed, content=content, delete_after=delete_after)
@@ -42,7 +42,7 @@ async def send_error(chat: TextChannel,
     embed.add_field(name="Action", value=f"`{action}`", inline=False)
     embed.add_field(name="Cause", value=cause, inline=False)
     embed.add_field(name="Solution", value=solution, inline=False)
-    embed.set_footer(text=user.name, icon_url=user.avatar_url)
+    embed.set_footer(text=user.name, icon_url=user.avatar.url)
     embed.timestamp = datetime.now()
     await chat.send(embed=embed, delete_after=delete_after, content=user.mention)
     get_discord_child_logger(action) \

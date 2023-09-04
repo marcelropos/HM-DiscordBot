@@ -95,5 +95,5 @@ class Roles(Cog):
         await ctx.reply(content=f"{ctx.author.mention} removed you from the {news.item.name} role")
 
 
-def setup(bot: Bot):
-    bot.add_cog(Roles(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Roles(bot))
