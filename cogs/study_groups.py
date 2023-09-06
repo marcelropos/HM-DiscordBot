@@ -249,7 +249,13 @@ class StudyGroups(Cog):
         a: str = custom_select1.values[0]
         b: str = custom_select2.values[0]
 
-        role: Role = {role for role in groups if role.name == a + b}.pop()
+        try:
+            role: Role = {role for role in groups if role.name == a + b}.pop()
+        except KeyError:
+            embed = Embed(title="Role not known",
+                          description=f"Dont know @{a + b} Role. Try again.")
+            await ctx.reply(content=member.mention, embed=embed)
+            return
 
         subjects = [document.subject for document in await StudySubjectRelations(self.bot).find(
             {DBKeyWrapperEnum.GROUP.value: role.id, DBKeyWrapperEnum.DEFAULT.value: True})]

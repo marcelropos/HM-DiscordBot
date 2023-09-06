@@ -2,6 +2,7 @@ import datetime
 import os
 import re
 from typing import Union, Sequence
+from asyncio import sleep
 
 import discord
 from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
@@ -66,19 +67,29 @@ class Upgrade(Cog):
 
         # remove every subject from everyone:
         logger.info("Starting to remove subjects from everyone")
-        for member in members:
-            logger.info(f"Checking {member.display_name}")
-            roles_to_remove = [role for role in subject_roles]
-            await member.remove_roles(*roles_to_remove, reason="upgrade")
+        count = len(members)
+        for i, member in enumerate(members):
+            logger.info(f"Checking {member.display_name} | {round((i + 1) / count * 100, 2)}%")
+
+            roles_to_remove: set[Role] = {role for role in subject_roles}.intersection(set(member.roles))
+            if roles_to_remove:
+                logger.info(f"remove {[role.name for role in roles_to_remove]} from {member.display_name}")
+                await member.remove_roles(*roles_to_remove, reason="upgrade")
+                await sleep(120)
+            else:
+                logger.info(f"No roles to remove from {member.display_name}")
+
         logger.info("Finished removing subjects from everyone")
 
         # recreate subject channels:
         logger.info("Starting to recreate the subject text channels")
-        for document in subjects_documents:
+        count = len(subjects_documents)
+        for i, document in enumerate(subjects_documents):
             channel: TextChannel = document.chat
             name = channel.name
-            if len([message async for message in channel.history(limit=1)]) == 0:
-                logger.info(f"Don't need the recreate {name} channel")
+            logger.info(f"Checking {name} | {round((i + 1) / count * 100, 2)}%")
+            if not [message async for message in channel.history(limit=1)]:
+                logger.info(f"Skipped {name} channel")
                 continue
             category = channel.category
             permissions = channel.overwrites
@@ -99,9 +110,11 @@ class Upgrade(Cog):
                 DBKeyWrapperEnum.ROLE.value: document.role_id
             }
             await subject_db.update_one(document.document, new_document)
+            await sleep(120)
         logger.info("Finished to recreate the subject text channels")
 
         # rename the study groups to one semester up
+        count = len(study_groups_documents)
         logger.info("Starting to rename study groups")
         documents_to_remove: list[SubjectOrGroup] = []
         for document in study_groups_documents:
@@ -125,10 +138,11 @@ class Upgrade(Cog):
             else:
                 new_name = f"{study_master}{int(study_semester) + 1}"
 
-            logger.info(f"Renamed {role.name} to {new_name}")
+            logger.info(f"Renamed {role.name} to {new_name} | {round((i + 1) / count * 100, 2)}%")
 
             await channel.edit(name=new_name, reason="upgrade")
             await role.edit(name=new_name, reason="upgrade")
+            await sleep(120)
 
         study_groups_documents = [document for document in study_groups_documents if
                                   document not in documents_to_remove]
@@ -136,7 +150,8 @@ class Upgrade(Cog):
 
         # create 1st semester study groups
         logger.info("Creating first semester study groups")
-        for document in study_groups_documents:
+        count = len(study_groups_documents)
+        for i, document in enumerate(study_groups_documents):
             channel: TextChannel = document.chat
 
             study_master, study_semester = re.match(match, document.role.name).groups()
@@ -156,15 +171,17 @@ class Upgrade(Cog):
                                                                        reason="upgrade")
                 await study_groups_db.insert_one((channel, role))
                 await role.edit(position=document.role.position)
-                logger.info(f"Created {name} study group")
+                logger.info(f"Created {name} study group | {round((i + 1) / count * 100, 2)}%")
+                await sleep(120)
         logger.info("Created first semester study groups")
 
         study_groups_documents: list[SubjectOrGroup] = await study_groups_db.find({})
         study_groups_roles: list[Role] = [document.role for document in study_groups_documents]
 
         # redo the links
+        count = len(study_groups_documents)
         logger.info("Remapping the links")
-        for document in study_groups_documents:
+        for i, document in enumerate(study_groups_documents):
             role: Role = document.role
 
             study_master, study_semester = re.match(match, role.name).groups()
@@ -179,19 +196,29 @@ class Upgrade(Cog):
                         DBKeyWrapperEnum.DEFAULT.value: link.default
                     }
                     await links_db.update_one(link.document, new_link)
-                    logger.info(f"Remapping {link.subject.name} from {link.group.name} to {lower_semester_role.name}")
+                    logger.info(
+                        f"Remapping {link.subject.name} from {link.group.name} to {lower_semester_role.name} "
+                        f"| {round((i + 1) / count * 100, 2)}%")
         logger.info("Done remapping the links")
 
         links_documents: list[StudySubjectRelation] = await links_db.find({})
 
         # assign everyone to their new subjects
+        count = len(members)
         logger.info("Assigning everyone to their new subjects")
-        for member in members:
-            logger.info(f"Assigning {member.display_name} to his/her new subjects")
+        for i, member in enumerate(members):
+            logger.info(f"Assigning {member.display_name} to his/her new subjects | {round((i + 1) / count * 100, 2)}%")
             groups: list[Role] = [role for role in member.roles if role in study_groups_roles]
             roles_to_add = [document.subject for document in links_documents if
                             (document.group in groups and document.default)]
-            await member.add_roles(*roles_to_add, reason="upgrade")
+
+            if roles_to_add:
+                logger.info(f"add {[role.name for role in roles_to_add]} to {member.display_name}")
+                await member.add_roles(*roles_to_add, reason="upgrade")
+            else:
+                logger.info(f"No roles to add to {member.display_name}")
+            await sleep(120)
+
         logger.info("Assigned everyone to their new subjects")
 
         logger.info("Finished upgrade")
