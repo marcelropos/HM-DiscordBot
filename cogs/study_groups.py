@@ -2,7 +2,7 @@ import re
 from typing import Union
 
 import discord
-from discord import Guild, Role, Member, User, TextChannel, Embed
+from discord import Guild, Role, Member, User, TextChannel, Embed, PermissionOverwrite, Color
 from discord.ext.commands import Cog, Bot, command, Context, group, BadArgument, has_guild_permissions
 from discord.ext.tasks import loop
 
@@ -14,7 +14,7 @@ from cogs.util.placeholder import Placeholder
 from cogs.util.select_view import SelectRoleView
 from cogs.util.study_subject_util import StudySubjectUtil
 from core import global_enum
-from core.error.error_collection import FailedToGrantRoleError, MissingInteractionError
+from core.error.error_collection import FailedToGrantRoleError, MissingInteractionError, GroupOrSubjectNotFoundError
 from core.global_enum import SubjectsOrGroupsEnum, CollectionEnum, ConfigurationNameEnum, DBKeyWrapperEnum
 from core.logger import get_discord_child_logger
 from core.predicates import bot_chat, is_not_in_group, has_role_plus
@@ -135,6 +135,43 @@ class StudyGroups(Cog):
         logger.info(f'User="{member.name}#{member.discriminator}({member.id})", Command="{ctx.message.content}"')
 
     @_group.command(pass_context=True,
+                    name="create",
+                    brief="Creates a Study group.",
+                    help="The name must contain the tag and the semester number.")
+    async def group_create(self, ctx: Context, name: str, semester: int = 1, color: int = 0):
+        """
+        Adds a new role-channel pair as a group.
+
+        Args:
+            ctx: The command context provided by the discord.py wrapper.
+
+            name: The name of the role and the chat.
+
+            color: color of group.
+
+            semester: number of semester
+        """
+        color_db = PrimitiveMongoData(CollectionEnum.GROUP_COLOR)
+        active_db = PrimitiveMongoData(CollectionEnum.GROUP_ACTIVE)
+        guild: Guild = ctx.guild
+
+        await color_db.insert_one({name: color})
+        await active_db.insert_one({name: True})
+
+        for i in range(1, semester + 1):
+            study_groups.add(
+                (
+                    await StudySubjectUtil.get_server_objects(
+                        ConfigurationNameEnum.GROUP_CATEGORY,
+                        guild,
+                        f"{name}{i}",
+                        ConfigurationNameEnum.STUDY_SEPARATOR_ROLE,
+                        self.db,
+                        color=Color(color)
+                        , reason="Create new group")
+                ).role)
+
+    @_group.command(pass_context=True,
                     name="add",
                     brief="Creates a Study group.",
                     help="The name must contain the tag and the semester number.")
@@ -189,6 +226,14 @@ class StudyGroups(Cog):
         await self.db.update_one(document.document, new_document)
 
     @_group.command(pass_context=True,
+                    name="active",
+                    brief="Creates a Study group.",
+                    help="The name must contain the tag and the semester number.")
+    async def group_active(self, _ctx: Context, name: str, active: bool):
+        active_db = PrimitiveMongoData(CollectionEnum.GROUP_ACTIVE)
+        await active_db.update_one({name: {"$exists": True}}, {name: active})
+
+    @_group.command(pass_context=True,
                     name="category",
                     brief="Sets the category",
                     help="The category must be given as an int value.")
@@ -234,10 +279,17 @@ class StudyGroups(Cog):
     async def assign_role(self, ctx: Context,
                           groups: list[Role],
                           member: Union[Member, User]):
-        group_names = sorted({str((re.match(self.match, _role.name).groups())[0])
-                              for _role in groups})
+
+        active_db = PrimitiveMongoData(CollectionEnum.GROUP_ACTIVE)
+
+        group_names = {str((re.match(self.match, _role.name).groups())[0])
+                       for _role in groups if _role}
+
+        active_group_names = sorted(
+            {x for x in group_names if (await active_db.find_one({x: True})).get(x)})
+
         group_semester = sorted({str((re.match(self.match, _role.name).groups())[1]) for _role in groups})
-        custom_select1: CustomSelect = CustomSelect(0, "Select your group", group_names,
+        custom_select1: CustomSelect = CustomSelect(0, "Select your group", active_group_names,
                                                     "I received your group input.")
         custom_select2: CustomSelect = CustomSelect(1, "Select your semester", group_semester,
                                                     "I received your semester input.")
@@ -252,10 +304,7 @@ class StudyGroups(Cog):
         try:
             role: Role = {role for role in groups if role.name == a + b}.pop()
         except KeyError:
-            embed = Embed(title="Role not known",
-                          description=f"Dont know @{a + b} Role. Try again.")
-            await ctx.reply(content=member.mention, embed=embed)
-            return
+            raise GroupOrSubjectNotFoundError(a + b, SubjectsOrGroupsEnum.GROUP)
 
         subjects = [document.subject for document in await StudySubjectRelations(self.bot).find(
             {DBKeyWrapperEnum.GROUP.value: role.id, DBKeyWrapperEnum.DEFAULT.value: True})]

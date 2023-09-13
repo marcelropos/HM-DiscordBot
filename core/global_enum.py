@@ -10,6 +10,8 @@ class MagicNumbers(Enum):
 
 class CollectionEnum(Enum):
     ROLES = "roles"
+    GROUP_COLOR = "group_color"
+    GROUP_ACTIVE = "group_active"
     CHANNELS = "channels"
     CATEGORIES = "categories"
     MESSAGES = "messages"
