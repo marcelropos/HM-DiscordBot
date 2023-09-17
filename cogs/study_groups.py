@@ -138,7 +138,7 @@ class StudyGroups(Cog):
                     name="create",
                     brief="Creates a Study group.",
                     help="The name must contain the tag and the semester number.")
-    async def group_create(self, ctx: Context, name: str, color, semester: int = 1):
+    async def group_create(self, ctx: Context, name: str, color: int, semester: int = 1):
         """
         Adds a new role-channel pair as a group.
 
