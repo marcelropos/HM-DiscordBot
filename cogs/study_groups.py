@@ -138,7 +138,7 @@ class StudyGroups(Cog):
                     name="create",
                     brief="Creates a Study group.",
                     help="The name must contain the tag and the semester number.")
-    async def group_create(self, ctx: Context, name: str, color: int, semester: int = 1):
+    async def group_create(self, ctx: Context, name: str, hex_color: str, semester: int = 1):
         """
         Adds a new role-channel pair as a group.
 
@@ -147,10 +147,11 @@ class StudyGroups(Cog):
 
             name: The name of the role and the chat.
 
-            color: color of group.
+            hex_color: color of group.
 
             semester: number of semester
         """
+        color = int(hex_color, 16)
         color_db = PrimitiveMongoData(CollectionEnum.GROUP_COLOR)
         active_db = PrimitiveMongoData(CollectionEnum.GROUP_ACTIVE)
         guild: Guild = ctx.guild
