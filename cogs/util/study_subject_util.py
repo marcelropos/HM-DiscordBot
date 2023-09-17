@@ -14,7 +14,8 @@ class StudySubjectUtil:
                                  name: str,
                                  separator_key: ConfigurationNameEnum,
                                  db: SubjectsOrGroups,
-                                 color: discord.Color = discord.Color.default()) -> SubjectOrGroup:
+                                 color: discord.Color = discord.Color.default(),
+                                 reason="") -> SubjectOrGroup:
         """
         Creates a "role-chat" pair, saves it and places it correctly.
 
@@ -31,6 +32,8 @@ class StudySubjectUtil:
 
             color: The optional Color of the Role created
 
+            reason: why "role-chat" pair was created
+
         Returns:
             A SubjectOrGroup which contains the created pair.
 
@@ -45,7 +48,7 @@ class StudySubjectUtil:
             (await PrimitiveMongoData(CollectionEnum.ROLES)
              .find_one({separator_key.value: {"$exists": True}}))[separator_key.value])
 
-        role: Role = await guild.create_role(name=name, reason="", color=color, hoist=True)
+        role: Role = await guild.create_role(name=name, reason=reason, color=color, hoist=True)
 
         overwrites = study_category.overwrites
         overwrites[role] = PermissionOverwrite(view_channel=True)
@@ -53,7 +56,7 @@ class StudySubjectUtil:
                                                                category=study_category,
                                                                overwrites=overwrites,
                                                                nsfw=False,
-                                                               reason="")
+                                                               reason=reason)
         entry: SubjectOrGroup = await db.insert_one((channel, role))
         await entry.role.edit(position=study_separator.position - 1)
 

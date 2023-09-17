@@ -10,6 +10,8 @@ class MagicNumbers(Enum):
 
 class CollectionEnum(Enum):
     ROLES = "roles"
+    GROUP_COLOR = "group_color"
+    GROUP_ACTIVE = "group_active"
     CHANNELS = "channels"
     CATEGORIES = "categories"
     MESSAGES = "messages"
@@ -89,13 +91,6 @@ class LoggerEnum(Enum):
 class SubjectsOrGroupsEnum(Enum):
     SUBJECT = "subject"
     GROUP = "group"
-
-
-colors: dict[str, discord.Color] = {
-    "IF": discord.Color(0xd79921),
-    "IB": discord.Color.green(),
-    "DC": discord.Color.blue()
-}
 
 
 def no_intersection():

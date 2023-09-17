@@ -13,7 +13,8 @@ class PrimitiveMongoData(MongoCollection):
         return await self.find_one(document)
 
     async def find_one(self, find_params: dict) -> dict:
-        return await self.collection.find_one(find_params)
+        result = await self.collection.find_one(find_params)
+        return result if result else dict()
 
     async def find(self, find_params: dict, sort: dict = None, limit: int = None) -> list[dict]:
         if sort:

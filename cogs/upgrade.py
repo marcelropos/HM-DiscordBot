@@ -5,13 +5,15 @@ from typing import Union, Sequence
 from asyncio import sleep
 
 import discord
-from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite
+from discord import Guild, Member, Role, TextChannel, NotFound, PermissionOverwrite, Color
 from discord.ext.commands import Cog, Bot, Context, command, is_owner, has_guild_permissions, ExtensionNotLoaded
 
 from cogs.util.assign_variables import assign_role
 from core import global_enum
-from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum, ConfigurationNameEnum
+from core.global_enum import SubjectsOrGroupsEnum, DBKeyWrapperEnum, ConfigurationNameEnum, CollectionEnum
 from core.logger import get_discord_child_logger
+
+from mongo.primitive_mongo_data import PrimitiveMongoData
 from mongo.study_subject_relation import StudySubjectRelations, StudySubjectRelation
 from mongo.subjects_or_groups import SubjectsOrGroups, SubjectOrGroup
 
@@ -156,9 +158,13 @@ class Upgrade(Cog):
 
             study_master, study_semester = re.match(match, document.role.name).groups()
 
-            color = global_enum.colors.get(study_master, discord.Color.default())
             if int(study_semester) == 2:
                 name = f"{study_master}1"
+
+                color_document = await PrimitiveMongoData(CollectionEnum.GROUP_COLOR).find_one(
+                    {study_master: {"$exists": True}})
+                color: Color = Color(color_document[study_master]) if color_document else Color.default()
+
                 category = channel.category
                 permissions: dict[Union[Role, Member], PermissionOverwrite] = channel.overwrites
 
