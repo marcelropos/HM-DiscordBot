@@ -138,7 +138,7 @@ class StudyGroups(Cog):
                     name="create",
                     brief="Creates a Study group.",
                     help="The name must contain the tag and the semester number.")
-    async def group_create(self, ctx: Context, name: str, semester: int = 1, color: int = 0):
+    async def group_create(self, ctx: Context, name: str, color, semester: int = 1):
         """
         Adds a new role-channel pair as a group.
 
@@ -155,21 +155,25 @@ class StudyGroups(Cog):
         active_db = PrimitiveMongoData(CollectionEnum.GROUP_ACTIVE)
         guild: Guild = ctx.guild
 
-        await color_db.insert_one({name: color})
-        await active_db.insert_one({name: True})
+        if not await color_db.find_one({name: {"$exists": True}}):
+            await color_db.insert_one({name: color})
+        if not active_db.find_one({name: {"$exists": True}}):
+            await active_db.insert_one({name: True})
 
         for i in range(1, semester + 1):
-            study_groups.add(
-                (
-                    await StudySubjectUtil.get_server_objects(
-                        ConfigurationNameEnum.GROUP_CATEGORY,
-                        guild,
-                        f"{name}{i}",
-                        ConfigurationNameEnum.STUDY_SEPARATOR_ROLE,
-                        self.db,
-                        color=Color(color)
-                        , reason="Create new group")
-                ).role)
+            created = await StudySubjectUtil.get_server_objects(
+                ConfigurationNameEnum.GROUP_CATEGORY,
+                guild,
+                f"{name}{i}",
+                ConfigurationNameEnum.STUDY_SEPARATOR_ROLE,
+                self.db,
+                color=Color(color)
+                , reason="Create new group")
+            study_groups.add(created.role)
+            embed = Embed(title="Study group created",
+                          description=f'The role {created.role.mention} has been created.\n'
+                                      f'The chat {created.chat.mention} has been created.\n')
+            await ctx.reply(embed=embed)
 
     @_group.command(pass_context=True,
                     name="add",
