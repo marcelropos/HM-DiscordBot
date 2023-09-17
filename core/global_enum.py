@@ -87,13 +87,6 @@ class SubjectsOrGroupsEnum(Enum):
     GROUP = "group"
 
 
-colors: dict[str, discord.Color] = {
-    "IF": discord.Color(0xd79921),
-    "IB": discord.Color.green(),
-    "DC": discord.Color.blue()
-}
-
-
 def no_intersection():
     """
     Checks if CollectionEnum and SubjectsOrGroupsEnum does not contain the same collection.

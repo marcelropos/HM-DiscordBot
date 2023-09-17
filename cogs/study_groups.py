@@ -190,7 +190,9 @@ class StudyGroups(Cog):
 
         study_master = re.match(self.match, name).groups()[0]
 
-        color = global_enum.colors.get(study_master, discord.Color.default())
+        color_document = await PrimitiveMongoData(CollectionEnum.GROUP_COLOR).find_one(
+            {study_master: {"$exists": True}})
+        color: Color = Color(color_document[study_master]) if color_document else Color.default()
 
         study_groups.add((await StudySubjectUtil.get_server_objects(category_key,
                                                                     guild,
