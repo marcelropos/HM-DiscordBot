@@ -218,7 +218,7 @@ class KickGhosts(Cog):
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
         found = await self.db.find_one({key: {"$exists": True}})
         safe_roles = set()
-        safe_roles.update(ctx.message.raw_role_mentions())
+        safe_roles.update([mention.id for mention in ctx.message.role_mentions])
         if found:
             safe_roles.update(found[key])
             await self.db.update_one({key: {"$exists": True}}, {key: list(safe_roles)})
