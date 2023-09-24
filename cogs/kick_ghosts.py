@@ -250,7 +250,7 @@ class KickGhosts(Cog):
         found = await self.db.find({key: {"$exists": True}})
         # noinspection PyTypeChecker
         safe_roles: set[int] = set(found[key])
-        safe_roles.difference_update(ctx.message.raw_role_mentions())
+        safe_roles.difference_update([mention.id for mention in ctx.message.role_mentions])
         await self.db.update_one({key: {"$exists": True}}, {key: safe_roles})
 
         embed = Embed(title="Safe Roles",
