@@ -1,19 +1,14 @@
-# HM Ersti FK07 Discord Bot
+# HM FK07 Discord Bot
 
-Das ist der Code für den **Sebastian** Bot auf dem "**FK07 Studenty Discord Server**".
+This is the code for the **Sebastian** Bot used on HM Discord Servers
 
-## Sprache
+# Redesign documentation
 
-Der Bot benutzt Python 3.9
+In an effort to improve the Bot, the bot will be rewritten from ground up, switching from Python to Rust.
 
-## Setup
+## Parts to redo
 
-Nachdem der Docker das erste Mal gestartet wurde, muss ein entry-point Script in `appdata/mongo/mongo-entrypoint/`
-hinzugefügt werden zu:
-```
-#!/usr/bin/env bash
-echo "Creating mongo users..."
-mongo admin --host localhost -u ROOT_USERNAME -p ROOT_PASSWORD --eval \
-    "use BOT_DATABASE; db.createUser({user: 'BOT_USERNAME', pwd: 'BOT_PASSWORD', roles: [{role: 'readWrite', db: 'BOT_DATABASE'}]});"
-echo "Mongo users created."
-```
+* Bot itself
+* Database
+* Docker setup
+* automatic building in GitHub
