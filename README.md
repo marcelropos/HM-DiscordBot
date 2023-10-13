@@ -12,3 +12,9 @@ In an effort to improve the Bot, the bot will be rewritten from ground up, switc
 * Database
 * Docker setup
 * automatic building in GitHub
+
+## Design files
+
+[Bot](Bot.md)
+
+[Database](Database.md)
