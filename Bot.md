@@ -65,9 +65,10 @@ Following information need to be set in the Setup:
 * channel ids
   * debug channel
   * bot chat channel
-  * mod chat channel
   * help chat channel
   * nerd voice channel
+  * study channel category
+  * subject channel category
 * role ids
   * studenty role
   * moderator role
@@ -76,7 +77,7 @@ Following information need to be set in the Setup:
   * study roles separator role
   * subject roles separator role
   * friend role
-  * restricted role
+* TMPC channel keep time
 
 To change any of those settings after the initial setup, one can redo the command and leave the setting that shouldn't be changed blank.
 
@@ -429,8 +430,7 @@ Renamed commands are not considered removed
 
 ### Replaced by setup command
 
-* `group category`
-* `group separator`
+* `group [category|separator]`
 * `kick [*]`
 * `safeRoles [add|rm|rm]`
 * `mail`
