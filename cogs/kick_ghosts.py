@@ -247,11 +247,11 @@ class KickGhosts(Cog):
            A success message.
        """
         key = ConfigurationNameEnum.SAFE_ROLES_LIST.value
-        found = await self.db.find({key: {"$exists": True}})
+        found = await self.db.find_one({key: {"$exists": True}})
         # noinspection PyTypeChecker
         safe_roles: set[int] = set(found[key])
         safe_roles.difference_update([mention.id for mention in ctx.message.role_mentions])
-        await self.db.update_one({key: {"$exists": True}}, {key: safe_roles})
+        await self.db.update_one({key: {"$exists": True}}, {key: list(safe_roles)})
 
         embed = Embed(title="Safe Roles",
                       description="The role(s) is/are now removed from the safe list.")
