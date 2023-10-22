@@ -158,7 +158,7 @@ class StudyGroups(Cog):
 
         if not await color_db.find_one({name: {"$exists": True}}):
             await color_db.insert_one({name: color})
-        if not active_db.find_one({name: {"$exists": True}}):
+        if not await active_db.find_one({name: {"$exists": True}}):
             await active_db.insert_one({name: True})
 
         for i in range(1, semester + 1):
