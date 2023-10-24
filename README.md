@@ -21,5 +21,4 @@ In an effort to improve the Bot, the bot will be rewritten from ground up, switc
 
 ## Still unclear
 
-* should the Nerd Channel functionality be kept?
 * find a good way to handle alumni and IF7+ students

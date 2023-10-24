@@ -24,7 +24,6 @@ Here is the information saved in the Database:
   * debug channel
   * bot chat channel
   * help chat channel
-  * nerd voice channel
   * logger pipe channel
   * study group channel category
   * subject channel category
@@ -61,8 +60,6 @@ Here is the information saved in the Database:
   * keep
   * deleteAt
   * token messages
-
-TODO: check if the nerd channel feature shouldn't be removed
 
 ## Database Design
 

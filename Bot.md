@@ -29,6 +29,7 @@ Following will be stored here:
 * Main guild id (The main guild id is used to send start up fail messages and also messages to the bot admins). In the main guild, the admins of the guild are the bot admins.
 * Logger levels
 * University email domain
+* Email SMTP Connection settings to send emails
 
 ### Database
 
@@ -66,7 +67,6 @@ Following information need to be set in the Setup:
   * debug channel
   * bot chat channel
   * help chat channel
-  * nerd voice channel
   * study channel category
   * subject channel category
 * role ids
@@ -82,8 +82,6 @@ Following information need to be set in the Setup:
 To change any of those settings after the initial setup, one can redo the command and leave the setting that shouldn't be changed blank.
 
 There will be a subcommand to print all the setup information for the guild.
-
-TODO: check if the nerd channel feature shouldn't be removed
 
 ### Help
 
@@ -236,7 +234,7 @@ Type: Slash command, Prefix command
 
 Permission: Moderator
 
-Adds the studenty role to that Student
+Adds the studenty role to that Student. It will also verify that user on any other server with the Bot where the student is.
 
 ### Verify itself
 
@@ -248,6 +246,10 @@ This command consists of 2 subcommands:
 
 1. Initialize the verification by giving the University issued email and sending a code to that email address
 2. Give the code received by email. If the code is correct for that user, he gets verified automatically
+
+The codes will only be saved in memory since this is a quick process and it doesn't make sense to save them between restarts.
+
+It will also verify that user on any other server with the Bot where the student is.
 
 ### Verify automatically
 
@@ -262,14 +264,6 @@ Type: Slash command, Prefix command
 Permission: everyone
 
 Ping Command
-
-### (Un)Lock nerd channel voice chat
-
-User joins/leaves voice chat callback, not a command
-
-TODO: check if the nerd channel feature shouldn't be removed
-
-If a user is inside inside the voice chat, make the vc free to all. If there is no one left, lock the vc again.
 
 ### TMPC Commands
 
@@ -435,7 +429,6 @@ Renamed commands are not considered removed
 * `safeRoles [add|rm|rm]`
 * `mail`
 * `man`
-* `nerd voice`
 * `subjects [category|separator]`
 
 ### Others
@@ -449,3 +442,4 @@ Renamed commands are not considered removed
 * `list-guild-member` : removed since never used
 * `tmpc [join|invite]` : removed since never used
 * `mongo [*]` : removed since we won't use mongo
+* `nerd voice` : removed to clean up features
