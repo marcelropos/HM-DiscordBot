@@ -6,6 +6,12 @@ Since the type of data is highly relational (the guild has information, there ar
 
 We will use a MySQL/MariaDB database and use [sqlx](https://github.com/launchbadge/sqlx) to talk with the database.
 
+## Database Migration
+
+With the use of [sqlx::migrate!](https://docs.rs/sqlx/latest/sqlx/macro.migrate.html) and SQL migration scripts that are ordered according to [sqlx::migrate::MigrationSource](https://docs.rs/sqlx/latest/sqlx/migrate/trait.MigrationSource.html). This will make migrations easier and force the database that the Bot works with to use the latest schema.
+
+While writing the migration scripts, one needs to be careful to not delete any data in case tables or columns are dropped or similar.
+
 ## Database communication
 
 The bot shouldn't make the database query himself. Instead, there will be a interface build so that the bot only talk with normal Rust types and the Interface handles the translation between SQL and Rust.
