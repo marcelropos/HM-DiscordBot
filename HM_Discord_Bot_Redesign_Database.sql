@@ -18,29 +18,40 @@ CREATE TABLE `Guild` (
   `study_role_separator_role` int NOT NULL,
   `subject_role_separator_role` int NOT NULL,
   `friend_role` int NOT NULL,
-  `tmpc_keep_time` TIME NOT NULL
+  `tmpc_keep_time` TIME NOT NULL,
+  `alumni_role` int NOT NULL,
+  `alumni_role_separator_role` int NOT NULL
+);
+
+CREATE TABLE `Alumni_roles` (
+  `role` int,
+  `guild_id` int NOT NULL,
+  PRIMARY KEY (`role`, `guild_id`)
 );
 
 CREATE TABLE `Study_groups` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `id` int AUTO_INCREMENT,
   `guild_id` int NOT NULL,
   `name` tinytext NOT NULL,
   `color` int NOT NULL,
-  `active` bool NOT NULL DEFAULT True
+  `active` bool NOT NULL DEFAULT True,
+  PRIMARY KEY (`id`, `guild_id`)
 );
 
 CREATE TABLE `Semester_study_groups` (
-  `role` int PRIMARY KEY,
+  `role` int,
   `study_group_id` int NOT NULL,
   `semester` int NOT NULL,
-  `text_channel` int UNIQUE NOT NULL
+  `text_channel` int UNIQUE NOT NULL,
+  PRIMARY KEY (`role`, `study_group_id`)
 );
 
 CREATE TABLE `Subject` (
-  `role` int PRIMARY KEY,
+  `role` int,
   `guild_id` int NOT NULL,
   `name` tinytext NOT NULL,
-  `text_channel` int UNIQUE NOT NULL
+  `text_channel` int UNIQUE NOT NULL,
+  PRIMARY KEY (`role`, `guild_id`)
 );
 
 CREATE TABLE `Study_subject_link` (
@@ -50,20 +61,22 @@ CREATE TABLE `Study_subject_link` (
 );
 
 CREATE TABLE `Tmpc_join_channel` (
-  `voice_channel` int PRIMARY KEY,
+  `voice_channel` int,
   `guild_id` int,
-  `persist` bool NOT NULL
+  `persist` bool NOT NULL,
+  PRIMARY KEY (`voice_channel`, `guild_id`)
 );
 
 CREATE TABLE `Tmpc` (
-  `voice_channel` int PRIMARY KEY,
-  `text_channel` int UNIQUE NOT NULL,
+  `voice_channel` int,
+  `text_channel` int NOT NULL,
   `guild_id` int NOT NULL,
   `owner` int NOT NULL,
   `persist` bool NOT NULL,
   `token` int NOT NULL,
   `keep` bool NOT NULL DEFAULT False,
-  `deleteAt` DATETIME
+  `deleteAt` DATETIME,
+  PRIMARY KEY (`voice_channel`, `guild_id`)
 );
 
 CREATE TABLE `Token_message` (
@@ -81,6 +94,10 @@ CREATE UNIQUE INDEX `Study_groups_index_0` ON `Study_groups` (`guild_id`, `name`
 CREATE UNIQUE INDEX `Semester_study_groups_index_1` ON `Semester_study_groups` (`study_group_id`, `semester`);
 
 CREATE UNIQUE INDEX `Subject_index_2` ON `Subject` (`guild_id`, `name`);
+
+CREATE UNIQUE INDEX `Tmpc_index_3` ON `Tmpc` (`text_channel`, `guild_id`);
+
+ALTER TABLE `Alumni_roles` ADD FOREIGN KEY (`guild_id`) REFERENCES `Guild` (`guild_id`);
 
 ALTER TABLE `Study_groups` ADD FOREIGN KEY (`guild_id`) REFERENCES `Guild` (`guild_id`);
 

@@ -17,8 +17,6 @@ In an effort to improve the Bot, the bot will be rewritten from ground up, switc
 
 [Bot](Bot.md)
 
+* [Alumni Support](Alumni.md)
+
 [Database](Database.md)
-
-## Still unclear
-
-* find a good way to handle alumni and IF7+ students

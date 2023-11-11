@@ -42,6 +42,10 @@ Here is the information saved in the Database:
   * study role separator role
   * subject role separator role
   * friend role
+  * alumni role
+  * alumni role separator role
+* alumni roles
+  * role
 * study groups
   * color
   * active
@@ -97,11 +101,18 @@ table Guild {
   subject_role_separator_role int [not null]
   friend_role int [not null]
   tmpc_keep_time TIME [not null]
+  alumni_role int [not null]
+  alumni_role_separator_role int [not null]
+}
+
+table Alumni_roles {
+  role int [pk]
+  guild_id int [pk, ref: > Guild.guild_id, not null]
 }
 
 table Study_groups {
   id int [pk, increment]
-  guild_id int [ref: > Guild.guild_id, not null]
+  guild_id int [pk, ref: > Guild.guild_id, not null]
   name tinytext [not null]
   color int [not null]
   active bool [not null, default: True]
@@ -113,7 +124,7 @@ table Study_groups {
 
 table Semester_study_groups {
   role int [pk]
-  study_group_id int [ref: > Study_groups.id, not null]
+  study_group_id int [pk, ref: > Study_groups.id, not null]
   semester int [not null]
   text_channel int [unique, not null]
 
@@ -124,7 +135,7 @@ table Semester_study_groups {
 
 table Subject {
   role int [pk]
-  guild_id int [ref: > Guild.guild_id, not null]
+  guild_id int [pk, ref: > Guild.guild_id, not null]
   name tinytext [not null]
   text_channel int [unique, not null]
 
@@ -140,19 +151,23 @@ table Study_subject_link {
 
 table Tmpc_join_channel {
   voice_channel int [pk]
-  guild_id int [ref: > Guild.guild_id]
+  guild_id int [pk, ref: > Guild.guild_id]
   persist bool [not null]
 }
 
 table Tmpc {
   voice_channel int [pk]
-  text_channel int [unique, not null]
-  guild_id int [ref: > Guild.guild_id, not null]
+  text_channel int [not null]
+  guild_id int [pk, ref: > Guild.guild_id, not null]
   owner int [not null]
   persist bool [not null]
   token int [not null]
   keep bool [not null, default: False]
   deleteAt DATETIME [null]
+
+  indexes {
+    (text_channel, guild_id) [unique]
+  }
 }
 
 table Token_message {

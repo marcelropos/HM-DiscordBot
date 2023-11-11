@@ -77,6 +77,8 @@ Following information need to be set in the Setup:
   * study roles separator role
   * subject roles separator role
   * friend role
+  * alumni roles separator role
+  * alumni role
 * TMPC channel keep time
 
 To change any of those settings after the initial setup, one can redo the command and leave the setting that shouldn't be changed blank.
@@ -121,8 +123,6 @@ The Upgrade needs to do following:
 * Remap study group - subject links
 * Assign students to their default subject roles
 * Enable back commands and disable itself
-
-TODO: Add way to handle Alumni and IF7+ students
 
 ### En/Disable Command
 
@@ -435,7 +435,7 @@ Renamed commands are not considered removed
 
 * `cog [load|reload|unload]` : replaced by individual en/disable command
 * `purge [chat|member]` : no need, is replaced by the raid, spam help of Discord
-* `toogle <command>` : replaced by individual en/disable command
+* `toggle <command>` : replaced by individual en/disable command
 * `logger` : logger level can't be set anymore
 * `mail` : removed since never used
 * `man` : removed since never used
