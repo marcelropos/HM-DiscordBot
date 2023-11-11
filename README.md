@@ -20,3 +20,5 @@ In an effort to improve the Bot, the bot will be rewritten from ground up, switc
 * [Alumni Support](Alumni.md)
 
 [Database](Database.md)
+
+[Redis](Redis.md)

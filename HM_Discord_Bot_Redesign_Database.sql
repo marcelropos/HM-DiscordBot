@@ -86,10 +86,6 @@ CREATE TABLE `Token_message` (
   PRIMARY KEY (`tmpc_voice_channel`, `message`)
 );
 
-CREATE TABLE `Main_log_pip_channel` (
-  `id` int PRIMARY KEY
-);
-
 CREATE UNIQUE INDEX `Study_groups_index_0` ON `Study_groups` (`guild_id`, `name`);
 
 CREATE UNIQUE INDEX `Semester_study_groups_index_1` ON `Semester_study_groups` (`study_group_id`, `semester`);

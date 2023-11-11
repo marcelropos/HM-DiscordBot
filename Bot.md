@@ -16,7 +16,7 @@ The reason why we use poise instead of directly using serenity is the support fo
 
 ## Storage
 
-The bot will store its data in 2 different places:
+The bot will store its data in 3 different places:
 
 ### Environment variables
 
@@ -34,6 +34,10 @@ Following will be stored here:
 ### Database
 
 For the details of the Database see [here](Database.md).
+
+### Redis
+
+For the details of redis see [here](Redis.md).
 
 ## Logging
 

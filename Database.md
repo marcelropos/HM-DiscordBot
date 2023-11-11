@@ -175,8 +175,4 @@ table Token_message {
   tmpc_voice_channel int [pk, ref: > Tmpc.voice_channel]
   message int [pk]
 }
-
-table Main_log_pip_channel {
-  id int [pk]
-}
 ```
