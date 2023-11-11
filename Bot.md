@@ -124,6 +124,14 @@ The Upgrade needs to do following:
 * Assign students to their default subject roles
 * Enable back commands and disable itself
 
+### Alumni
+
+Type: Slash command, Prefix command
+
+Permission: Student above 6. Semester
+
+Mark itself as an alumni. For more info see [here](Alumni.md).
+
 ### En/Disable Command
 
 Type: Prefix command
