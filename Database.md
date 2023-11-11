@@ -147,6 +147,7 @@ table Subject {
 table Study_subject_link {
   study_group_role int [pk, ref: > Semester_study_groups.role]
   subject_role int [pk, ref: > Subject.role]
+  guild_id int [pk, ref: > Subject.guild_id]
 }
 
 table Tmpc_join_channel {

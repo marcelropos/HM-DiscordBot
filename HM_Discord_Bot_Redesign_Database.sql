@@ -57,7 +57,8 @@ CREATE TABLE `Subject` (
 CREATE TABLE `Study_subject_link` (
   `study_group_role` int,
   `subject_role` int,
-  PRIMARY KEY (`study_group_role`, `subject_role`)
+  `guild_id` int,
+  PRIMARY KEY (`study_group_role`, `subject_role`, `guild_id`)
 );
 
 CREATE TABLE `Tmpc_join_channel` (
@@ -108,6 +109,8 @@ ALTER TABLE `Subject` ADD FOREIGN KEY (`guild_id`) REFERENCES `Guild` (`guild_id
 ALTER TABLE `Study_subject_link` ADD FOREIGN KEY (`study_group_role`) REFERENCES `Semester_study_groups` (`role`);
 
 ALTER TABLE `Study_subject_link` ADD FOREIGN KEY (`subject_role`) REFERENCES `Subject` (`role`);
+
+ALTER TABLE `Study_subject_link` ADD FOREIGN KEY (`guild_id`) REFERENCES `Subject` (`guild_id`);
 
 ALTER TABLE `Tmpc_join_channel` ADD FOREIGN KEY (`guild_id`) REFERENCES `Guild` (`guild_id`);
 
