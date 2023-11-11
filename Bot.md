@@ -95,7 +95,7 @@ The help message will need to be build manually as poise doesn't have a nice hel
 
 Idea is to replicate the discord-pretty-help help page 1:1 with the buttons. For this, a kind a modular system need to be designed so that information can be easily added/removed and changed depending on the user permissions.
 
-TODO: find design that allow easily adding/removing commands from the help page.
+The help information can easily be gotten from the [command](https://docs.rs/poise/latest/poise/macros/attr.command.html) type. Also additional information can be given with the `custom_data` property of the command macro.
 
 ### Tmp Studenty
 
@@ -238,7 +238,7 @@ Show a list of ghosts that would be kicked/warned at this moment in time (can al
 
 ### Verify user
 
-Type: Slash command, Prefix command
+Type: Context Menu Command, Slash command, Prefix command
 
 Permission: Moderator
 
