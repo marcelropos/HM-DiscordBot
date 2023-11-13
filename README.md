@@ -15,10 +15,10 @@ In an effort to improve the Bot, the bot will be rewritten from ground up, switc
 
 ## Design files
 
-[Bot](Bot.md)
+[Bot](docs/Bot.md)
 
-* [Alumni Support](Alumni.md)
+* [Alumni Support](docs/Alumni.md)
 
-[Database](Database.md)
+[Database](docs/Database.md)
 
-[Redis](Redis.md)
+[Redis](docs/Redis.md)
