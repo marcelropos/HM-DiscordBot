@@ -41,7 +41,7 @@ For the details of redis see [here](Redis.md).
 
 ## Logging
 
-The Bot should log everything that it does and save it to a file. Also there should be the option to send the log to a discord channel (guild owners can pipe their own log to their channel, the Main guild can receive everything from every server). For this, we will use [log4rs](https://github.com/estk/log4rs).
+The Bot should log everything that it does and save it to a file. Also there should be the option to send the log to a discord channel (guild owners can pipe their own log to their channel, the Main guild can receive everything from every server). For this, we will use [tracing](https://github.com/tokio-rs/tracing).
 
 ## Bot Features
 
