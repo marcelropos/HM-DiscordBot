@@ -1,0 +1,43 @@
+version: '3.4'
+
+x-mariadb-variables: &mariadb-variables
+  MYSQL_DATABASE: USER_DB_NAME
+  MYSQL_USER: MYSQL_USER
+  MYSQL_PASSWORD: DATABASE_PASSWORD
+  PUID: 1000
+  PGID: 1000
+
+services:
+  download-mover:
+    container_name: DiscordBot
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./appdata/discordBot:/hm-discord-bot/appdata
+    environment: *mariadb-variables
+    depends_on:
+      - mariadb
+      - redis
+
+  mariadb:
+    container_name: mariadb
+    image: lscr.io/linuxserver/mariadb:latest
+    restart: unless-stopped
+    volumes:
+      - ./appdata/mariadb:/config
+    environment:
+      <<: *mariadb-variables
+      TZ: Europe/Berlin
+      MYSQL_ROOT_PASSWORD: ROOT_ACCESS_PASSWORD
+    ports:
+      - "3306:3306"
+
+  redis:
+      container_name: redis
+      image: redis:latest
+      restart: unless-stopped
+      volumes:
+        - ./appdata/redis:/data
+      ports:
+        - "6379:6379"
+      command: redis-server --save 20 1 --loglevel warning

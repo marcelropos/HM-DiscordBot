@@ -1,0 +1,12 @@
+README.md
+LICENSE
+.dockerignore
+.gitignore
+Dockerfile
+.git/
+.idea/
+docker-compose.yml
+appdata/
+docs/
+.github/
+target/

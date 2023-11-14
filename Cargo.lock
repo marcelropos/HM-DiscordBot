@@ -698,7 +698,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hm_discord_bot"
+name = "hm-discord-bot"
 version = "0.1.0"
 dependencies = [
  "poise",
