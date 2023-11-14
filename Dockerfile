@@ -13,6 +13,7 @@ RUN cargo build --release
 RUN rm src/*.rs
 
 # Now that the dependency is built, copy your source code
+COPY ./migrations ./migrations
 COPY ./src ./src
 
 # Build for release.
