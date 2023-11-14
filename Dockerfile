@@ -1,46 +1,23 @@
-FROM rust:1.71.1 as builder
+FROM lukemathwalker/cargo-chef:latest-rust-1.73 AS chef
+WORKDIR /app
 
-# create a new empty shell project
-RUN USER=root cargo new --bin hm-discord-bot
-WORKDIR /hm-discord-bot
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
 
-# Copy manifests
-COPY ./Cargo.lock ./Cargo.lock
-COPY ./Cargo.toml ./Cargo.toml
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+# Build dependencies - this is the caching Docker layer!
+RUN cargo chef cook --release --recipe-path recipe.json
+# Build application
+COPY . .
+RUN SQLX_OFFLINE=true cargo build --release
 
-# Build only the dependencies to cache them
-RUN cargo build --release
-RUN rm src/*.rs
+FROM debian:bookworm-slim AS runtime
+RUN apt update && apt install ca-certificates openssl -y && rm -rf /var/lib/apt/lists/*
 
-# Now that the dependency is built, copy your source code
-COPY ./migrations ./migrations
-COPY ./src ./src
+COPY --from=builder /app/target/release/hm-discord-bot /usr/local/bin/hm-discord-bot
 
-# Build for release.
-RUN rm ./target/release/deps/hm_discord_bot*
-RUN cargo install --path .
+WORKDIR /usr/local/hm-discord-bot
 
-FROM debian:bullseye-slim
-
-WORKDIR /hm-discord-bot
-
-#RUN apt-get update && apt-get install -y extra-runtime-dependencies && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-
-# initialize user as needed
-RUN useradd -u 1001 -s /bin/sh abc
-
-# copy entrypoint
-COPY ./entrypoint.sh .
-
-# Fix permissions
-RUN chmod +x entrypoint.sh
-
-# copy the build artifact from the build stage
-COPY --from=builder /usr/local/cargo/bin/hm-discord-bot /usr/local/bin/hm-discord-bot
-
-ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-ENV SSL_CERT_DIR=/etc/ssl/certs
-
-ENTRYPOINT ./entrypoint.sh
+CMD ["hm-discord-bot"]
