@@ -18,6 +18,15 @@ RUN apt update && apt install ca-certificates openssl -y && rm -rf /var/lib/apt/
 
 COPY --from=builder /app/target/release/hm-discord-bot /usr/local/bin/hm-discord-bot
 
-WORKDIR /usr/local/hm-discord-bot
+# initialize user as needed
+RUN useradd -u 1001 -s /bin/sh abc
 
-CMD ["hm-discord-bot"]
+# copy entrypoint
+COPY ./entrypoint.sh .
+
+# Fix permissions
+RUN chmod +x entrypoint.sh
+
+WORKDIR /hm-discord-bot
+
+ENTRYPOINT ["./entrypoint.sh"]
