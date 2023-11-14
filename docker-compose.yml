@@ -1,9 +1,9 @@
 version: '3.4'
 
 x-mariadb-variables: &mariadb-variables
-  MYSQL_DATABASE: USER_DB_NAME
-  MYSQL_USER: MYSQL_USER
-  MYSQL_PASSWORD: DATABASE_PASSWORD
+  MYSQL_DATABASE: "USER_DB_NAME"
+  MYSQL_USER: "MYSQL_USER"
+  MYSQL_PASSWORD: "DATABASE_PASSWORD"
   PUID: 1000
   PGID: 1000
 
@@ -11,10 +11,16 @@ services:
   download-mover:
     container_name: DiscordBot
     build: .
-    restart: unless-stopped
+    restart: no
     volumes:
       - ./appdata/discordBot:/hm-discord-bot/appdata
-    environment: *mariadb-variables
+    environment:
+      <<: *mariadb-variables
+      MYSQL_PORT: 3306
+      MYSQL_HOST: "mariadb"
+      REDIS_PORT: 6379
+      REDIS_HOST: "redis"
+      BOT_TOKEN: "discord-bot-token"
     depends_on:
       - mariadb
       - redis
@@ -27,7 +33,7 @@ services:
       - ./appdata/mariadb:/config
     environment:
       <<: *mariadb-variables
-      TZ: Europe/Berlin
+      TZ: "Europe/Berlin"
       MYSQL_ROOT_PASSWORD: ROOT_ACCESS_PASSWORD
     ports:
       - "3306:3306"
