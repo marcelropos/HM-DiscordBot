@@ -705,8 +705,10 @@ dependencies = [
 name = "hm-discord-bot"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "poise",
  "redis",
+ "sha1",
  "sqlx",
  "tokio",
  "tracing",

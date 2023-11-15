@@ -18,3 +18,5 @@ sqlx = { version = "0.7.2", features = [
 redis = { version = "0.23.3", features = [
     "tokio-comp",
 ] } # https://github.com/redis-rs/redis-rs
+sha1 = "0.10.6"
+hex = "0.4.3"

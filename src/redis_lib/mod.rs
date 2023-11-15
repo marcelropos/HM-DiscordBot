@@ -1,6 +1,7 @@
 use std::env;
 
 use redis::{aio::Connection, AsyncCommands, Client};
+use sha1::Digest;
 use tracing::error;
 
 /// Tries to establish a connection with the given env variables and return the Redis client if
@@ -41,28 +42,28 @@ pub async fn get_connection() -> Option<(Client, Connection)> {
 #[allow(unused)]
 pub async fn increment_email_used_verification_success(con: &mut Connection, email: &str) {
     let email_hash = hash_email(email);
-    let current = get_email_stats(con, email_hash).await;
-    set_email_stats(con, email_hash, current.0 + 1, current.1);
+    let current = get_email_stats(con, &email_hash).await;
+    set_email_stats(con, &email_hash, current.0 + 1, current.1);
 }
 
 /// Increments the counter that tracks how often an email was given to verify an account
 #[allow(unused)]
 pub async fn increment_email_used_verification(con: &mut Connection, email: &str) {
     let email_hash = hash_email(email);
-    let current = get_email_stats(con, email_hash).await;
-    set_email_stats(con, email_hash, current.0, current.1 + 1);
+    let current = get_email_stats(con, &email_hash).await;
+    set_email_stats(con, &email_hash, current.0, current.1 + 1);
 }
 
 /// gets how often an email was used to verify an account (not necessarily successful)
 #[allow(unused)]
 pub async fn get_email_used_verification_success(con: &mut Connection, email: &str) -> u64 {
-    get_email_stats(con, hash_email(email)).await.0
+    get_email_stats(con, &hash_email(email)).await.0
 }
 
 /// gets how often an email was used to verify an account (not necessarily successful)
 #[allow(unused)]
 pub async fn get_email_used_verification(con: &mut Connection, email: &str) -> u64 {
-    get_email_stats(con, hash_email(email)).await.1
+    get_email_stats(con, &hash_email(email)).await.1
 }
 
 async fn set_email_stats(con: &mut Connection, email_hash: &str, successful: u64, used: u64) {
@@ -88,7 +89,7 @@ async fn get_email_stats(con: &mut Connection, email_hash: &str) -> (u64, u64) {
     }
     let redis_value = redis_value.unwrap();
 
-    let values: Vec<&str> = redis_value.split(",").collect();
+    let values: Vec<&str> = redis_value.split(',').collect();
     if values.len() != 2 {
         error!("Redis returned invalid value for {email_hash}")
     }
@@ -106,13 +107,13 @@ async fn get_email_stats(con: &mut Connection, email_hash: &str) -> (u64, u64) {
     (used_success.unwrap(), used.unwrap())
 }
 
-/// TODO: Which hash function should this use?
-fn hash_email(email: &str) -> &str {
-    email
+fn hash_email(email: &str) -> String {
+    let mut hasher = sha1::Sha1::new();
+    hasher.update(email);
+    hex::encode(hasher.finalize())
 }
 
 /// The key under which redis stores the main discord channel to put logs into
-/// TODO: put the actual key in here
 const MAIN_DISCORD_LOG_CHANNEL_KEY: &str = "main_discord_log_channel";
 
 #[allow(unused)]
