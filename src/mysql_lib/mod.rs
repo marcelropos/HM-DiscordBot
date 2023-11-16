@@ -17,29 +17,38 @@ use tracing::error;
 /// * MYSQL_PASSWORD: the password of the user specified, needs to be present
 pub async fn get_connection(max_concurrent_connections: u32) -> Option<Pool<MySql>> {
     let sql_port = env::var("MYSQL_PORT").unwrap_or("3306".to_owned());
-    let sql_port: u16 = sql_port.parse().ok()?;
+    let sql_port = match sql_port.parse() {
+        Ok(val) => val,
+        Err(_) => {
+            error!("Could not parse MYSQL_PORT");
+            return None;
+        }
+    };
 
     let sql_hostname = env::var("MYSQL_HOST").unwrap_or("127.0.0.1".to_owned());
 
-    let sql_database = if let Ok(val) = env::var("MYSQL_DATABASE") {
-        val
-    } else {
-        error!("No database given");
-        return None;
+    let sql_database = match env::var("MYSQL_DATABASE") {
+        Ok(val) => val,
+        Err(_) => {
+            error!("No database given");
+            return None;
+        }
     };
 
-    let sql_username = if let Ok(val) = env::var("MYSQL_USER") {
-        val
-    } else {
-        error!("No database username given");
-        return None;
+    let sql_username = match env::var("MYSQL_USER") {
+        Ok(val) => val,
+        Err(_) => {
+            error!("No database username given");
+            return None;
+        }
     };
 
-    let sql_password = if let Ok(val) = env::var("MYSQL_PASSWORD") {
-        val
-    } else {
-        error!("No password for user given");
-        return None;
+    let sql_password = match env::var("MYSQL_PASSWORD") {
+        Ok(val) => val,
+        Err(_) => {
+            error!("No password for user given");
+            return None;
+        }
     };
 
     match MySqlPoolOptions::new()

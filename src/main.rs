@@ -20,5 +20,5 @@ async fn main() {
     }
     info!("Successfully made the SQL migration if any");
 
-    bot::entrypoint(sql_pool, redis.0).await;
+    bot::entrypoint(sql_pool, redis).await;
 }
