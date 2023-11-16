@@ -20,14 +20,14 @@ pub type Context<'a> = poise::Context<'a, Data, Error>;
 /// Entrypoint to start the Bot
 pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     info!("Starting the bot");
-    let bot_token;
-    match env::var("BOT_TOKEN") {
-        Ok(val) => bot_token = val,
+    
+    let bot_token = match env::var("BOT_TOKEN") {
+        Ok(val) => val,
         Err(_) => {
             error!("No Bot Token given");
             return;
         }
-    }
+    };
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
