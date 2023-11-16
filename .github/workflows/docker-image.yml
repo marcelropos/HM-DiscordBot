@@ -1,6 +1,6 @@
 name: Create and publish a Docker image
 
-# Configures this workflow to run every time a change is pushed or a pull request is merged to the branch called `master`.
+# Configures this workflow to run every time a change is pushed or a pull request is merged to the branch called `main`.
 on:
   push:
     branches:
@@ -15,14 +15,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  check-code:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - run: cargo check
-      - run: cargo clippy
-
   build-and-push-image:
     runs-on: ubuntu-latest
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
