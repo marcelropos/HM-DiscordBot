@@ -1,9 +1,12 @@
 use std::env;
 
+use poise::serenity_prelude::GuildId;
+use sqlx::{migrate, MySql, Pool};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions};
-use sqlx::{migrate, MySql, Pool};
 use tracing::error;
+
+mod test;
 
 /// Tries to establish a Connection with the given env variables and return the MySQL connection
 /// Pool if successful.
@@ -76,4 +79,24 @@ pub async fn get_connection(max_concurrent_connections: u32) -> Option<Pool<MySq
 
 pub async fn migrate_database(pool: &Pool<MySql>) -> Result<(), MigrateError> {
     migrate!("./migrations").run(pool).await
+}
+
+/// Query if a Guild is saved in the database
+#[allow(unused)]
+pub async fn is_guild_in_database(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool> {
+    match sqlx::query("SELECT * FROM Guild WHERE guild_id=?")
+        .bind(guild_id.0)
+        .fetch_optional(pool)
+        .await {
+        Ok(val) => {
+            Some(val.is_some())
+        }
+        Err(err) => {
+            error!(
+                error = err.to_string(),
+                "Problem executing query"
+            );
+            None
+        }
+    }
 }
