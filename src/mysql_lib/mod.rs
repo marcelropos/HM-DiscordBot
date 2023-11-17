@@ -1,9 +1,10 @@
 use std::env;
 
-use poise::serenity_prelude::GuildId;
+use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
 use sqlx::{migrate, MySql, Pool};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions};
+use sqlx::types::time::Time;
 use tracing::error;
 
 mod test;
@@ -87,15 +88,107 @@ pub async fn is_guild_in_database(pool: &Pool<MySql>, guild_id: GuildId) -> Opti
     match sqlx::query("SELECT * FROM Guild WHERE guild_id=?")
         .bind(guild_id.0)
         .fetch_optional(pool)
-        .await {
-        Ok(val) => {
-            Some(val.is_some())
-        }
+        .await
+    {
+        Ok(val) => Some(val.is_some()),
         Err(err) => {
-            error!(
-                error = err.to_string(),
-                "Problem executing query"
-            );
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Inserts a new Guild into the Database
+#[allow(unused)]
+pub async fn insert_guild(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    ghost_warning_deadline: u32,
+    ghost_kick_deadline: u32,
+    ghost_time_to_check: Time,
+    ghost_enabled: bool,
+    debug_channel: ChannelId,
+    bot_channel: ChannelId,
+    help_channel: ChannelId,
+    study_group_category: ChannelId,
+    subject_group_category: ChannelId,
+    studenty_role: RoleId,
+    moderator_role: RoleId,
+    newsletter_role: RoleId,
+    nsfw_role: RoleId,
+    study_role_separator_role: RoleId,
+    subject_role_separator_role: RoleId,
+    friend_role: RoleId,
+    tmpc_keep_time: Time,
+    alumni_role: RoleId,
+    alumni_role_separator_role: RoleId,
+) -> Option<bool> {
+    match sqlx::query(
+        "INSERT INTO USER_DB_NAME.Guild (
+guild_id,
+ghost_warn_deadline,
+ghost_kick_deadline,
+ghost_time_to_check,
+ghost_enabled,
+debug_channel,
+bot_channel,
+help_channel,
+study_group_category,
+subject_group_category,
+studenty_role,
+moderator_role,
+newsletter_role,
+nsfw_role,
+study_role_separator_role,
+subject_role_separator_role,
+friend_role,
+tmpc_keep_time,
+alumni_role,
+alumni_role_separator_role)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+    )
+    .bind(guild_id.0)
+    .bind(ghost_warning_deadline)
+    .bind(ghost_kick_deadline)
+    .bind(ghost_time_to_check)
+    .bind(ghost_enabled)
+    .bind(debug_channel.0)
+    .bind(bot_channel.0)
+    .bind(help_channel.0)
+    .bind(study_group_category.0)
+    .bind(subject_group_category.0)
+    .bind(studenty_role.0)
+    .bind(moderator_role.0)
+    .bind(newsletter_role.0)
+    .bind(nsfw_role.0)
+    .bind(study_role_separator_role.0)
+    .bind(subject_role_separator_role.0)
+    .bind(friend_role.0)
+    .bind(tmpc_keep_time)
+    .bind(alumni_role.0)
+    .bind(alumni_role_separator_role.0)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Guild saved in the Database
+#[allow(unused)]
+pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool> {
+    match sqlx::query("DELETE FROM Guild WHERE guild_id=?")
+        .bind(guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
             None
         }
     }
