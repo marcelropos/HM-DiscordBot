@@ -10,7 +10,9 @@ mod commands;
 
 /// User data, which is stored and accessible in all command invocations
 pub struct Data {
+    #[allow(unused)]
     database_pool: Pool<MySql>,
+    #[allow(unused)]
     redis_client: Client,
 }
 
