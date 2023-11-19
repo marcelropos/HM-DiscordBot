@@ -1,9 +1,10 @@
 use std::env;
 
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
-use sqlx::{migrate, MySql, Pool};
+use sqlx::{FromRow, IntoArguments, migrate, MySql, Pool, Row};
+use sqlx::database::HasArguments;
 use sqlx::migrate::MigrateError;
-use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions};
+use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::Time;
 use tracing::error;
 
@@ -98,10 +99,8 @@ pub async fn is_guild_in_database(pool: &Pool<MySql>, guild_id: GuildId) -> Opti
     }
 }
 
-/// Inserts a new Guild into the Database
-#[allow(unused)]
-pub async fn insert_guild(
-    pool: &Pool<MySql>,
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseGuild {
     guild_id: GuildId,
     ghost_warning_deadline: u32,
     ghost_kick_deadline: u32,
@@ -110,9 +109,11 @@ pub async fn insert_guild(
     debug_channel: ChannelId,
     bot_channel: ChannelId,
     help_channel: ChannelId,
+    logger_pipe_channel: Option<ChannelId>,
     study_group_category: ChannelId,
     subject_group_category: ChannelId,
     studenty_role: RoleId,
+    tmp_studenty_role: Option<RoleId>,
     moderator_role: RoleId,
     newsletter_role: RoleId,
     nsfw_role: RoleId,
@@ -122,9 +123,45 @@ pub async fn insert_guild(
     tmpc_keep_time: Time,
     alumni_role: RoleId,
     alumni_role_separator_role: RoleId,
-) -> Option<bool> {
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseGuild {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            guild_id: GuildId(row.try_get("guild_id")?),
+            ghost_warning_deadline: row.try_get("ghost_warn_deadline")?,
+            ghost_kick_deadline: row.try_get("ghost_kick_deadline")?,
+            ghost_time_to_check: row.try_get("ghost_time_to_check")?,
+            ghost_enabled: row.try_get("ghost_enabled")?,
+            debug_channel: ChannelId(row.try_get("debug_channel")?),
+            bot_channel: ChannelId(row.try_get("bot_channel")?),
+            help_channel: ChannelId(row.try_get("help_channel")?),
+            logger_pipe_channel: row.try_get("logger_pipe_channel")
+                .map(|val: Option<u64>| val.map(|val| ChannelId(val)))?,
+            study_group_category: ChannelId(row.try_get("study_group_category")?),
+            subject_group_category: ChannelId(row.try_get("subject_group_category")?),
+            studenty_role: RoleId(row.try_get("studenty_role")?),
+            tmp_studenty_role: row.try_get("logger_pipe_channel")
+                .map(|val: Option<u64>| val.map(|val| RoleId(val)))?,
+            moderator_role: RoleId(row.try_get("moderator_role")?),
+            newsletter_role: RoleId(row.try_get("newsletter_role")?),
+            nsfw_role: RoleId(row.try_get("nsfw_role")?),
+            study_role_separator_role: RoleId(row.try_get("study_role_separator_role")?),
+            subject_role_separator_role: RoleId(row.try_get("subject_role_separator_role")?),
+            friend_role: RoleId(row.try_get("friend_role")?),
+            tmpc_keep_time: row.try_get("tmpc_keep_time")?,
+            alumni_role: RoleId(row.try_get("alumni_role")?),
+            alumni_role_separator_role: RoleId(row.try_get("alumni_role_separator_role")?),
+        })
+    }
+}
+
+/// Inserts a new Guild into the Database.
+/// `DatabaseGuild::logger_pipe_channel` and `DatabaseGuild::tmp_studenty_role` are ignored.
+#[allow(unused)]
+pub async fn insert_guild(pool: &Pool<MySql>, guild: DatabaseGuild) -> Option<bool> {
     match sqlx::query(
-        "INSERT INTO USER_DB_NAME.Guild (
+        "INSERT IGNORE INTO USER_DB_NAME.Guild (
 guild_id,
 ghost_warn_deadline,
 ghost_kick_deadline,
@@ -147,30 +184,31 @@ alumni_role,
 alumni_role_separator_role)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
     )
-    .bind(guild_id.0)
-    .bind(ghost_warning_deadline)
-    .bind(ghost_kick_deadline)
-    .bind(ghost_time_to_check)
-    .bind(ghost_enabled)
-    .bind(debug_channel.0)
-    .bind(bot_channel.0)
-    .bind(help_channel.0)
-    .bind(study_group_category.0)
-    .bind(subject_group_category.0)
-    .bind(studenty_role.0)
-    .bind(moderator_role.0)
-    .bind(newsletter_role.0)
-    .bind(nsfw_role.0)
-    .bind(study_role_separator_role.0)
-    .bind(subject_role_separator_role.0)
-    .bind(friend_role.0)
-    .bind(tmpc_keep_time)
-    .bind(alumni_role.0)
-    .bind(alumni_role_separator_role.0)
+    .bind(guild.guild_id.0)
+    .bind(guild.ghost_warning_deadline)
+    .bind(guild.ghost_kick_deadline)
+    .bind(guild.ghost_time_to_check)
+    .bind(guild.ghost_enabled)
+    .bind(guild.debug_channel.0)
+    .bind(guild.bot_channel.0)
+    .bind(guild.help_channel.0)
+    .bind(guild.study_group_category.0)
+    .bind(guild.subject_group_category.0)
+    .bind(guild.studenty_role.0)
+    .bind(guild.moderator_role.0)
+    .bind(guild.newsletter_role.0)
+    .bind(guild.nsfw_role.0)
+    .bind(guild.study_role_separator_role.0)
+    .bind(guild.subject_role_separator_role.0)
+    .bind(guild.friend_role.0)
+    .bind(guild.tmpc_keep_time)
+    .bind(guild.alumni_role.0)
+    .bind(guild.alumni_role_separator_role.0)
     .execute(pool)
     .await
     {
-        Ok(val) => Some(val.rows_affected() != 0),
+        Ok(val) =>
+            Some(val.rows_affected() != 0),
         Err(err) => {
             error!(error = err.to_string(), "Problem executing query");
             None
@@ -190,6 +228,22 @@ pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool>
         Err(err) => {
             error!(error = err.to_string(), "Problem executing query");
             None
+        }
+    }
+}
+
+/// Gets the guild information from the Database
+#[allow(unused)]
+pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<DatabaseGuild> {
+    match sqlx::query_as::<_, DatabaseGuild>("SELECT * FROM Guild WHERE guild_id=?")
+        .bind(guild_id.0)
+        .fetch_one(pool)
+        .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            return None;
         }
     }
 }
