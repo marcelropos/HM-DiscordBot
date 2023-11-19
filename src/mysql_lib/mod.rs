@@ -249,3 +249,24 @@ pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Database
         }
     }
 }
+
+/// Updated the Ghost warning deadline (in days), returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_ghost_warning_deadline(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    ghost_warning_deadline: u32,
+) -> Option<bool> {
+    match sqlx::query("UPDATE Guild SET ghost_warn_deadline = ? WHERE guild_id=?")
+        .bind(ghost_warning_deadline)
+        .bind(guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}

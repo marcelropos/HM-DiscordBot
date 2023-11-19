@@ -4,21 +4,23 @@ mod tests {
     use sqlx::{MySql, Pool};
     use sqlx::types::time::Time;
 
-    use crate::mysql_lib::{DatabaseGuild, delete_guild, get_connection, get_guild, insert_guild, is_guild_in_database, migrate_database};
+    use crate::mysql_lib::{DatabaseGuild, delete_guild, get_connection, get_guild, insert_guild, is_guild_in_database, migrate_database, update_ghost_warning_deadline};
 
-    async fn get_connection_pool() -> Pool<MySql>{
+    async fn get_connection_pool() -> Pool<MySql> {
         tracing_subscriber::fmt::init();
         let pool = get_connection(1)
             .await
             .expect("Database could not be connected to");
-        migrate_database(&pool).await.expect("Database migration could not be done");
+        migrate_database(&pool)
+            .await
+            .expect("Database migration could not be done");
         return pool;
     }
 
     #[tokio::test]
-    async fn test_insert_and_delete_guild() {
+    async fn test_guild_methods() {
         let pool = get_connection_pool().await;
-        let guild = DatabaseGuild{
+        let mut guild = DatabaseGuild {
             guild_id: GuildId(1),
             ghost_warning_deadline: 2,
             ghost_kick_deadline: 3,
@@ -40,24 +42,28 @@ mod tests {
             alumni_role: RoleId(16),
             alumni_role_separator_role: RoleId(17),
             logger_pipe_channel: None,
-            tmp_studenty_role: None
+            tmp_studenty_role: None,
         };
         let result = insert_guild(&pool, guild)
             .await
             .expect("Query was not successful");
         assert!(result, "Could not insert into Database");
-        let result = is_guild_in_database(&pool, GuildId(1))
+        let result = is_guild_in_database(&pool, guild.guild_id)
             .await
             .expect("Query was not successful");
         assert!(result, "Guild was not found in Database");
-        let result = get_guild(&pool, GuildId(1))
+        guild.ghost_warning_deadline = 5;
+        let result = update_ghost_warning_deadline(&pool, guild.guild_id, guild.ghost_warning_deadline)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Ghost warning deadline couldn't be updated");
+        let result = get_guild(&pool, guild.guild_id)
             .await
             .expect("Query was not successful");
         assert_eq!(guild, result, "Guild had not the information expected");
-        let result = delete_guild(&pool, GuildId(1))
+        let result = delete_guild(&pool, guild.guild_id)
             .await
             .expect("Query was not successful");
         assert!(result, "Guild could not be deleted");
     }
 }
-
