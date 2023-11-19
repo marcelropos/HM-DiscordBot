@@ -137,13 +137,13 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
             help_channel: ChannelId(row.try_get("help_channel")?),
             logger_pipe_channel: row
                 .try_get("logger_pipe_channel")
-                .map(|val: Option<u64>| val.map(|val| ChannelId(val)))?,
+                .map(|val: Option<u64>| val.map(ChannelId))?,
             study_group_category: ChannelId(row.try_get("study_group_category")?),
             subject_group_category: ChannelId(row.try_get("subject_group_category")?),
             studenty_role: RoleId(row.try_get("studenty_role")?),
             tmp_studenty_role: row
                 .try_get("logger_pipe_channel")
-                .map(|val: Option<u64>| val.map(|val| RoleId(val)))?,
+                .map(|val: Option<u64>| val.map(RoleId))?,
             moderator_role: RoleId(row.try_get("moderator_role")?),
             newsletter_role: RoleId(row.try_get("newsletter_role")?),
             nsfw_role: RoleId(row.try_get("nsfw_role")?),
@@ -245,7 +245,7 @@ pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Database
         Ok(val) => Some(val),
         Err(err) => {
             error!(error = err.to_string(), "Problem executing query");
-            return None;
+            None
         }
     }
 }

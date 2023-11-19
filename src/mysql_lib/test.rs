@@ -14,7 +14,7 @@ mod tests {
         migrate_database(&pool)
             .await
             .expect("Database migration could not be done");
-        return pool;
+        pool
     }
 
     #[tokio::test]
