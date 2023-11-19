@@ -1,8 +1,7 @@
 use std::env;
 
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
-use sqlx::{FromRow, IntoArguments, migrate, MySql, Pool, Row};
-use sqlx::database::HasArguments;
+use sqlx::{FromRow, migrate, MySql, Pool, Row};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::Time;
