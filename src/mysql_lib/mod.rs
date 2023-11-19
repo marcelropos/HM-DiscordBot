@@ -1,10 +1,10 @@
 use std::env;
 
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
-use sqlx::{FromRow, migrate, MySql, Pool, Row};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::Time;
+use sqlx::{migrate, FromRow, MySql, Pool, Row};
 use tracing::error;
 
 mod test;
@@ -135,12 +135,14 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
             debug_channel: ChannelId(row.try_get("debug_channel")?),
             bot_channel: ChannelId(row.try_get("bot_channel")?),
             help_channel: ChannelId(row.try_get("help_channel")?),
-            logger_pipe_channel: row.try_get("logger_pipe_channel")
+            logger_pipe_channel: row
+                .try_get("logger_pipe_channel")
                 .map(|val: Option<u64>| val.map(|val| ChannelId(val)))?,
             study_group_category: ChannelId(row.try_get("study_group_category")?),
             subject_group_category: ChannelId(row.try_get("subject_group_category")?),
             studenty_role: RoleId(row.try_get("studenty_role")?),
-            tmp_studenty_role: row.try_get("logger_pipe_channel")
+            tmp_studenty_role: row
+                .try_get("logger_pipe_channel")
                 .map(|val: Option<u64>| val.map(|val| RoleId(val)))?,
             moderator_role: RoleId(row.try_get("moderator_role")?),
             newsletter_role: RoleId(row.try_get("newsletter_role")?),
@@ -208,8 +210,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
     .execute(pool)
     .await
     {
-        Ok(val) =>
-            Some(val.rows_affected() != 0),
+        Ok(val) => Some(val.rows_affected() != 0),
         Err(err) => {
             error!(error = err.to_string(), "Problem executing query");
             None
