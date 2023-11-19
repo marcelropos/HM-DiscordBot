@@ -40,7 +40,7 @@ pub async fn get_connection() -> Option<Client> {
 }
 
 /// Increments the counter that tracks how often an email was successfully used to verify an account
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn increment_email_used_verification_success(
     con: &mut Connection,
     email: &str,
@@ -52,7 +52,7 @@ pub async fn increment_email_used_verification_success(
 }
 
 /// Increments the counter that tracks how often an email was given to verify an account
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn increment_email_used_verification(
     con: &mut Connection,
     email: &str,
@@ -66,7 +66,7 @@ pub async fn increment_email_used_verification(
 /// gets how often an email was used to verify an account (not necessarily successful)
 /// return value of 0 means either that there is no entry in redis for this email,
 /// or that the entry is 0
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn get_email_used_verification_success(
     con: &mut Connection,
     email: &str,
@@ -78,7 +78,7 @@ pub async fn get_email_used_verification_success(
 /// gets how often an email was used to verify an account (not necessarily successful)
 /// return value of 0 means either that there is no entry in redis for this email,
 /// or that the entry is 0
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn get_email_used_verification(con: &mut Connection, email: &str) -> Result<u64, ()> {
     let stat = get_email_stats(con, &hash_email(email)).await?.1;
     Ok(stat)
@@ -147,7 +147,7 @@ fn hash_email(email: &str) -> String {
 /// The key under which redis stores the main discord channel to put logs into
 const MAIN_DISCORD_LOG_CHANNEL_KEY: &str = "main_discord_log_channel";
 
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn set_main_discord_log_channel(
     con: &mut Connection,
     channel_id: &str,
@@ -161,7 +161,7 @@ pub async fn set_main_discord_log_channel(
     })
 }
 
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn get_main_discord_log_channel(con: &mut Connection) -> Result<Option<String>, ()> {
     let command: Result<Option<String>, _> = con.get(MAIN_DISCORD_LOG_CHANNEL_KEY).await;
     command.map_err(|err| {
@@ -169,7 +169,7 @@ pub async fn get_main_discord_log_channel(con: &mut Connection) -> Result<Option
     })
 }
 
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn delete_main_discord_log_channel(con: &mut Connection) -> Result<(), ()> {
     let command: Result<(), _> = con.del(MAIN_DISCORD_LOG_CHANNEL_KEY).await;
     command.map_err(|err| {

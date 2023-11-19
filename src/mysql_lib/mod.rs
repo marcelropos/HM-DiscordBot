@@ -84,7 +84,7 @@ pub async fn migrate_database(pool: &Pool<MySql>) -> Result<(), MigrateError> {
 }
 
 /// Query if a Guild is saved in the database
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn is_guild_in_database(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool> {
     match sqlx::query("SELECT * FROM Guild WHERE guild_id=?")
         .bind(guild_id.0)
@@ -158,7 +158,7 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
 
 /// Inserts a new Guild into the Database.
 /// `DatabaseGuild::logger_pipe_channel` and `DatabaseGuild::tmp_studenty_role` are ignored.
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn insert_guild(pool: &Pool<MySql>, guild: DatabaseGuild) -> Option<bool> {
     match sqlx::query(
         "INSERT IGNORE INTO USER_DB_NAME.Guild (
@@ -217,7 +217,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 }
 
 /// Deletes a Guild saved in the Database
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool> {
     match sqlx::query("DELETE FROM Guild WHERE guild_id=?")
         .bind(guild_id.0)
@@ -233,7 +233,7 @@ pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool>
 }
 
 /// Gets the guild information from the Database
-#[allow(unused)]
+#[allow(dead_code)]
 pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<DatabaseGuild> {
     match sqlx::query_as::<_, DatabaseGuild>("SELECT * FROM Guild WHERE guild_id=?")
         .bind(guild_id.0)
