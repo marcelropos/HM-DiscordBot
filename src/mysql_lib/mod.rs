@@ -1,10 +1,10 @@
 use std::env;
 
 use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
+use sqlx::{FromRow, migrate, MySql, Pool, Row};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::Time;
-use sqlx::{migrate, FromRow, MySql, Pool, Row};
 use tracing::error;
 
 mod test;
@@ -98,6 +98,31 @@ pub async fn is_guild_in_database(pool: &Pool<MySql>, guild_id: GuildId) -> Opti
     }
 }
 
+#[derive(Copy, Clone)]
+enum Column {
+    GhostWarningDeadline(u32),
+    GhostKickDeadline(u32),
+    GhostTimeToCheck(Time),
+    GhostEnabled(bool),
+    DebugChannel(ChannelId),
+    BotChannel(ChannelId),
+    HelpChannel(ChannelId),
+    LoggerPipeChannel(Option<ChannelId>),
+    StudyGroupCategory(ChannelId),
+    SubjectGroupCategory(ChannelId),
+    StudentyRole(RoleId),
+    TmpStudentyRole(Option<RoleId>),
+    ModeratorRole(RoleId),
+    NewsletterRole(RoleId),
+    NsfwRole(RoleId),
+    StudyRoleSeparatorRole(RoleId),
+    SubjectRoleSeparatorRole(RoleId),
+    FriendRole(RoleId),
+    TmpcKeepTime(Time),
+    AlumniRole(RoleId),
+    AlumniRoleSeparatorRole(RoleId),
+}
+
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseGuild {
     guild_id: GuildId,
@@ -142,7 +167,7 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
             subject_group_category: ChannelId(row.try_get("subject_group_category")?),
             studenty_role: RoleId(row.try_get("studenty_role")?),
             tmp_studenty_role: row
-                .try_get("logger_pipe_channel")
+                .try_get("tmp_studenty_role")
                 .map(|val: Option<u64>| val.map(RoleId))?,
             moderator_role: RoleId(row.try_get("moderator_role")?),
             newsletter_role: RoleId(row.try_get("newsletter_role")?),
@@ -250,18 +275,359 @@ pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Database
     }
 }
 
-/// Updated the Ghost warning deadline (in days), returns if the value was changed
+/// Update the Ghost warning deadline (in days), returns if the value was changed
 #[allow(dead_code)]
 pub async fn update_ghost_warning_deadline(
     pool: &Pool<MySql>,
     guild_id: GuildId,
     ghost_warning_deadline: u32,
 ) -> Option<bool> {
-    match sqlx::query("UPDATE Guild SET ghost_warn_deadline = ? WHERE guild_id=?")
-        .bind(ghost_warning_deadline)
-        .bind(guild_id.0)
-        .execute(pool)
-        .await
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::GhostWarningDeadline(ghost_warning_deadline),
+    )
+    .await
+}
+
+/// Update the Ghost kick deadline (in days), returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_ghost_kick_deadline(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    ghost_kick_deadline: u32,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::GhostKickDeadline(ghost_kick_deadline),
+    )
+    .await
+}
+
+/// Update the Ghost Time to check, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_ghost_time_to_check(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    ghost_time_to_check: Time,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::GhostTimeToCheck(ghost_time_to_check),
+    )
+    .await
+}
+
+/// Update the ghost enabled flag, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_ghost_enabled(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    ghost_enabled: bool,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::GhostEnabled(ghost_enabled)).await
+}
+
+/// Update the debug channel, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_debug_channel(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    debug_channel: ChannelId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::DebugChannel(debug_channel)).await
+}
+
+/// Update the bot channel, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_bot_channel(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    bot_channel: ChannelId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::BotChannel(bot_channel)).await
+}
+
+/// Update the help channel, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_help_channel(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    help_channel: ChannelId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::HelpChannel(help_channel)).await
+}
+
+/// Update the logger pipe channel, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_logger_pipe_channel(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    logger_pipe_channel: Option<ChannelId>,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::LoggerPipeChannel(logger_pipe_channel),
+    )
+    .await
+}
+
+/// Update the study group category, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_study_group_category(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    study_group_category: ChannelId,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::StudyGroupCategory(study_group_category),
+    )
+    .await
+}
+
+/// Update the subject group category, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_subject_group_category(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    subject_group_category: ChannelId,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::SubjectGroupCategory(subject_group_category),
+    )
+    .await
+}
+
+/// Update the studenty role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_studenty_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    studenty_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::StudentyRole(studenty_role)).await
+}
+
+/// Update the tmp studenty role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_tmp_studenty_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    tmp_studenty_role: Option<RoleId>,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::TmpStudentyRole(tmp_studenty_role)).await
+}
+
+/// Update the moderator role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_moderator_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    moderator_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::ModeratorRole(moderator_role)).await
+}
+
+/// Update the newsletter role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_newsletter_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    newsletter_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::NewsletterRole(newsletter_role)).await
+}
+
+/// Update the nsfw role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_nsfw_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    nsfw_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::NsfwRole(nsfw_role)).await
+}
+
+/// Update the study role separator role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_study_role_separator_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    study_role_separator_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::StudyRoleSeparatorRole(study_role_separator_role),
+    )
+    .await
+}
+
+/// Update the subject role separator role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_subject_role_separator_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    subject_role_separator_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::SubjectRoleSeparatorRole(subject_role_separator_role),
+    )
+    .await
+}
+
+/// Update the friend role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_friend_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    friend_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::FriendRole(friend_role)).await
+}
+
+/// Update the tmpc keep time, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_tmpc_keep_time(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    tmpc_keep_time: Time,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::TmpcKeepTime(tmpc_keep_time)).await
+}
+
+/// Update the alumni role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_alumni_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    alumni_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(pool, guild_id, Column::AlumniRole(alumni_role)).await
+}
+
+/// Update the alumni role separator role, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_alumni_role_separator_role(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    alumni_role_separator_role: RoleId,
+) -> Option<bool> {
+    update_guild_table_value(
+        pool,
+        guild_id,
+        Column::AlumniRoleSeparatorRole(alumni_role_separator_role),
+    )
+    .await
+}
+
+async fn update_guild_table_value(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+    action: Column,
+) -> Option<bool> {
+    macro_rules! query_format {
+        ($($args:tt)*) => {format!("UPDATE Guild SET {}=? WHERE guild_id=?", $($args)*)};
+    }
+    let query: String;
+    match match action {
+        Column::GhostWarningDeadline(val) => {
+            query = query_format!("ghost_warn_deadline");
+            sqlx::query(query.as_str()).bind(val)
+        }
+        Column::GhostKickDeadline(val) => {
+            query = query_format!("ghost_kick_deadline");
+            sqlx::query(query.as_str()).bind(val)
+        }
+        Column::GhostTimeToCheck(val) => {
+            query = query_format!("ghost_time_to_check");
+            sqlx::query(query.as_str()).bind(val)
+        }
+        Column::GhostEnabled(val) => {
+            query = query_format!("ghost_enabled");
+            sqlx::query(query.as_str()).bind(val)
+        }
+        Column::DebugChannel(val) => {
+            query = query_format!("debug_channel");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::BotChannel(val) => {
+            query = query_format!("bot_channel");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::HelpChannel(val) => {
+            query = query_format!("help_channel");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::LoggerPipeChannel(val) => {
+            query = query_format!("logger_pipe_channel");
+            sqlx::query(query.as_str()).bind(val.map(|val| val.0))
+        }
+        Column::StudyGroupCategory(val) => {
+            query = query_format!("study_group_category");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::SubjectGroupCategory(val) => {
+            query = query_format!("subject_group_category");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::StudentyRole(val) => {
+            query = query_format!("studenty_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::TmpStudentyRole(val) => {
+            query = query_format!("tmp_studenty_role");
+            sqlx::query(query.as_str()).bind(val.map(|val| val.0))
+        }
+        Column::ModeratorRole(val) => {
+            query = query_format!("moderator_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::NewsletterRole(val) => {
+            query = query_format!("newsletter_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::NsfwRole(val) => {
+            query = query_format!("nsfw_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::StudyRoleSeparatorRole(val) => {
+            query = query_format!("study_role_separator_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::SubjectRoleSeparatorRole(val) => {
+            query = query_format!("subject_role_separator_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::FriendRole(val) => {
+            query = query_format!("friend_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::TmpcKeepTime(val) => {
+            query = query_format!("tmpc_keep_time");
+            sqlx::query(query.as_str()).bind(val)
+        }
+        Column::AlumniRole(val) => {
+            query = query_format!("alumni_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+        Column::AlumniRoleSeparatorRole(val) => {
+            query = query_format!("alumni_role_separator_role");
+            sqlx::query(query.as_str()).bind(val.0)
+        }
+    }
+    .bind(guild_id.0)
+    .execute(pool)
+    .await
     {
         Ok(val) => Some(val.rows_affected() != 0),
         Err(err) => {
