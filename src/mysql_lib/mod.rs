@@ -155,7 +155,9 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
     }
 }
 
-/// Inserts a new Guild into the Database.
+/// Inserts a new Guild into the Database. Return if the guild was inserted into the Database,
+/// may be false if the guild was already in the Database.
+///
 /// `DatabaseGuild::logger_pipe_channel` and `DatabaseGuild::tmp_studenty_role` are ignored.
 #[allow(dead_code)]
 pub async fn insert_guild(pool: &Pool<MySql>, guild: DatabaseGuild) -> Option<bool> {
@@ -215,7 +217,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
     }
 }
 
-/// Deletes a Guild saved in the Database
+/// Deletes a Guild saved in the Database, returns if the query deleted something
 #[allow(dead_code)]
 pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool> {
     match sqlx::query("DELETE FROM Guild WHERE guild_id=?")
