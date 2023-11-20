@@ -1,7 +1,10 @@
 name: Check code
 
 # Configures this workflow to run every time a change is pushed
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    types: [opened, reopened]
 
 # Make sure CI fails on all warnings, including Clippy lints
 env:
