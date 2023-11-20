@@ -15,6 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: echo ${{github.event.pull_request.head.repo.full_name}}
+      - run: echo ${{github.event.pull_request.head.repo.full_name == 'marcelropos/HM-DiscordBot'}}
+      - run: echo ${{ ! (github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.event.pull_request.head.repo.full_name == 'marcelropos/HM-DiscordBot')}}
       #- run: cargo check
       #- run: cargo clippy --all-targets --all-features
