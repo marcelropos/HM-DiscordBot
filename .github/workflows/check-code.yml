@@ -1,10 +1,7 @@
 name: Check code
 
 # Configures this workflow to run every time a change is pushed
-on:
-  push:
-  pull_request:
-    types: [opened, reopened]
+on: [push, pull_request]
 
 # Make sure CI fails on all warnings, including Clippy lints
 env:
@@ -13,6 +10,8 @@ env:
 jobs:
   check-code:
     runs-on: ubuntu-latest
+    # It is not run if it is a pull_request synchronize event on the main repo
+    if: ${{ ! (github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.repository_id == 'MDEwOlJlcG9zaXRvcnkzMDcwNjg4MzE=')}}
     steps:
       - uses: actions/checkout@v4
 
