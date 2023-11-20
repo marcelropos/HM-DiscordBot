@@ -15,6 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: echo github.event.pull_request.head.repo.full_name
+      - run: echo ${{github.event.pull_request.head.repo.full_name}}
       #- run: cargo check
       #- run: cargo clippy --all-targets --all-features
