@@ -11,19 +11,21 @@ mod tests {
 
     use crate::mysql_lib::{
         delete_alumni_role, delete_guild, delete_semester_study_group, delete_study_group,
-        delete_subject, get_alumni_roles, get_connection, get_guild,
+        delete_study_subject_link, delete_subject, get_alumni_roles, get_connection, get_guild,
         get_semester_study_groups_in_guild, get_semester_study_groups_in_study_group,
-        get_study_groups, get_subjects, insert_alumni_role, insert_guild,
-        insert_semester_study_group, insert_study_group, insert_subject, is_guild_in_database,
-        migrate_database, update_alumni_role, update_alumni_role_separator_role,
-        update_bot_channel, update_debug_channel, update_friend_role, update_ghost_enabled,
-        update_ghost_kick_deadline, update_ghost_time_to_check, update_ghost_warning_deadline,
-        update_help_channel, update_logger_pipe_channel, update_moderator_role,
-        update_newsletter_role, update_nsfw_role, update_studenty_role,
-        update_study_group_category, update_study_role_separator_role,
-        update_subject_group_category, update_subject_role_separator_role,
-        update_tmp_studenty_role, update_tmpc_keep_time, DatabaseAlumniRole, DatabaseGuild,
-        DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseSubject,
+        get_study_groups, get_study_subject_links_for_study_group,
+        get_study_subject_links_for_subject, get_study_subject_links_in_guild, get_subjects,
+        insert_alumni_role, insert_guild, insert_semester_study_group, insert_study_group,
+        insert_study_subject_link, insert_subject, is_guild_in_database, migrate_database,
+        update_alumni_role, update_alumni_role_separator_role, update_bot_channel,
+        update_debug_channel, update_friend_role, update_ghost_enabled, update_ghost_kick_deadline,
+        update_ghost_time_to_check, update_ghost_warning_deadline, update_help_channel,
+        update_logger_pipe_channel, update_moderator_role, update_newsletter_role,
+        update_nsfw_role, update_studenty_role, update_study_group_category,
+        update_study_role_separator_role, update_subject_group_category,
+        update_subject_role_separator_role, update_tmp_studenty_role, update_tmpc_keep_time,
+        DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup,
+        DatabaseStudySubjectLink, DatabaseSubject,
     };
 
     static INIT: Once = Once::new();
@@ -417,6 +419,111 @@ mod tests {
         assert!(result, "Study Group couldn't get deleted");
 
         // this also tests if a guild can be deleted while there is information linked with it as intended
+        delete_guild_test(&pool, guild.guild_id).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_study_subject_link_methods() {
+        let pool = get_connection_pool().await;
+        let guild = create_guild_in_database(&pool).await;
+        let subject = DatabaseSubject {
+            role: RoleId(5),
+            guild_id: guild.guild_id,
+            name: "SE1".to_string(),
+            text_channel: ChannelId(4),
+        };
+        let result = insert_subject(&pool, subject.clone())
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Subject couldn't be inserted");
+        let mut study_group = DatabaseStudyGroup {
+            id: None,
+            guild_id: guild.guild_id,
+            name: "IF".to_string(),
+            color: 0xFF00AB,
+            active: true,
+        };
+        let result = insert_study_group(&pool, study_group.clone())
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Study group couldn't be inserted");
+        let result = get_study_groups(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 1, "Don't have 1 Study groups in Database");
+        study_group.id = result
+            .iter()
+            .find(|t| t.name == study_group.name)
+            .map(|t| t.id)
+            .unwrap_or(None);
+
+        let semester_study_group = DatabaseSemesterStudyGroup {
+            role: RoleId(1),
+            study_group_id: study_group.id.unwrap(),
+            semester: 1,
+            text_channel: ChannelId(2),
+        };
+        let result = insert_semester_study_group(&pool, semester_study_group)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Semester Study role couldn't get inserted");
+
+        let study_subject_link = DatabaseStudySubjectLink {
+            study_group_role: semester_study_group.role,
+            subject_role: subject.role,
+            guild_id: guild.guild_id,
+        };
+        let result = insert_study_subject_link(&pool, study_subject_link)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Study-Subject Link couldn't get inserted");
+        let result = get_study_subject_links_in_guild(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(
+            result.len(),
+            1,
+            "Don't have 1 Study-Subject Link in Database"
+        );
+        assert!(
+            result.contains(&study_subject_link),
+            "Wanted Study-Subject Link is not part of the Vector"
+        );
+        let result = get_study_subject_links_for_subject(&pool, subject.role)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(
+            result.len(),
+            1,
+            "Don't have 1 Study-Subject Link in Database"
+        );
+        assert!(
+            result.contains(&study_subject_link),
+            "Wanted Study-Subject Link is not part of the Vector"
+        );
+        let result = get_study_subject_links_for_study_group(&pool, semester_study_group.role)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(
+            result.len(),
+            1,
+            "Don't have 1 Study-Subject Link in Database"
+        );
+        assert!(
+            result.contains(&study_subject_link),
+            "Wanted Study-Subject Link is not part of the Vector"
+        );
+        let result = delete_study_subject_link(&pool, study_subject_link)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Study-Subject Link couldn't get deleted");
+
+        // this also tests if a guild can be deleted while there is information linked with it as intended
+        let result = insert_study_subject_link(&pool, study_subject_link)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Study-Subject Link couldn't get inserted");
         delete_guild_test(&pool, guild.guild_id).await;
     }
 }

@@ -1066,3 +1066,140 @@ pub async fn get_subjects(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<D
         }
     }
 }
+
+/// Inserts a new Study-Subject Link into the Database. Return if the Study-Subject Link was
+/// inserted into the Database, may be false if the Study-Subject Link was already in the Database.
+#[allow(dead_code)]
+pub async fn insert_study_subject_link(
+    pool: &Pool<MySql>,
+    study_subject_link: DatabaseStudySubjectLink,
+) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Study_subject_link (\
+study_group_role,
+subject_role,
+guild_id)
+VALUES (?, ?, ?);",
+    )
+    .bind(study_subject_link.study_group_role.0)
+    .bind(study_subject_link.subject_role.0)
+    .bind(study_subject_link.guild_id.0)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Study-Subject Link saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_study_subject_link(
+    pool: &Pool<MySql>,
+    study_subject_link: DatabaseStudySubjectLink,
+) -> Option<bool> {
+    match sqlx::query(
+        "DELETE FROM Study_subject_link WHERE study_group_role=? AND subject_role=? AND guild_id=?",
+    )
+    .bind(study_subject_link.study_group_role.0)
+    .bind(study_subject_link.subject_role.0)
+    .bind(study_subject_link.guild_id.0)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Study-Subject Link saved for the Guild in the Database
+#[allow(dead_code)]
+pub async fn get_study_subject_links_in_guild(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+) -> Option<Vec<DatabaseStudySubjectLink>> {
+    match sqlx::query_as::<_, DatabaseStudySubjectLink>(
+        "SELECT * FROM Study_subject_link WHERE guild_id=?",
+    )
+    .bind(guild_id.0)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Study-Subject Link saved for the Subject in the Database
+#[allow(dead_code)]
+pub async fn get_study_subject_links_for_subject(
+    pool: &Pool<MySql>,
+    subject_role_id: RoleId,
+) -> Option<Vec<DatabaseStudySubjectLink>> {
+    match sqlx::query_as::<_, DatabaseStudySubjectLink>(
+        "SELECT * FROM Study_subject_link WHERE subject_role=?",
+    )
+    .bind(subject_role_id.0)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Study-Subject Link saved for the Semester Study Group in the Database
+#[allow(dead_code)]
+pub async fn get_study_subject_links_for_study_group(
+    pool: &Pool<MySql>,
+    study_group_role: RoleId,
+) -> Option<Vec<DatabaseStudySubjectLink>> {
+    match sqlx::query_as::<_, DatabaseStudySubjectLink>(
+        "SELECT * FROM Study_subject_link WHERE study_group_role=?",
+    )
+    .bind(study_group_role.0)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Checks id there exists a Study-Subject Link saved for the Semester Study Group and Subject in the Database
+#[allow(dead_code)]
+pub async fn is_study_subject_link_in_database(
+    pool: &Pool<MySql>,
+    study_subject_link: DatabaseStudySubjectLink,
+) -> Option<bool> {
+    match sqlx::query_as::<_, DatabaseStudySubjectLink>(
+        "SELECT * FROM Study_subject_link WHERE study_group_role=? AND subject_role=? AND guild_id=?",
+    )
+    .bind(study_subject_link.study_group_role.0)
+    .bind(study_subject_link.subject_role.0)
+    .bind(study_subject_link.guild_id.0)
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(val) => Some(val.is_some()),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
