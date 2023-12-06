@@ -1268,3 +1268,89 @@ pub async fn get_tmpc_join_channel(
         }
     }
 }
+
+/// Inserts a new Tmpc into the Database. Return if the Tmpc was inserted he Database, may be false
+/// if the Tmpc was already in the Database.
+///
+/// `DatabaseTmpc::delete_at` is ignored
+#[allow(dead_code)]
+pub async fn insert_tmpc(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Tmpc (
+voice_channel,
+text_channel,
+guild_id,
+owner,
+persist,
+token,
+keep)
+VALUES (?, ?, ?, ?, ?, ?, ?);",
+    )
+    .bind(tmpc.voice_channel.0)
+    .bind(tmpc.text_channel.0)
+    .bind(tmpc.guild_id.0)
+    .bind(tmpc.owner.0)
+    .bind(tmpc.persist)
+    .bind(tmpc.token)
+    .bind(tmpc.keep)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Modifies the deleteAt time of a Tmpc, returns if the value was changed
+#[allow(dead_code)]
+pub async fn modify_tmpc_delete_at(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
+    match sqlx::query("UPDATE Tmpc SET deleteAt=? WHERE voice_channel=? AND guild_id=?")
+        .bind(tmpc.delete_at)
+        .bind(tmpc.voice_channel.0)
+        .bind(tmpc.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Tmpc  saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_tmpc(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
+    match sqlx::query("DELETE FROM Tmpc WHERE voice_channel=? AND guild_id=?")
+        .bind(tmpc.voice_channel.0)
+        .bind(tmpc.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Tmpc saved for the Guild in the Database
+#[allow(dead_code)]
+pub async fn get_tmpc(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<DatabaseTmpc>> {
+    match sqlx::query_as::<_, DatabaseTmpc>("SELECT * FROM Tmpc WHERE guild_id=?")
+        .bind(guild_id.0)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}

@@ -5,28 +5,30 @@ mod tests {
     use std::sync::Once;
     use std::time::Duration;
 
-    use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
-    use sqlx::types::time::Time;
+    use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
+    use sqlx::types::time::{Date, PrimitiveDateTime, Time};
     use sqlx::{MySql, Pool};
+    use time::Month;
 
     use crate::mysql_lib::{
         delete_alumni_role, delete_guild, delete_semester_study_group, delete_study_group,
-        delete_study_subject_link, delete_subject, delete_tmpc_join_channel, get_alumni_roles,
-        get_connection, get_guild, get_semester_study_groups_in_guild,
+        delete_study_subject_link, delete_subject, delete_tmpc, delete_tmpc_join_channel,
+        get_alumni_roles, get_connection, get_guild, get_semester_study_groups_in_guild,
         get_semester_study_groups_in_study_group, get_study_groups,
         get_study_subject_links_for_study_group, get_study_subject_links_for_subject,
-        get_study_subject_links_in_guild, get_subjects, get_tmpc_join_channel, insert_alumni_role,
-        insert_guild, insert_semester_study_group, insert_study_group, insert_study_subject_link,
-        insert_subject, insert_tmpc_join_channel, is_guild_in_database, migrate_database,
-        update_alumni_role, update_alumni_role_separator_role, update_bot_channel,
-        update_debug_channel, update_friend_role, update_ghost_enabled, update_ghost_kick_deadline,
+        get_study_subject_links_in_guild, get_subjects, get_tmpc, get_tmpc_join_channel,
+        insert_alumni_role, insert_guild, insert_semester_study_group, insert_study_group,
+        insert_study_subject_link, insert_subject, insert_tmpc, insert_tmpc_join_channel,
+        is_guild_in_database, migrate_database, modify_tmpc_delete_at, update_alumni_role,
+        update_alumni_role_separator_role, update_bot_channel, update_debug_channel,
+        update_friend_role, update_ghost_enabled, update_ghost_kick_deadline,
         update_ghost_time_to_check, update_ghost_warning_deadline, update_help_channel,
         update_logger_pipe_channel, update_moderator_role, update_newsletter_role,
         update_nsfw_role, update_studenty_role, update_study_group_category,
         update_study_role_separator_role, update_subject_group_category,
         update_subject_role_separator_role, update_tmp_studenty_role, update_tmpc_keep_time,
         DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup,
-        DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpcJoinChannel,
+        DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpc, DatabaseTmpcJoinChannel,
     };
 
     static INIT: Once = Once::new();
@@ -562,6 +564,62 @@ mod tests {
 
         // this also tests if a guild can be deleted while there is information linked with it as intended
         let result = insert_tmpc_join_channel(&pool, tmpc_join_channel)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Tmpc Join Channel couldn't be inserted");
+        delete_guild_test(&pool, guild.guild_id).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_tmpc_methods() {
+        let pool = get_connection_pool().await;
+        let guild = create_guild_in_database(&pool).await;
+        let mut tmpc = DatabaseTmpc {
+            voice_channel: ChannelId(2),
+            text_channel: ChannelId(3),
+            guild_id: guild.guild_id,
+            owner: UserId(4),
+            persist: false,
+            token: 0,
+            keep: false,
+            delete_at: None,
+        };
+        let result = insert_tmpc(&pool, tmpc)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Tmpc couldn't be inserted");
+        let result = get_tmpc(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 1, "Don't have 1 Tmpc in Database");
+        assert!(
+            result.contains(&tmpc),
+            "Wanted Tmpc is not part of the Vector"
+        );
+        tmpc.delete_at = Some(PrimitiveDateTime::new(
+            Date::from_calendar_date(2023, Month::December, 1).unwrap(),
+            Time::from_hms(12, 0, 0).unwrap(),
+        ));
+        let result = modify_tmpc_delete_at(&pool, tmpc)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "deleteAt couldn't be modified");
+        let result = get_tmpc(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 1, "Don't have 1 Tmpc in Database");
+        assert!(
+            result.contains(&tmpc),
+            "Wanted Tmpc is not part of the Vector"
+        );
+        let result = delete_tmpc(&pool, tmpc)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Tmpc couldn't get deleted");
+
+        // this also tests if a guild can be deleted while there is information linked with it as intended
+        let result = insert_tmpc(&pool, tmpc)
             .await
             .expect("Query was not successful");
         assert!(result, "Tmpc Join Channel couldn't be inserted");
