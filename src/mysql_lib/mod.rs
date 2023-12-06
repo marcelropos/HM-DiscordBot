@@ -912,3 +912,98 @@ pub async fn get_study_groups(
         }
     }
 }
+
+/// Inserts a new Semester Study Group into the Database. Return if the Semester Study Group was
+/// inserted into the Database, may be false if the Semester Study Group was already in the Database.
+#[allow(dead_code)]
+pub async fn insert_semester_study_group(
+    pool: &Pool<MySql>,
+    semester_study_group: DatabaseSemesterStudyGroup,
+) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Semester_study_groups (\
+role,
+study_group_id,
+semester,
+text_channel)
+VALUES (?, ?, ?, ?);",
+    )
+    .bind(semester_study_group.role.0)
+    .bind(semester_study_group.study_group_id)
+    .bind(semester_study_group.semester)
+    .bind(semester_study_group.text_channel.0)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Semester Study Group saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_semester_study_group(
+    pool: &Pool<MySql>,
+    semester_study_group: DatabaseSemesterStudyGroup,
+) -> Option<bool> {
+    match sqlx::query("DELETE FROM Semester_study_groups WHERE role=? AND study_group_id=?")
+        .bind(semester_study_group.role.0)
+        .bind(semester_study_group.study_group_id)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Semester Study Groups saved for the Guild in the Database
+#[allow(dead_code)]
+pub async fn get_semester_study_groups_in_guild(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+) -> Option<Vec<DatabaseSemesterStudyGroup>> {
+    match sqlx::query_as::<_, DatabaseSemesterStudyGroup>(
+        "SELECT Semester_study_groups.*
+FROM Semester_study_groups
+INNER JOIN Study_groups ON Semester_study_groups.study_group_id = Study_groups.id
+WHERE guild_id=?",
+    )
+    .bind(guild_id.0)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Semester Study Groups saved for the StudyGroup in the Database
+#[allow(dead_code)]
+pub async fn get_semester_study_groups_in_study_group(
+    pool: &Pool<MySql>,
+    study_group_id: i32,
+) -> Option<Vec<DatabaseSemesterStudyGroup>> {
+    match sqlx::query_as::<_, DatabaseSemesterStudyGroup>(
+        "SELECT * FROM Semester_study_groups WHERE study_group_id=?",
+    )
+    .bind(study_group_id)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
