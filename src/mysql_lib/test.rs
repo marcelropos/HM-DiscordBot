@@ -30,10 +30,8 @@ mod tests {
         pool
     }
 
-    #[tokio::test]
-    async fn test_guild_methods() {
-        let pool = get_connection_pool().await;
-        let mut guild = DatabaseGuild {
+    async fn create_guild_in_database(pool: &Pool<MySql>) -> DatabaseGuild {
+        let guild = DatabaseGuild {
             guild_id: GuildId(1),
             ghost_warning_deadline: 2,
             ghost_kick_deadline: 3,
@@ -57,10 +55,24 @@ mod tests {
             logger_pipe_channel: None,
             tmp_studenty_role: None,
         };
-        let result = insert_guild(&pool, guild)
+        let result = insert_guild(pool, guild)
             .await
             .expect("Query was not successful");
         assert!(result, "Could not insert into Database");
+        guild
+    }
+
+    async fn delete_guild_test(pool: &Pool<MySql>, guild_id: GuildId) {
+        let result = delete_guild(pool, guild_id)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Guild could not be deleted");
+    }
+
+    #[tokio::test]
+    async fn test_guild_methods() {
+        let pool = get_connection_pool().await;
+        let mut guild = create_guild_in_database(&pool).await;
         let result = is_guild_in_database(&pool, guild.guild_id)
             .await
             .expect("Query was not successful");
@@ -195,9 +207,6 @@ mod tests {
             .await
             .expect("Query was not successful");
         assert_eq!(guild, result, "Guild had not the information expected");
-        let result = delete_guild(&pool, guild.guild_id)
-            .await
-            .expect("Query was not successful");
-        assert!(result, "Guild could not be deleted");
+        delete_guild_test(&pool, guild.guild_id).await;
     }
 }
