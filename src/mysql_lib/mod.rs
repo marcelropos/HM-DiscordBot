@@ -1,10 +1,10 @@
 use std::env;
 
-use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
+use poise::serenity_prelude::{ChannelId, GuildId, MessageId, RoleId, UserId};
 use sqlx::{FromRow, migrate, MySql, Pool, Row};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
-use sqlx::types::time::Time;
+use sqlx::types::time::{PrimitiveDateTime, Time};
 use tracing::error;
 
 mod test;
@@ -149,6 +149,69 @@ pub struct DatabaseGuild {
     alumni_role_separator_role: RoleId,
 }
 
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseAlumniRole {
+    role: RoleId,
+    guild_id: GuildId,
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseStudyGroup {
+    id: u32,
+    guild_id: GuildId,
+    name: String,
+    color: u32,
+    active: bool,
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseSemesterStudyGroup {
+    role: RoleId,
+    study_group_id: u32,
+    semester: u32,
+    text_channel: ChannelId,
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseSubject {
+    role: RoleId,
+    guild_id: GuildId,
+    name: String,
+    text_channel: ChannelId,
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseStudySubjectLink {
+    study_group_role: RoleId,
+    subject_role: RoleId,
+    guild_id: GuildId,
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseTmpcJoinChannel {
+    voice_channel: ChannelId,
+    guild_id: GuildId,
+    persist: bool,
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseTmpc {
+    voice_channel: ChannelId,
+    text_channel: ChannelId,
+    guild_id: GuildId,
+    owner: UserId,
+    persist: bool,
+    token: u32,
+    keep: bool,
+    delete_at: Option<PrimitiveDateTime>,
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct DatabaseTokenMessage {
+    tmpc_voice_channel: ChannelId,
+    message: MessageId,
+}
+
 impl FromRow<'_, MySqlRow> for DatabaseGuild {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
@@ -178,6 +241,93 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
             tmpc_keep_time: row.try_get("tmpc_keep_time")?,
             alumni_role: RoleId(row.try_get("alumni_role")?),
             alumni_role_separator_role: RoleId(row.try_get("alumni_role_separator_role")?),
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseAlumniRole {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            role: RoleId(row.try_get("role_id")?),
+            guild_id: GuildId(row.try_get("guild_id")?),
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseStudyGroup {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            id: row.try_get("id")?,
+            guild_id: GuildId(row.try_get("guild_id")?),
+            name: row.try_get("name")?,
+            color: row.try_get("color")?,
+            active: row.try_get("active")?,
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseSemesterStudyGroup {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            role: RoleId(row.try_get("role")?),
+            study_group_id: row.try_get("study_group_id")?,
+            semester: row.try_get("semester")?,
+            text_channel: ChannelId(row.try_get("text_channel")?),
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseSubject {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            role: RoleId(row.try_get("role")?),
+            guild_id: GuildId(row.try_get("guild_id")?),
+            name: row.try_get("name")?,
+            text_channel: ChannelId(row.try_get("text_channel")?),
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseStudySubjectLink {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            study_group_role: RoleId(row.try_get("study_group_role")?),
+            subject_role: RoleId(row.try_get("subject_role")?),
+            guild_id: GuildId(row.try_get("guild_id")?),
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseTmpcJoinChannel {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            voice_channel: ChannelId(row.try_get("voice_channel")?),
+            guild_id: GuildId(row.try_get("guild_id")?),
+            persist: row.try_get("persist")?,
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseTmpc {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            voice_channel: ChannelId(row.try_get("voice_channel")?),
+            text_channel: ChannelId(row.try_get("text_channel")?),
+            guild_id: GuildId(row.try_get("guild_id")?),
+            owner: UserId(row.try_get("owner")?),
+            persist: row.try_get("persist")?,
+            token: row.try_get("token")?,
+            keep: row.try_get("keep")?,
+            delete_at: row.try_get("deleteAt")?,
+        })
+    }
+}
+
+impl FromRow<'_, MySqlRow> for DatabaseTokenMessage {
+    fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            tmpc_voice_channel: ChannelId(row.try_get("tmpc_voice_channel")?),
+            message: MessageId(row.try_get("message")?),
         })
     }
 }
