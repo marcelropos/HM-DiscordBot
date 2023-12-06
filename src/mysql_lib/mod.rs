@@ -1051,7 +1051,7 @@ pub async fn delete_subject(pool: &Pool<MySql>, subject: DatabaseSubject) -> Opt
     }
 }
 
-/// Gets theSubject saved for the Guild in the Database
+/// Gets the Subject saved for the Guild in the Database
 #[allow(dead_code)]
 pub async fn get_subjects(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<DatabaseSubject>> {
     match sqlx::query_as::<_, DatabaseSubject>("SELECT * FROM Subject WHERE guild_id=?")
@@ -1197,6 +1197,71 @@ pub async fn is_study_subject_link_in_database(
     .await
     {
         Ok(val) => Some(val.is_some()),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Inserts a new Tmpc Join Channel into the Database. Return if the Tmpc Join Channel was inserted
+/// into the Database, may be false if the Tmpc Join Channel was already in the Database.
+#[allow(dead_code)]
+pub async fn insert_tmpc_join_channel(
+    pool: &Pool<MySql>,
+    tmpc_join_channel: DatabaseTmpcJoinChannel,
+) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Tmpc_join_channel (voice_channel, guild_id, persist) VALUES (?, ?, ?);",
+    )
+    .bind(tmpc_join_channel.voice_channel.0)
+    .bind(tmpc_join_channel.guild_id.0)
+    .bind(tmpc_join_channel.persist)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Tmpc Join Channel saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_tmpc_join_channel(
+    pool: &Pool<MySql>,
+    tmpc_join_channel: DatabaseTmpcJoinChannel,
+) -> Option<bool> {
+    match sqlx::query("DELETE FROM Tmpc_join_channel WHERE voice_channel=? AND guild_id=?")
+        .bind(tmpc_join_channel.voice_channel.0)
+        .bind(tmpc_join_channel.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Tmpc Join Channel saved for the Guild in the Database
+#[allow(dead_code)]
+pub async fn get_tmpc_join_channel(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+) -> Option<Vec<DatabaseTmpcJoinChannel>> {
+    match sqlx::query_as::<_, DatabaseTmpcJoinChannel>(
+        "SELECT * FROM Tmpc_join_channel WHERE guild_id=?",
+    )
+    .bind(guild_id.0)
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
         Err(err) => {
             error!(error = err.to_string(), "Problem executing query");
             None
