@@ -11,9 +11,10 @@ mod tests {
 
     use crate::mysql_lib::{
         delete_alumni_role, delete_guild, delete_semester_study_group, delete_study_group,
-        get_alumni_roles, get_connection, get_guild, get_semester_study_groups_in_guild,
-        get_semester_study_groups_in_study_group, get_study_groups, insert_alumni_role,
-        insert_guild, insert_semester_study_group, insert_study_group, is_guild_in_database,
+        delete_subject, get_alumni_roles, get_connection, get_guild,
+        get_semester_study_groups_in_guild, get_semester_study_groups_in_study_group,
+        get_study_groups, get_subjects, insert_alumni_role, insert_guild,
+        insert_semester_study_group, insert_study_group, insert_subject, is_guild_in_database,
         migrate_database, update_alumni_role, update_alumni_role_separator_role,
         update_bot_channel, update_debug_channel, update_friend_role, update_ghost_enabled,
         update_ghost_kick_deadline, update_ghost_time_to_check, update_ghost_warning_deadline,
@@ -22,7 +23,7 @@ mod tests {
         update_study_group_category, update_study_role_separator_role,
         update_subject_group_category, update_subject_role_separator_role,
         update_tmp_studenty_role, update_tmpc_keep_time, DatabaseAlumniRole, DatabaseGuild,
-        DatabaseSemesterStudyGroup, DatabaseStudyGroup,
+        DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseSubject,
     };
 
     static INIT: Once = Once::new();
@@ -364,6 +365,53 @@ mod tests {
         // clean up
 
         let result = delete_study_group(&pool, study_group2)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Study Group couldn't get deleted");
+
+        // this also tests if a guild can be deleted while there is information linked with it as intended
+        delete_guild_test(&pool, guild.guild_id).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_subject_methods() {
+        let pool = get_connection_pool().await;
+        let guild = create_guild_in_database(&pool).await;
+        let subject = DatabaseSubject {
+            role: RoleId(5),
+            guild_id: guild.guild_id,
+            name: "SE1".to_string(),
+            text_channel: ChannelId(4),
+        };
+        let result = insert_subject(&pool, subject.clone())
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Subject couldn't be inserted");
+        let subject2 = DatabaseSubject {
+            role: RoleId(6),
+            guild_id: guild.guild_id,
+            name: "SE2".to_string(),
+            text_channel: ChannelId(5),
+        };
+        let result = insert_subject(&pool, subject2.clone())
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Second Subject couldn't be inserted");
+        let result = get_subjects(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 2, "Don't have 2 Subjects in Database");
+        assert!(
+            result.contains(&subject),
+            "Wanted Subject is not part of the Vector"
+        );
+        assert!(
+            result.contains(&subject2),
+            "Wanted Subject is not part of the Vector"
+        );
+
+        let result = delete_subject(&pool, subject)
             .await
             .expect("Query was not successful");
         assert!(result, "Study Group couldn't get deleted");

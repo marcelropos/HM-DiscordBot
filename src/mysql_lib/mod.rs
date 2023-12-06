@@ -880,6 +880,10 @@ pub async fn delete_study_group(
     pool: &Pool<MySql>,
     study_group: DatabaseStudyGroup,
 ) -> Option<bool> {
+    if study_group.id.is_none() {
+        error!("Can't delete Study group without id");
+        return None;
+    }
     match sqlx::query("DELETE FROM Study_groups WHERE id=? AND guild_id=?")
         .bind(study_group.id)
         .bind(study_group.guild_id.0)
@@ -999,6 +1003,61 @@ pub async fn get_semester_study_groups_in_study_group(
     .bind(study_group_id)
     .fetch_all(pool)
     .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Inserts a new Subject into the Database. Return if the Subject was inserted into the
+/// Database, may be false if the Subject was already in the Database.
+#[allow(dead_code)]
+pub async fn insert_subject(pool: &Pool<MySql>, subject: DatabaseSubject) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Subject (role, guild_id, name, text_channel) VALUES (?, ?, ?, ?);",
+    )
+    .bind(subject.role.0)
+    .bind(subject.guild_id.0)
+    .bind(subject.name)
+    .bind(subject.text_channel.0)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Subject saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_subject(pool: &Pool<MySql>, subject: DatabaseSubject) -> Option<bool> {
+    match sqlx::query("DELETE FROM Subject WHERE role=? AND guild_id=?")
+        .bind(subject.role.0)
+        .bind(subject.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets theSubject saved for the Guild in the Database
+#[allow(dead_code)]
+pub async fn get_subjects(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<DatabaseSubject>> {
+    match sqlx::query_as::<_, DatabaseSubject>("SELECT * FROM Subject WHERE guild_id=?")
+        .bind(guild_id.0)
+        .fetch_all(pool)
+        .await
     {
         Ok(val) => Some(val),
         Err(err) => {
