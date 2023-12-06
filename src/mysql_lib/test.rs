@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use std::ops::Add;
+    use std::sync::Once;
     use std::time::Duration;
 
     use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
@@ -8,19 +9,24 @@ mod tests {
     use sqlx::types::time::Time;
 
     use crate::mysql_lib::{
-        DatabaseGuild, delete_guild, get_connection, get_guild, insert_guild,
+        DatabaseAlumniRole, DatabaseGuild, delete_alumni_role, delete_guild, get_alumni_roles,
+        get_connection, get_guild, insert_alumni_role, insert_guild,
         is_guild_in_database, migrate_database, update_alumni_role,
         update_alumni_role_separator_role, update_bot_channel, update_debug_channel, update_friend_role,
         update_ghost_enabled, update_ghost_kick_deadline, update_ghost_time_to_check,
         update_ghost_warning_deadline, update_help_channel, update_logger_pipe_channel,
         update_moderator_role, update_newsletter_role, update_nsfw_role,
         update_studenty_role, update_study_group_category,
-        update_study_role_separator_role, update_subject_group_category,
-        update_subject_role_separator_role, update_tmp_studenty_role, update_tmpc_keep_time,
+        update_study_role_separator_role, update_subject_group_category, update_subject_role_separator_role,
+        update_tmp_studenty_role, update_tmpc_keep_time,
     };
 
+    static INIT: Once = Once::new();
+
     async fn get_connection_pool() -> Pool<MySql> {
-        tracing_subscriber::fmt::init();
+        INIT.call_once(|| {
+            tracing_subscriber::fmt::init();
+        });
         let pool = get_connection(1)
             .await
             .expect("Database could not be connected to");
@@ -32,7 +38,7 @@ mod tests {
 
     async fn create_guild_in_database(pool: &Pool<MySql>) -> DatabaseGuild {
         let guild = DatabaseGuild {
-            guild_id: GuildId(1),
+            guild_id: GuildId(rand::random()),
             ghost_warning_deadline: 2,
             ghost_kick_deadline: 3,
             ghost_time_to_check: Time::from_hms(8, 0, 0).unwrap(),
@@ -207,6 +213,43 @@ mod tests {
             .await
             .expect("Query was not successful");
         assert_eq!(guild, result, "Guild had not the information expected");
+        delete_guild_test(&pool, guild.guild_id).await;
+    }
+
+    #[tokio::test]
+    async fn test_alumni_role_methods() {
+        let pool = get_connection_pool().await;
+        let guild = create_guild_in_database(&pool).await;
+        let alumni_role = DatabaseAlumniRole {
+            role: RoleId(5),
+            guild_id: guild.guild_id,
+        };
+        let result = insert_alumni_role(&pool, alumni_role)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Alumni role couldn't be inserted");
+        let alumni_role = DatabaseAlumniRole {
+            role: RoleId(6),
+            guild_id: guild.guild_id,
+        };
+        let result = insert_alumni_role(&pool, alumni_role)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Second Alumni role couldn't be inserted");
+        let result = get_alumni_roles(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 2, "Don't have 2 alumni roles in Database");
+        assert!(
+            result.contains(&alumni_role),
+            "Wanted Alumni Role is not part of the Vector"
+        );
+        let result = delete_alumni_role(&pool, alumni_role)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Alumni role couldn't get deleted");
+
+        // this also tests if a guild can be deleted while there is information linked with it as intended
         delete_guild_test(&pool, guild.guild_id).await;
     }
 }

@@ -248,7 +248,7 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
 impl FromRow<'_, MySqlRow> for DatabaseAlumniRole {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            role: RoleId(row.try_get("role_id")?),
+            role: RoleId(row.try_get("role")?),
             guild_id: GuildId(row.try_get("guild_id")?),
         })
     }
@@ -339,7 +339,7 @@ impl FromRow<'_, MySqlRow> for DatabaseTokenMessage {
 #[allow(dead_code)]
 pub async fn insert_guild(pool: &Pool<MySql>, guild: DatabaseGuild) -> Option<bool> {
     match sqlx::query(
-        "INSERT IGNORE INTO USER_DB_NAME.Guild (
+        "INSERT IGNORE INTO Guild (
 guild_id,
 ghost_warn_deadline,
 ghost_kick_deadline,
@@ -780,6 +780,59 @@ async fn update_guild_table_value(
     .await
     {
         Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Inserts a new Alumni Role into the Database. Return if the Alumni Role was inserted into the
+/// Database, may be false if the Alumni Role was already in the Database.
+#[allow(dead_code)]
+pub async fn insert_alumni_role(pool: &Pool<MySql>, alumni_role: DatabaseAlumniRole) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Alumni_roles (role, guild_id) VALUES (?, ?);",
+    )
+    .bind(alumni_role.role.0)
+    .bind(alumni_role.guild_id.0)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Alumni Role saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_alumni_role(pool: &Pool<MySql>, alumni_role: DatabaseAlumniRole) -> Option<bool> {
+    match sqlx::query("DELETE FROM Alumni_roles WHERE role=? AND guild_id=?")
+        .bind(alumni_role.role.0)
+        .bind(alumni_role.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Alumni Roles saved for the Guild in the Database
+#[allow(dead_code)]
+pub async fn get_alumni_roles(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<DatabaseAlumniRole>> {
+    match sqlx::query_as::<_, DatabaseAlumniRole>("SELECT * FROM Alumni_roles WHERE guild_id=?")
+        .bind(guild_id.0)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(val) => Some(val),
         Err(err) => {
             error!(error = err.to_string(), "Problem executing query");
             None
