@@ -10,6 +10,8 @@ env:
 jobs:
   check-code:
     runs-on: ubuntu-latest
+    # It is not run if it is a pull_request synchronize event on the main repo
+    if: ${{ ! (github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.event.pull_request.head.repo.full_name == 'marcelropos/HM-DiscordBot')}}
     steps:
       - uses: actions/checkout@v4
 
