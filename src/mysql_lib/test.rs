@@ -3,22 +3,24 @@ mod tests {
     use std::ops::Add;
     use std::sync::Once;
     use std::time::Duration;
+    use serial_test::serial;
 
     use poise::serenity_prelude::{ChannelId, GuildId, RoleId};
-    use sqlx::{MySql, Pool};
     use sqlx::types::time::Time;
+    use sqlx::{MySql, Pool};
 
     use crate::mysql_lib::{
-        DatabaseAlumniRole, DatabaseGuild, delete_alumni_role, delete_guild, get_alumni_roles,
-        get_connection, get_guild, insert_alumni_role, insert_guild,
+        delete_alumni_role, delete_guild, delete_study_group, get_alumni_roles, get_connection,
+        get_guild, get_study_groups, insert_alumni_role, insert_guild, insert_study_group,
         is_guild_in_database, migrate_database, update_alumni_role,
-        update_alumni_role_separator_role, update_bot_channel, update_debug_channel, update_friend_role,
-        update_ghost_enabled, update_ghost_kick_deadline, update_ghost_time_to_check,
-        update_ghost_warning_deadline, update_help_channel, update_logger_pipe_channel,
-        update_moderator_role, update_newsletter_role, update_nsfw_role,
-        update_studenty_role, update_study_group_category,
-        update_study_role_separator_role, update_subject_group_category, update_subject_role_separator_role,
-        update_tmp_studenty_role, update_tmpc_keep_time,
+        update_alumni_role_separator_role, update_bot_channel, update_debug_channel,
+        update_friend_role, update_ghost_enabled, update_ghost_kick_deadline,
+        update_ghost_time_to_check, update_ghost_warning_deadline, update_help_channel,
+        update_logger_pipe_channel, update_moderator_role, update_newsletter_role,
+        update_nsfw_role, update_studenty_role, update_study_group_category,
+        update_study_role_separator_role, update_subject_group_category,
+        update_subject_role_separator_role, update_tmp_studenty_role, update_tmpc_keep_time,
+        DatabaseAlumniRole, DatabaseGuild, DatabaseStudyGroup,
     };
 
     static INIT: Once = Once::new();
@@ -38,7 +40,7 @@ mod tests {
 
     async fn create_guild_in_database(pool: &Pool<MySql>) -> DatabaseGuild {
         let guild = DatabaseGuild {
-            guild_id: GuildId(rand::random()),
+            guild_id: GuildId(1),
             ghost_warning_deadline: 2,
             ghost_kick_deadline: 3,
             ghost_time_to_check: Time::from_hms(8, 0, 0).unwrap(),
@@ -76,6 +78,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_guild_methods() {
         let pool = get_connection_pool().await;
         let mut guild = create_guild_in_database(&pool).await;
@@ -217,6 +220,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_alumni_role_methods() {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
@@ -245,6 +249,55 @@ mod tests {
             "Wanted Alumni Role is not part of the Vector"
         );
         let result = delete_alumni_role(&pool, alumni_role)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Alumni role couldn't get deleted");
+
+        // this also tests if a guild can be deleted while there is information linked with it as intended
+        delete_guild_test(&pool, guild.guild_id).await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_study_group_methods() {
+        let pool = get_connection_pool().await;
+        let guild = create_guild_in_database(&pool).await;
+        let study_group = DatabaseStudyGroup {
+            id: None,
+            guild_id: guild.guild_id,
+            name: "IF".to_string(),
+            color: 0xFF00AB,
+            active: true,
+        };
+        let result = insert_study_group(&pool, study_group)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Study group couldn't be inserted");
+        let mut study_group = DatabaseStudyGroup {
+            id: None,
+            guild_id: guild.guild_id,
+            name: "IB".to_string(),
+            color: 0xFF00AB,
+            active: true,
+        };
+        let result = insert_study_group(&pool, study_group.clone())
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Second Study group couldn't be inserted");
+        let result = get_study_groups(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 2, "Don't have 2 Study groups in Database");
+        study_group.id = result
+            .iter()
+            .find(|t| t.name == study_group.name)
+            .map(|t| t.id)
+            .unwrap_or(None);
+        assert!(
+            result.contains(&study_group),
+            "Wanted Study Group is not part of the Vector"
+        );
+        let result = delete_study_group(&pool, study_group)
             .await
             .expect("Query was not successful");
         assert!(result, "Alumni role couldn't get deleted");

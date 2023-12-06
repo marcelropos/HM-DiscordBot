@@ -1,10 +1,10 @@
 use std::env;
 
 use poise::serenity_prelude::{ChannelId, GuildId, MessageId, RoleId, UserId};
-use sqlx::{FromRow, migrate, MySql, Pool, Row};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::{PrimitiveDateTime, Time};
+use sqlx::{migrate, FromRow, MySql, Pool, Row};
 use tracing::error;
 
 mod test;
@@ -157,7 +157,7 @@ pub struct DatabaseAlumniRole {
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseStudyGroup {
-    id: u32,
+    id: Option<i32>,
     guild_id: GuildId,
     name: String,
     color: u32,
@@ -167,7 +167,7 @@ pub struct DatabaseStudyGroup {
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseSemesterStudyGroup {
     role: RoleId,
-    study_group_id: u32,
+    study_group_id: i32,
     semester: u32,
     text_channel: ChannelId,
 }
@@ -790,14 +790,15 @@ async fn update_guild_table_value(
 /// Inserts a new Alumni Role into the Database. Return if the Alumni Role was inserted into the
 /// Database, may be false if the Alumni Role was already in the Database.
 #[allow(dead_code)]
-pub async fn insert_alumni_role(pool: &Pool<MySql>, alumni_role: DatabaseAlumniRole) -> Option<bool> {
-    match sqlx::query(
-        "INSERT IGNORE INTO Alumni_roles (role, guild_id) VALUES (?, ?);",
-    )
-    .bind(alumni_role.role.0)
-    .bind(alumni_role.guild_id.0)
-    .execute(pool)
-    .await
+pub async fn insert_alumni_role(
+    pool: &Pool<MySql>,
+    alumni_role: DatabaseAlumniRole,
+) -> Option<bool> {
+    match sqlx::query("INSERT IGNORE INTO Alumni_roles (role, guild_id) VALUES (?, ?);")
+        .bind(alumni_role.role.0)
+        .bind(alumni_role.guild_id.0)
+        .execute(pool)
+        .await
     {
         Ok(val) => Some(val.rows_affected() != 0),
         Err(err) => {
@@ -809,7 +810,10 @@ pub async fn insert_alumni_role(pool: &Pool<MySql>, alumni_role: DatabaseAlumniR
 
 /// Deletes a Alumni Role saved in the Database, returns if the query deleted something
 #[allow(dead_code)]
-pub async fn delete_alumni_role(pool: &Pool<MySql>, alumni_role: DatabaseAlumniRole) -> Option<bool> {
+pub async fn delete_alumni_role(
+    pool: &Pool<MySql>,
+    alumni_role: DatabaseAlumniRole,
+) -> Option<bool> {
     match sqlx::query("DELETE FROM Alumni_roles WHERE role=? AND guild_id=?")
         .bind(alumni_role.role.0)
         .bind(alumni_role.guild_id.0)
@@ -826,8 +830,77 @@ pub async fn delete_alumni_role(pool: &Pool<MySql>, alumni_role: DatabaseAlumniR
 
 /// Gets the Alumni Roles saved for the Guild in the Database
 #[allow(dead_code)]
-pub async fn get_alumni_roles(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<DatabaseAlumniRole>> {
+pub async fn get_alumni_roles(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+) -> Option<Vec<DatabaseAlumniRole>> {
     match sqlx::query_as::<_, DatabaseAlumniRole>("SELECT * FROM Alumni_roles WHERE guild_id=?")
+        .bind(guild_id.0)
+        .fetch_all(pool)
+        .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Inserts a new Study Group into the Database. Return if the Study Group was inserted into the
+/// Database, may be false if the Study Group was already in the Database.
+///
+/// `DatabaseStudyGroup::id` is ignored
+#[allow(dead_code)]
+pub async fn insert_study_group(
+    pool: &Pool<MySql>,
+    study_group: DatabaseStudyGroup,
+) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Study_groups (guild_id, name, color, active) VALUES (?, ?, ?, ?);",
+    )
+    .bind(study_group.guild_id.0)
+    .bind(study_group.name)
+    .bind(study_group.color)
+    .bind(study_group.active)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Study Group saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_study_group(
+    pool: &Pool<MySql>,
+    study_group: DatabaseStudyGroup,
+) -> Option<bool> {
+    match sqlx::query("DELETE FROM Study_groups WHERE id=? AND guild_id=?")
+        .bind(study_group.id)
+        .bind(study_group.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Study Groups saved for the Guild in the Database
+#[allow(dead_code)]
+pub async fn get_study_groups(
+    pool: &Pool<MySql>,
+    guild_id: GuildId,
+) -> Option<Vec<DatabaseStudyGroup>> {
+    match sqlx::query_as::<_, DatabaseStudyGroup>("SELECT * FROM Study_groups WHERE guild_id=?")
         .bind(guild_id.0)
         .fetch_all(pool)
         .await
