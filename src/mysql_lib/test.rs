@@ -5,21 +5,22 @@ mod tests {
     use std::sync::Once;
     use std::time::Duration;
 
-    use poise::serenity_prelude::{ChannelId, GuildId, RoleId, UserId};
+    use poise::serenity_prelude::{ChannelId, GuildId, MessageId, RoleId, UserId};
     use sqlx::types::time::{Date, PrimitiveDateTime, Time};
     use sqlx::{MySql, Pool};
     use time::Month;
 
     use crate::mysql_lib::{
-        delete_alumni_role, delete_guild, delete_semester_study_group, delete_study_group,
-        delete_study_subject_link, delete_subject, delete_tmpc, delete_tmpc_join_channel,
-        get_alumni_roles, get_connection, get_guild, get_semester_study_groups_in_guild,
-        get_semester_study_groups_in_study_group, get_study_groups,
-        get_study_subject_links_for_study_group, get_study_subject_links_for_subject,
-        get_study_subject_links_in_guild, get_subjects, get_tmpc, get_tmpc_join_channel,
-        insert_alumni_role, insert_guild, insert_semester_study_group, insert_study_group,
-        insert_study_subject_link, insert_subject, insert_tmpc, insert_tmpc_join_channel,
-        is_guild_in_database, migrate_database, modify_tmpc_delete_at, update_alumni_role,
+        delete_all_token_messages, delete_alumni_role, delete_guild, delete_semester_study_group,
+        delete_study_group, delete_study_subject_link, delete_subject, delete_tmpc,
+        delete_tmpc_join_channel, delete_token_message, get_alumni_roles, get_connection,
+        get_guild, get_semester_study_groups_in_guild, get_semester_study_groups_in_study_group,
+        get_study_groups, get_study_subject_links_for_study_group,
+        get_study_subject_links_for_subject, get_study_subject_links_in_guild, get_subjects,
+        get_tmpc, get_tmpc_join_channel, get_token_messages, insert_alumni_role, insert_guild,
+        insert_semester_study_group, insert_study_group, insert_study_subject_link, insert_subject,
+        insert_tmpc, insert_tmpc_join_channel, insert_token_message, is_guild_in_database,
+        migrate_database, modify_tmpc_delete_at, update_alumni_role,
         update_alumni_role_separator_role, update_bot_channel, update_debug_channel,
         update_friend_role, update_ghost_enabled, update_ghost_kick_deadline,
         update_ghost_time_to_check, update_ghost_warning_deadline, update_help_channel,
@@ -29,6 +30,7 @@ mod tests {
         update_subject_role_separator_role, update_tmp_studenty_role, update_tmpc_keep_time,
         DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup,
         DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpc, DatabaseTmpcJoinChannel,
+        DatabaseTokenMessage,
     };
 
     static INIT: Once = Once::new();
@@ -540,7 +542,7 @@ mod tests {
             guild_id: guild.guild_id,
             persist: false,
         };
-        let result = insert_tmpc_join_channel(&pool, tmpc_join_channel.clone())
+        let result = insert_tmpc_join_channel(&pool, tmpc_join_channel)
             .await
             .expect("Query was not successful");
         assert!(result, "Tmpc Join Channel couldn't be inserted");
@@ -613,6 +615,40 @@ mod tests {
             result.contains(&tmpc),
             "Wanted Tmpc is not part of the Vector"
         );
+
+        let token_message = DatabaseTokenMessage {
+            tmpc_voice_channel: tmpc.voice_channel,
+            message: MessageId(4),
+        };
+        let result = insert_token_message(&pool, token_message)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Token Message couldn't be inserted");
+        let result = get_token_messages(&pool, tmpc.voice_channel)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 1, "Don't have 1 Token Message in Database");
+        assert!(
+            result.contains(&token_message),
+            "Wanted Token Message is not part of the Vector"
+        );
+        let result = delete_token_message(&pool, token_message)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Token Message couldn't get deleted");
+        let result = insert_token_message(&pool, token_message)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Token Message couldn't be inserted");
+        let result = delete_all_token_messages(&pool, tmpc.voice_channel)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Token Message couldn't get deleted");
+
+        let result = insert_token_message(&pool, token_message)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Token Message couldn't be inserted");
         let result = delete_tmpc(&pool, tmpc)
             .await
             .expect("Query was not successful");

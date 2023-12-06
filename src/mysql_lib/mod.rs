@@ -1269,8 +1269,8 @@ pub async fn get_tmpc_join_channel(
     }
 }
 
-/// Inserts a new Tmpc into the Database. Return if the Tmpc was inserted he Database, may be false
-/// if the Tmpc was already in the Database.
+/// Inserts a new Tmpc into the Database. Return if the Tmpc was inserted into the Database, may be
+/// false if the Tmpc was already in the Database.
 ///
 /// `DatabaseTmpc::delete_at` is ignored
 #[allow(dead_code)]
@@ -1346,6 +1346,90 @@ pub async fn get_tmpc(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<Datab
         .bind(guild_id.0)
         .fetch_all(pool)
         .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Inserts a new Token Message into the Database. Return if the Token Message was inserted into the
+/// Database, may be false if the Token Message was already in the Database.
+#[allow(dead_code)]
+pub async fn insert_token_message(
+    pool: &Pool<MySql>,
+    token_message: DatabaseTokenMessage,
+) -> Option<bool> {
+    match sqlx::query(
+        "INSERT IGNORE INTO Token_message (tmpc_voice_channel, message) VALUES (?, ?);",
+    )
+    .bind(token_message.tmpc_voice_channel.0)
+    .bind(token_message.message.0)
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes a Token Message saved in the Database, returns if the query deleted something
+#[allow(dead_code)]
+pub async fn delete_token_message(
+    pool: &Pool<MySql>,
+    token_message: DatabaseTokenMessage,
+) -> Option<bool> {
+    match sqlx::query("DELETE FROM Token_message WHERE tmpc_voice_channel=? AND message=?")
+        .bind(token_message.tmpc_voice_channel.0)
+        .bind(token_message.message.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Deletes all Token Message saved in the Database for the tmpc channel, returns if the query
+/// deleted something
+#[allow(dead_code)]
+pub async fn delete_all_token_messages(
+    pool: &Pool<MySql>,
+    tmpc_voice_channel: ChannelId,
+) -> Option<bool> {
+    match sqlx::query("DELETE FROM Token_message WHERE tmpc_voice_channel=?")
+        .bind(tmpc_voice_channel.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() > 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Gets the Token Message saved for tmpc voice channel in the Database
+#[allow(dead_code)]
+pub async fn get_token_messages(
+    pool: &Pool<MySql>,
+    tmpc_voice_channel: ChannelId,
+) -> Option<Vec<DatabaseTokenMessage>> {
+    match sqlx::query_as::<_, DatabaseTokenMessage>(
+        "SELECT * FROM Token_message WHERE tmpc_voice_channel=?",
+    )
+    .bind(tmpc_voice_channel.0)
+    .fetch_all(pool)
+    .await
     {
         Ok(val) => Some(val),
         Err(err) => {
