@@ -1,9 +1,5 @@
 use crate::bot::Context;
-use crate::mysql_lib::{
-    delete_alumni_role, delete_semester_study_group, delete_study_subject_link,
-    delete_subject, update_tmp_studenty_role, DatabaseAlumniRole, DatabaseGuild,
-    DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseStudySubjectLink, DatabaseSubject,
-};
+use crate::mysql_lib::{delete_alumni_role, delete_semester_study_group, delete_study_subject_link, delete_subject, update_tmp_studenty_role, DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpcJoinChannel, delete_tmpc_join_channel};
 use poise::serenity_prelude::{GuildId, Http};
 use sqlx::{MySql, Pool};
 use tracing::error;
@@ -224,7 +220,7 @@ pub async fn validate_study_group(
 
 /// If the semester study group is not found, it will be deleted from the database
 #[allow(dead_code)]
-pub async fn validate_semester_study_group_with_roles<'a>(
+pub async fn validate_semester_study_group<'a>(
     ctx: Context<'_>,
     pool: &Pool<MySql>,
     database_semester_study_group: &'a DatabaseSemesterStudyGroup,
@@ -383,4 +379,50 @@ pub async fn validate_study_subject_link<'a>(
     };
 
     Ok(database_study_subject_link)
+}
+
+/// If the guild isn't known, nothing will be deleted from the database
+///
+/// If the tmpc join channel is not found, it will be deleted from the database
+#[allow(dead_code)]
+pub async fn validate_tmpc_join_channel<'a>(
+    ctx: Context<'_>,
+    pool: &Pool<MySql>,
+    database_tmpc_join_channel: &'a DatabaseTmpcJoinChannel,
+) -> Result<&'a DatabaseTmpcJoinChannel, String> {
+    if ctx
+        .http()
+        .get_guild(database_tmpc_join_channel.guild_id.0)
+        .await
+        .is_err()
+    {
+        return Err(format!(
+            "Bot doesn't know guild: {}",
+            database_tmpc_join_channel.guild_id.0
+        ));
+    }
+
+    if ctx
+        .http()
+        .get_channel(database_tmpc_join_channel.voice_channel.0)
+        .await
+        .is_err()
+    {
+        match delete_tmpc_join_channel(pool, *database_tmpc_join_channel).await {
+            None => {
+                return Err("Couldn't remove tmpc join channel, query problem.".to_string());
+            }
+            Some(changed) => {
+                if !changed {
+                    error!("Tmpc join channel was not removed.")
+                }
+            }
+        }
+        return Err(format!(
+            "Bot doesn't know text channel of tmpc join channel: {}",
+            database_tmpc_join_channel.voice_channel.0
+        ));
+    }
+
+    Ok(database_tmpc_join_channel)
 }
