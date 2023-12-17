@@ -1,9 +1,9 @@
 use crate::bot::Context;
 use crate::mysql_lib::{
-    delete_alumni_role, update_tmp_studenty_role, DatabaseAlumniRole, DatabaseGuild,
-    DatabaseStudyGroup,
+    delete_alumni_role, delete_semester_study_group, update_tmp_studenty_role, DatabaseAlumniRole,
+    DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup,
 };
-use poise::serenity_prelude::Http;
+use poise::serenity_prelude::{GuildId, Http};
 use sqlx::{MySql, Pool};
 use tracing::error;
 
@@ -219,4 +219,63 @@ pub async fn validate_study_group(
     }
 
     Ok(database_study_group)
+}
+
+/// If the semester study group is not found, it will be deleted from the database
+#[allow(dead_code)]
+pub async fn validate_semester_study_group_with_roles<'a>(
+    ctx: Context<'_>,
+    pool: &Pool<MySql>,
+    database_semester_study_group: &'a mut DatabaseSemesterStudyGroup,
+    guild_id: GuildId,
+) -> Result<&'a mut DatabaseSemesterStudyGroup, String> {
+    match guild_id.roles(ctx.http()).await {
+        Err(_) => {
+            return Err(format!("Bot doesn't know guild: {}", guild_id.0));
+        }
+        Ok(roles) => {
+            if !roles.contains_key(&database_semester_study_group.role) {
+                match delete_semester_study_group(pool, *database_semester_study_group).await {
+                    None => {
+                        return Err(
+                            "Couldn't remove semester study group, query problem.".to_string()
+                        );
+                    }
+                    Some(changed) => {
+                        if !changed {
+                            error!("Semester study group was not removed.")
+                        }
+                    }
+                }
+                return Err(format!(
+                    "Bot doesn't know semester study group: {}",
+                    database_semester_study_group.role.0
+                ));
+            }
+        }
+    };
+
+    if ctx
+        .http()
+        .get_channel(database_semester_study_group.text_channel.0)
+        .await
+        .is_err()
+    {
+        match delete_semester_study_group(pool, *database_semester_study_group).await {
+            None => {
+                return Err("Couldn't remove semester study group, query problem.".to_string());
+            }
+            Some(changed) => {
+                if !changed {
+                    error!("Semester study group was not removed.")
+                }
+            }
+        }
+        return Err(format!(
+            "Bot doesn't know text channel of semester study group: {}",
+            database_semester_study_group.text_channel.0
+        ));
+    }
+
+    Ok(database_semester_study_group)
 }
