@@ -8,6 +8,7 @@ use sqlx::types::time::{PrimitiveDateTime, Time};
 use tracing::error;
 
 mod test;
+pub mod validate;
 
 /// Tries to establish a Connection with the given env variables and return the MySQL connection
 /// Pool if successful.
