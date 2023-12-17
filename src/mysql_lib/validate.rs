@@ -1,5 +1,10 @@
 use crate::bot::Context;
-use crate::mysql_lib::{delete_alumni_role, delete_semester_study_group, delete_study_subject_link, delete_subject, update_tmp_studenty_role, DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpcJoinChannel, delete_tmpc_join_channel};
+use crate::mysql_lib::{
+    delete_alumni_role, delete_semester_study_group, delete_study_subject_link, delete_subject,
+    delete_tmpc, delete_tmpc_join_channel, update_tmp_studenty_role, DatabaseAlumniRole,
+    DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseStudySubjectLink,
+    DatabaseSubject, DatabaseTmpc, DatabaseTmpcJoinChannel,
+};
 use poise::serenity_prelude::{GuildId, Http};
 use sqlx::{MySql, Pool};
 use tracing::error;
@@ -419,10 +424,63 @@ pub async fn validate_tmpc_join_channel<'a>(
             }
         }
         return Err(format!(
-            "Bot doesn't know text channel of tmpc join channel: {}",
+            "Bot doesn't know voice channel of tmpc join channel: {}",
             database_tmpc_join_channel.voice_channel.0
         ));
     }
 
     Ok(database_tmpc_join_channel)
+}
+
+/// If the guild isn't known, nothing will be deleted from the database
+///
+/// If the tmpc is not found, it will be deleted from the database
+///
+/// If the owner is not checked
+#[allow(dead_code)]
+pub async fn validate_tmpc<'a>(
+    ctx: Context<'_>,
+    pool: &Pool<MySql>,
+    database_tmpc: &'a DatabaseTmpc,
+) -> Result<&'a DatabaseTmpc, String> {
+    if ctx
+        .http()
+        .get_guild(database_tmpc.guild_id.0)
+        .await
+        .is_err()
+    {
+        return Err(format!(
+            "Bot doesn't know guild: {}",
+            database_tmpc.guild_id.0
+        ));
+    }
+
+    if ctx
+        .http()
+        .get_channel(database_tmpc.voice_channel.0)
+        .await
+        .is_err()
+        || ctx
+            .http()
+            .get_channel(database_tmpc.text_channel.0)
+            .await
+            .is_err()
+    {
+        match delete_tmpc(pool, *database_tmpc).await {
+            None => {
+                return Err("Couldn't remove tmpc, query problem.".to_string());
+            }
+            Some(changed) => {
+                if !changed {
+                    error!("Tmpc was not removed.")
+                }
+            }
+        }
+        return Err(format!(
+            "Bot doesn't know tmpc: {} {}",
+            database_tmpc.voice_channel.0, database_tmpc.text_channel.0
+        ));
+    }
+
+    Ok(database_tmpc)
 }
