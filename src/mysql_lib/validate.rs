@@ -1,9 +1,10 @@
 use crate::bot::Context;
 use crate::mysql_lib::{
     delete_alumni_role, delete_semester_study_group, delete_study_subject_link, delete_subject,
-    delete_tmpc, delete_tmpc_join_channel, update_tmp_studenty_role, DatabaseAlumniRole,
-    DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseStudySubjectLink,
-    DatabaseSubject, DatabaseTmpc, DatabaseTmpcJoinChannel,
+    delete_tmpc, delete_tmpc_join_channel, delete_token_message, update_tmp_studenty_role,
+    DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup,
+    DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpc, DatabaseTmpcJoinChannel,
+    DatabaseTokenMessage,
 };
 use poise::serenity_prelude::{GuildId, Http};
 use sqlx::{MySql, Pool};
@@ -483,4 +484,46 @@ pub async fn validate_tmpc<'a>(
     }
 
     Ok(database_tmpc)
+}
+
+/// If the message is not found, it will be deleted from the database
+///
+/// The tmpc voice channel is not checked
+#[allow(dead_code)]
+pub async fn validate_token_message<'a>(
+    ctx: Context<'_>,
+    pool: &Pool<MySql>,
+    database_token_message: &'a DatabaseTokenMessage,
+) -> Result<&'a DatabaseTokenMessage, String> {
+    if ctx
+        .http()
+        .get_channel(database_token_message.message_channel.0)
+        .await
+        .is_err()
+        || ctx
+            .http()
+            .get_message(
+                database_token_message.message_channel.0,
+                database_token_message.message.0,
+            )
+            .await
+            .is_err()
+    {
+        match delete_token_message(pool, *database_token_message).await {
+            None => {
+                return Err("Couldn't remove token message, query problem.".to_string());
+            }
+            Some(changed) => {
+                if !changed {
+                    error!("Token message was not removed.")
+                }
+            }
+        }
+        return Err(format!(
+            "Bot doesn't know token message: {} {}",
+            database_token_message.message_channel.0, database_token_message.message.0
+        ));
+    }
+
+    Ok(database_token_message)
 }

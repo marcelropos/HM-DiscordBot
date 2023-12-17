@@ -640,6 +640,7 @@ mod tests {
         let token_message = DatabaseTokenMessage {
             tmpc_voice_channel: tmpc.voice_channel,
             message: MessageId(4),
+            message_channel: ChannelId(1),
         };
         let result = insert_token_message(&pool, token_message)
             .await

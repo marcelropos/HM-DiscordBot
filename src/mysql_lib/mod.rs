@@ -1,10 +1,10 @@
 use std::env;
 
 use poise::serenity_prelude::{ChannelId, GuildId, MessageId, RoleId, UserId};
-use sqlx::{FromRow, migrate, MySql, Pool, Row};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::{PrimitiveDateTime, Time};
+use sqlx::{migrate, FromRow, MySql, Pool, Row};
 use tracing::error;
 
 mod test;
@@ -210,6 +210,7 @@ pub struct DatabaseTmpc {
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseTokenMessage {
     tmpc_voice_channel: ChannelId,
+    message_channel: ChannelId,
     message: MessageId,
 }
 
@@ -329,6 +330,7 @@ impl FromRow<'_, MySqlRow> for DatabaseTokenMessage {
         Ok(Self {
             tmpc_voice_channel: ChannelId(row.try_get("tmpc_voice_channel")?),
             message: MessageId(row.try_get("message")?),
+            message_channel: ChannelId(row.try_get("message_channel")?),
         })
     }
 }
@@ -1453,10 +1455,11 @@ pub async fn insert_token_message(
     token_message: DatabaseTokenMessage,
 ) -> Option<bool> {
     match sqlx::query(
-        "INSERT IGNORE INTO Token_message (tmpc_voice_channel, message) VALUES (?, ?);",
+        "INSERT IGNORE INTO Token_message (tmpc_voice_channel, message, message_channel) VALUES (?, ?, ?);",
     )
     .bind(token_message.tmpc_voice_channel.0)
     .bind(token_message.message.0)
+    .bind(token_message.message_channel.0)
     .execute(pool)
     .await
     {
@@ -1474,11 +1477,14 @@ pub async fn delete_token_message(
     pool: &Pool<MySql>,
     token_message: DatabaseTokenMessage,
 ) -> Option<bool> {
-    match sqlx::query("DELETE FROM Token_message WHERE tmpc_voice_channel=? AND message=?")
-        .bind(token_message.tmpc_voice_channel.0)
-        .bind(token_message.message.0)
-        .execute(pool)
-        .await
+    match sqlx::query(
+        "DELETE FROM Token_message WHERE tmpc_voice_channel=? AND message=? AND message_channel=?",
+    )
+    .bind(token_message.tmpc_voice_channel.0)
+    .bind(token_message.message.0)
+    .bind(token_message.message_channel.0)
+    .execute(pool)
+    .await
     {
         Ok(val) => Some(val.rows_affected() != 0),
         Err(err) => {
