@@ -1,5 +1,9 @@
 use crate::bot::Context;
-use crate::mysql_lib::{update_tmp_studenty_role, DatabaseGuild};
+use crate::mysql_lib::{
+    delete_alumni_role, update_tmp_studenty_role, DatabaseAlumniRole, DatabaseGuild,
+    DatabaseStudyGroup,
+};
+use poise::serenity_prelude::Http;
 use sqlx::{MySql, Pool};
 use tracing::error;
 
@@ -158,4 +162,41 @@ pub async fn validate_guild<'a>(
     }
 
     Ok(database_guild)
+}
+
+/// If the alumni role is not found, it will be deleted from the database
+#[allow(dead_code)]
+pub async fn validate_alumni<'a>(
+    http: Http,
+    pool: &Pool<MySql>,
+    database_alumni_role: &'a mut DatabaseAlumniRole,
+) -> Result<&'a mut DatabaseAlumniRole, String> {
+    match database_alumni_role.guild_id.roles(http).await {
+        Err(_) => {
+            return Err(format!(
+                "Bot doesn't know guild: {}",
+                database_alumni_role.guild_id.0
+            ));
+        }
+        Ok(roles) => {
+            if !roles.contains_key(&database_alumni_role.role) {
+                match delete_alumni_role(pool, *database_alumni_role).await {
+                    None => {
+                        return Err("Couldn't remove alumni role, query problem.".to_string());
+                    }
+                    Some(changed) => {
+                        if !changed {
+                            error!("alumni role was not removed.")
+                        }
+                    }
+                }
+                return Err(format!(
+                    "Bot doesn't know alumni role: {}",
+                    database_alumni_role.role.0
+                ));
+            }
+        }
+    }
+
+    Ok(database_alumni_role)
 }
