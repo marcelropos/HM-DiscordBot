@@ -1,7 +1,8 @@
 use crate::bot::Context;
 use crate::mysql_lib::{
-    delete_alumni_role, delete_semester_study_group, update_tmp_studenty_role, DatabaseAlumniRole,
-    DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup,
+    delete_alumni_role, delete_semester_study_group, delete_study_subject_link,
+    delete_subject, update_tmp_studenty_role, DatabaseAlumniRole, DatabaseGuild,
+    DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseStudySubjectLink, DatabaseSubject,
 };
 use poise::serenity_prelude::{GuildId, Http};
 use sqlx::{MySql, Pool};
@@ -169,8 +170,8 @@ pub async fn validate_guild<'a>(
 pub async fn validate_alumni<'a>(
     http: Http,
     pool: &Pool<MySql>,
-    database_alumni_role: &'a mut DatabaseAlumniRole,
-) -> Result<&'a mut DatabaseAlumniRole, String> {
+    database_alumni_role: &'a DatabaseAlumniRole,
+) -> Result<&'a DatabaseAlumniRole, String> {
     match database_alumni_role.guild_id.roles(http).await {
         Err(_) => {
             return Err(format!(
@@ -205,8 +206,8 @@ pub async fn validate_alumni<'a>(
 #[allow(dead_code)]
 pub async fn validate_study_group(
     http: Http,
-    database_study_group: &mut DatabaseStudyGroup,
-) -> Result<&mut DatabaseStudyGroup, String> {
+    database_study_group: &DatabaseStudyGroup,
+) -> Result<&DatabaseStudyGroup, String> {
     if http
         .get_guild(database_study_group.guild_id.0)
         .await
@@ -226,9 +227,9 @@ pub async fn validate_study_group(
 pub async fn validate_semester_study_group_with_roles<'a>(
     ctx: Context<'_>,
     pool: &Pool<MySql>,
-    database_semester_study_group: &'a mut DatabaseSemesterStudyGroup,
+    database_semester_study_group: &'a DatabaseSemesterStudyGroup,
     guild_id: GuildId,
-) -> Result<&'a mut DatabaseSemesterStudyGroup, String> {
+) -> Result<&'a DatabaseSemesterStudyGroup, String> {
     match guild_id.roles(ctx.http()).await {
         Err(_) => {
             return Err(format!("Bot doesn't know guild: {}", guild_id.0));
@@ -278,4 +279,108 @@ pub async fn validate_semester_study_group_with_roles<'a>(
     }
 
     Ok(database_semester_study_group)
+}
+
+/// If the guild saved is not found, nothing will be deleted but an error will be returned.
+///
+/// If anything else is not found, it will be deleted from the database
+#[allow(dead_code)]
+pub async fn validate_subject<'a>(
+    ctx: Context<'_>,
+    pool: &Pool<MySql>,
+    database_subject: &'a DatabaseSubject,
+) -> Result<&'a DatabaseSubject, String> {
+    match database_subject.guild_id.roles(ctx.http()).await {
+        Err(_) => {
+            return Err(format!(
+                "Bot doesn't know guild: {}",
+                database_subject.guild_id.0
+            ));
+        }
+        Ok(roles) => {
+            if !roles.contains_key(&database_subject.role) {
+                match delete_subject(pool, database_subject.clone()).await {
+                    None => {
+                        return Err("Couldn't remove subject, query problem.".to_string());
+                    }
+                    Some(changed) => {
+                        if !changed {
+                            error!("Subject was not removed.")
+                        }
+                    }
+                }
+                return Err(format!(
+                    "Bot doesn't know role of subject: {}",
+                    database_subject.role.0
+                ));
+            }
+        }
+    };
+
+    if ctx
+        .http()
+        .get_channel(database_subject.text_channel.0)
+        .await
+        .is_err()
+    {
+        match delete_subject(pool, database_subject.clone()).await {
+            None => {
+                return Err("Couldn't remove subject, query problem.".to_string());
+            }
+            Some(changed) => {
+                if !changed {
+                    error!("Subject was not removed.")
+                }
+            }
+        }
+        return Err(format!(
+            "Bot doesn't know text channel of subject: {}",
+            database_subject.text_channel.0
+        ));
+    }
+
+    Ok(database_subject)
+}
+
+/// If the guild saved is not found, nothing will be deleted but an error will be returned.
+///
+/// If anything else is not found, it will be deleted from the database
+#[allow(dead_code)]
+pub async fn validate_study_subject_link<'a>(
+    ctx: Context<'_>,
+    pool: &Pool<MySql>,
+    database_study_subject_link: &'a DatabaseStudySubjectLink,
+) -> Result<&'a DatabaseStudySubjectLink, String> {
+    match database_study_subject_link.guild_id.roles(ctx.http()).await {
+        Err(_) => {
+            return Err(format!(
+                "Bot doesn't know guild: {}",
+                database_study_subject_link.guild_id.0
+            ));
+        }
+        Ok(roles) => {
+            if !roles.contains_key(&database_study_subject_link.study_group_role)
+                || !roles.contains_key(&database_study_subject_link.subject_role)
+            {
+                match delete_study_subject_link(pool, *database_study_subject_link).await {
+                    None => {
+                        return Err(
+                            "Couldn't remove study-subject link, query problem.".to_string()
+                        );
+                    }
+                    Some(changed) => {
+                        if !changed {
+                            error!("Study-subject link was not removed.")
+                        }
+                    }
+                }
+                return Err(format!(
+                    "Bot doesn't know study_group_role or subject role of study-subject link: {}",
+                    database_study_subject_link.study_group_role.0
+                ));
+            }
+        }
+    };
+
+    Ok(database_study_subject_link)
 }
