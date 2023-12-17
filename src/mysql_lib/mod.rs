@@ -1,10 +1,10 @@
 use std::env;
 
 use poise::serenity_prelude::{ChannelId, GuildId, MessageId, RoleId, UserId};
+use sqlx::{FromRow, migrate, MySql, Pool, Row};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::{PrimitiveDateTime, Time};
-use sqlx::{migrate, FromRow, MySql, Pool, Row};
 use tracing::error;
 
 mod test;
@@ -917,6 +917,36 @@ pub async fn get_study_groups(
     }
 }
 
+/// Updates the name, color and active values of the study group, returns if the value was changed
+///
+/// IMPORTANT: The changed values only change in the database, existing roles and chats need to be updated outside this
+/// function if wanted
+#[allow(dead_code)]
+pub async fn update_study_group(
+    pool: &Pool<MySql>,
+    study_group: DatabaseStudyGroup,
+) -> Option<bool> {
+    if study_group.id.is_none() {
+        error!("Can't update Study group without id");
+        return None;
+    }
+    match sqlx::query("UPDATE Study_groups SET name=?, color=?, active=? WHERE id=? AND guild_id=?")
+        .bind(study_group.name)
+        .bind(study_group.color)
+        .bind(study_group.active)
+        .bind(study_group.id)
+        .bind(study_group.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
 /// Inserts a new Semester Study Group into the Database. Return if the Semester Study Group was
 /// inserted into the Database, may be false if the Semester Study Group was already in the Database.
 #[allow(dead_code)]
@@ -1269,6 +1299,29 @@ pub async fn get_tmpc_join_channel(
     }
 }
 
+/// Updates the persist value of the tmpc join channel, returns if the value was changed
+///
+/// IMPORTANT: The changed values don't change existing tmpc
+#[allow(dead_code)]
+pub async fn update_tmpc_join_channel_persist(
+    pool: &Pool<MySql>,
+    tmpc_join_channel: DatabaseTmpcJoinChannel,
+) -> Option<bool> {
+    match sqlx::query("UPDATE Tmpc_join_channel SET persist=? WHERE voice_channel=? AND guild_id=?")
+        .bind(tmpc_join_channel.persist)
+        .bind(tmpc_join_channel.voice_channel.0)
+        .bind(tmpc_join_channel.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
 /// Inserts a new Tmpc into the Database. Return if the Tmpc was inserted into the Database, may be
 /// false if the Tmpc was already in the Database.
 ///
@@ -1306,9 +1359,45 @@ VALUES (?, ?, ?, ?, ?, ?, ?);",
 
 /// Modifies the deleteAt time of a Tmpc, returns if the value was changed
 #[allow(dead_code)]
-pub async fn modify_tmpc_delete_at(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
+pub async fn update_tmpc_delete_at(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
     match sqlx::query("UPDATE Tmpc SET deleteAt=? WHERE voice_channel=? AND guild_id=?")
         .bind(tmpc.delete_at)
+        .bind(tmpc.voice_channel.0)
+        .bind(tmpc.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Updates the token value of a tmpc, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_tmpc_token(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
+    match sqlx::query("UPDATE Tmpc SET token=? WHERE voice_channel=? AND guild_id=?")
+        .bind(tmpc.token)
+        .bind(tmpc.voice_channel.0)
+        .bind(tmpc.guild_id.0)
+        .execute(pool)
+        .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Updates the keep value of a tmpc, returns if the value was changed
+#[allow(dead_code)]
+pub async fn update_tmpc_keep(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
+    match sqlx::query("UPDATE Tmpc SET keep=? WHERE voice_channel=? AND guild_id=?")
+        .bind(tmpc.keep)
         .bind(tmpc.voice_channel.0)
         .bind(tmpc.guild_id.0)
         .execute(pool)

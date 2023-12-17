@@ -1,37 +1,16 @@
 #[cfg(test)]
 mod tests {
-    use serial_test::serial;
     use std::ops::Add;
     use std::sync::Once;
     use std::time::Duration;
 
     use poise::serenity_prelude::{ChannelId, GuildId, MessageId, RoleId, UserId};
-    use sqlx::types::time::{Date, PrimitiveDateTime, Time};
+    use serial_test::serial;
     use sqlx::{MySql, Pool};
+    use sqlx::types::time::{Date, PrimitiveDateTime, Time};
     use time::Month;
 
-    use crate::mysql_lib::{
-        delete_all_token_messages, delete_alumni_role, delete_guild, delete_semester_study_group,
-        delete_study_group, delete_study_subject_link, delete_subject, delete_tmpc,
-        delete_tmpc_join_channel, delete_token_message, get_alumni_roles, get_connection,
-        get_guild, get_semester_study_groups_in_guild, get_semester_study_groups_in_study_group,
-        get_study_groups, get_study_subject_links_for_study_group,
-        get_study_subject_links_for_subject, get_study_subject_links_in_guild, get_subjects,
-        get_tmpc, get_tmpc_join_channel, get_token_messages, insert_alumni_role, insert_guild,
-        insert_semester_study_group, insert_study_group, insert_study_subject_link, insert_subject,
-        insert_tmpc, insert_tmpc_join_channel, insert_token_message, is_guild_in_database,
-        migrate_database, modify_tmpc_delete_at, update_alumni_role,
-        update_alumni_role_separator_role, update_bot_channel, update_debug_channel,
-        update_friend_role, update_ghost_enabled, update_ghost_kick_deadline,
-        update_ghost_time_to_check, update_ghost_warning_deadline, update_help_channel,
-        update_logger_pipe_channel, update_moderator_role, update_newsletter_role,
-        update_nsfw_role, update_studenty_role, update_study_group_category,
-        update_study_role_separator_role, update_subject_group_category,
-        update_subject_role_separator_role, update_tmp_studenty_role, update_tmpc_keep_time,
-        DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup,
-        DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpc, DatabaseTmpcJoinChannel,
-        DatabaseTokenMessage,
-    };
+    use crate::mysql_lib::{DatabaseAlumniRole, DatabaseGuild, DatabaseSemesterStudyGroup, DatabaseStudyGroup, DatabaseStudySubjectLink, DatabaseSubject, DatabaseTmpc, DatabaseTmpcJoinChannel, DatabaseTokenMessage, delete_all_token_messages, delete_alumni_role, delete_guild, delete_semester_study_group, delete_study_group, delete_study_subject_link, delete_subject, delete_tmpc, delete_tmpc_join_channel, delete_token_message, get_alumni_roles, get_connection, get_guild, get_semester_study_groups_in_guild, get_semester_study_groups_in_study_group, get_study_groups, get_study_subject_links_for_study_group, get_study_subject_links_for_subject, get_study_subject_links_in_guild, get_subjects, get_tmpc, get_tmpc_join_channel, get_token_messages, insert_alumni_role, insert_guild, insert_semester_study_group, insert_study_group, insert_study_subject_link, insert_subject, insert_tmpc, insert_tmpc_join_channel, insert_token_message, is_guild_in_database, migrate_database, update_tmpc_delete_at, update_alumni_role, update_alumni_role_separator_role, update_bot_channel, update_debug_channel, update_friend_role, update_ghost_enabled, update_ghost_kick_deadline, update_ghost_time_to_check, update_ghost_warning_deadline, update_help_channel, update_logger_pipe_channel, update_moderator_role, update_newsletter_role, update_nsfw_role, update_studenty_role, update_study_group, update_study_group_category, update_study_role_separator_role, update_subject_group_category, update_subject_role_separator_role, update_tmp_studenty_role, update_tmpc_keep_time, update_tmpc_join_channel_persist, update_tmpc_token, update_tmpc_keep};
 
     static INIT: Once = Once::new();
 
@@ -316,6 +295,21 @@ mod tests {
             result.contains(&study_group2),
             "Wanted Study Group is not part of the Vector"
         );
+        study_group.name = "DC".to_string();
+        study_group.color = 0x00F00;
+        study_group.active = !study_group.active;
+        let result = update_study_group(&pool, study_group.clone())
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Study group couldn't be updated");
+        let result = get_study_groups(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(result.len(), 2, "Don't have 2 Study groups in Database");
+        assert!(
+            result.contains(&study_group),
+            "Wanted Study Group is not part of the Vector"
+        );
 
         // Semester Study Group
 
@@ -537,7 +531,7 @@ mod tests {
     async fn test_tmpc_join_channel_methods() {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
-        let tmpc_join_channel = DatabaseTmpcJoinChannel {
+        let mut tmpc_join_channel = DatabaseTmpcJoinChannel {
             voice_channel: ChannelId(2),
             guild_id: guild.guild_id,
             persist: false,
@@ -546,6 +540,23 @@ mod tests {
             .await
             .expect("Query was not successful");
         assert!(result, "Tmpc Join Channel couldn't be inserted");
+        let result = get_tmpc_join_channel(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(
+            result.len(),
+            1,
+            "Don't have 1 Tmpc Join Channel in Database"
+        );
+        assert!(
+            result.contains(&tmpc_join_channel),
+            "Wanted Tmpc Join Channel is not part of the Vector"
+        );
+        tmpc_join_channel.persist = !tmpc_join_channel.persist;
+        let result = update_tmpc_join_channel_persist(&pool, tmpc_join_channel)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Tmpc Join Channel couldn't be updated");
         let result = get_tmpc_join_channel(&pool, guild.guild_id)
             .await
             .expect("Query was not successful");
@@ -603,10 +614,20 @@ mod tests {
             Date::from_calendar_date(2023, Month::December, 1).unwrap(),
             Time::from_hms(12, 0, 0).unwrap(),
         ));
-        let result = modify_tmpc_delete_at(&pool, tmpc)
+        tmpc.token = 42;
+        tmpc.keep = !tmpc.keep;
+        let result = update_tmpc_delete_at(&pool, tmpc)
             .await
             .expect("Query was not successful");
         assert!(result, "deleteAt couldn't be modified");
+        let result = update_tmpc_token(&pool, tmpc)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "token couldn't be modified");
+        let result = update_tmpc_keep(&pool, tmpc)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "keep value couldn't be modified");
         let result = get_tmpc(&pool, guild.guild_id)
             .await
             .expect("Query was not successful");
