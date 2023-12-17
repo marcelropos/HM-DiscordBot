@@ -200,3 +200,23 @@ pub async fn validate_alumni<'a>(
 
     Ok(database_alumni_role)
 }
+
+/// If the guild saved is not found, nothing will be deleted but an error will be returned
+#[allow(dead_code)]
+pub async fn validate_study_group(
+    http: Http,
+    database_study_group: &mut DatabaseStudyGroup,
+) -> Result<&mut DatabaseStudyGroup, String> {
+    if http
+        .get_guild(database_study_group.guild_id.0)
+        .await
+        .is_err()
+    {
+        return Err(format!(
+            "Bot doesn't know guild: {}",
+            database_study_group.guild_id.0
+        ));
+    }
+
+    Ok(database_study_group)
+}
