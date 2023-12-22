@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::sync::OnceLock;
 
 use poise::serenity_prelude::ChannelId;
-use poise::serenity_prelude::GuildId;
+use poise::serenity_prelude::futures::executor::block_on;
 use rolling_file::RollingConditionBasic;
 use tracing::error;
 use tracing::info;
@@ -44,7 +44,8 @@ pub async fn setup_logging() -> WorkerGuard {
         .expect("Could not create rolling file appender"),
     );
 
-    let discord_layer = DiscordTracingLayer::new(GuildId(0), ChannelId(0));
+    // TODO: Get the guild and channel id's from a proper source
+    let discord_layer = DiscordTracingLayer::new(0, 0);
 
     let (discord_layer_reloadable, log_reload_handle) = reload::Layer::new(discord_layer);
 
@@ -75,13 +76,13 @@ pub fn install_framework(framework: Arc<bot::Framework>) {
 
 #[allow(dead_code)]
 struct DiscordTracingLayer {
-    main_log_guild: GuildId,
-    main_log_channel: ChannelId,
+    main_log_guild: u64,
+    main_log_channel: u64,
     poise_framework: Option<Arc<bot::Framework>>,
 }
 
 impl DiscordTracingLayer {
-    pub fn new(main_log_guild: GuildId, main_log_channel: ChannelId) -> DiscordTracingLayer {
+    pub fn new(main_log_guild: u64, main_log_channel: u64) -> DiscordTracingLayer {
         DiscordTracingLayer {
             main_log_guild,
             main_log_channel,
@@ -101,12 +102,44 @@ where
 {
     fn on_event(
         &self,
-        _event: &tracing::Event<'_>,
+        event: &tracing::Event<'_>,
         _ctx: tracing_subscriber::layer::Context<'_, S>,
     ) {
+        let poise_framework = if let Some(poise_framework) = &self.poise_framework {
+            poise_framework
+        } else {
+            return;
+        };
 
-        // if event.fields().any(|field| field.name() == "guild_id") {
+        let event_level = event.metadata().level();
+        let event_message = event.fields().find_map(|field| {
+            if field.name() != "message" {
+                return None;
+            }
+            Some(field.to_string())
+        }).unwrap_or("No message".to_string());
 
-        // }
+        let event_guild_id = event.fields().find_map(|field| {
+            if field.name() == "guild_id" {
+                return Some(field.to_string());
+            }
+            None
+        });
+
+
+        let http = &poise_framework.client().cache_and_http.http;
+
+        let channel_id = ChannelId(self.main_log_channel);
+
+        let _ = block_on(
+            channel_id.send_message(http, |m| {
+                m.content(format!("{event_level} {event_message}"))
+            })
+        );
+
+        if let Some(_guild_id) = event_guild_id {
+            // TODO: Send message to a specific guild's log channel
+        }
     }
+
 }
