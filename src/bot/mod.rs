@@ -1,3 +1,4 @@
+use std::sync::{Arc, OnceLock};
 use std::env;
 use std::time::Duration;
 
@@ -9,6 +10,7 @@ use tracing::{error, info};
 mod commands;
 
 /// User data, which is stored and accessible in all command invocations
+#[derive(Debug)]
 pub struct Data {
     #[allow(unused)]
     database_pool: Pool<MySql>,
@@ -19,10 +21,13 @@ pub struct Data {
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
+static POISE_FRAMEWORK: OnceLock<Arc<poise::framework::Framework<Data, Error>>>
+    = OnceLock::new();
+
 /// Entrypoint to start the Bot
 pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     info!("Starting the bot");
-    
+
     let bot_token = match env::var("BOT_TOKEN") {
         Ok(val) => val,
         Err(_) => {
@@ -73,5 +78,9 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
             })
         });
 
-    framework.run().await.expect("Err creating client");
+    let built_framework = framework.build().await.expect("Err building poise client");
+
+    let _ = POISE_FRAMEWORK.set(built_framework.clone());
+
+    built_framework.start().await.expect("Err running poise client");
 }

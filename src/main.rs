@@ -3,10 +3,13 @@ use tracing::{error, info};
 mod bot;
 mod mysql_lib;
 mod redis_lib;
+mod logging;
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt::init();
+    let _worker_guard = logging::setup_logging();
+
+    info!("Starting hm-discord-bot");
 
     let redis = redis_lib::get_connection().await.unwrap();
     info!("Successfully connected to redis");
@@ -22,3 +25,4 @@ async fn main() {
 
     bot::entrypoint(sql_pool, redis).await;
 }
+
