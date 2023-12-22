@@ -1,4 +1,4 @@
-use std::sync::{Arc, OnceLock};
+
 use std::env;
 use std::time::Duration;
 
@@ -6,6 +6,8 @@ use poise::serenity_prelude as serenity;
 use redis::Client;
 use sqlx::{MySql, Pool};
 use tracing::{error, info};
+
+use crate::logging;
 
 mod commands;
 
@@ -20,9 +22,7 @@ pub struct Data {
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
-
-static POISE_FRAMEWORK: OnceLock<Arc<poise::framework::Framework<Data, Error>>>
-    = OnceLock::new();
+pub type Framework = poise::Framework<Data, Error>;
 
 /// Entrypoint to start the Bot
 pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
@@ -80,7 +80,7 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
 
     let built_framework = framework.build().await.expect("Err building poise client");
 
-    let _ = POISE_FRAMEWORK.set(built_framework.clone());
+    logging::install_framework(built_framework.clone());
 
     built_framework.start().await.expect("Err running poise client");
 }
