@@ -126,7 +126,7 @@ enum Column {
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseGuild {
-    guild_id: GuildId,
+    pub guild_id: GuildId,
     ghost_warning_deadline: u32,
     ghost_kick_deadline: u32,
     ghost_time_to_check: Time,
@@ -134,7 +134,7 @@ pub struct DatabaseGuild {
     debug_channel: ChannelId,
     bot_channel: ChannelId,
     help_channel: ChannelId,
-    logger_pipe_channel: Option<ChannelId>,
+    pub logger_pipe_channel: Option<ChannelId>,
     study_group_category: ChannelId,
     subject_group_category: ChannelId,
     studenty_role: RoleId,
@@ -424,6 +424,21 @@ pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Database
         Err(err) => {
             error!(error = err.to_string(), "Problem executing query");
             None
+        }
+    }
+}
+
+/// Gets the guild information from the Database
+#[allow(dead_code)]
+pub async fn get_all_guilds(pool: &Pool<MySql>) -> Vec<DatabaseGuild> {
+    match sqlx::query_as::<_, DatabaseGuild>("SELECT * FROM Guild")
+        .fetch_all(pool)
+        .await
+    {
+        Ok(val) => val,
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            vec![]
         }
     }
 }

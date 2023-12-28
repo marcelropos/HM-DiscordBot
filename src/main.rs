@@ -7,7 +7,7 @@ mod logging;
 
 #[tokio::main]
 async fn main() {
-    let _worker_guard = logging::setup_logging().await;
+    let _log_file_guard = logging::setup_logging().await;
 
     info!("Starting hm-discord-bot");
 

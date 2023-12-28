@@ -28,6 +28,8 @@ pub type Framework = poise::Framework<Data, Error>;
 pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     info!("Starting the bot");
 
+    let db_clone = database_pool.clone();
+
     let bot_token = match env::var("BOT_TOKEN") {
         Ok(val) => val,
         Err(_) => {
@@ -71,16 +73,16 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
         .intents(
             serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT,
         )
-        .setup(|_ctx, _ready, _framework| {
+        .setup(|_ctx, ready, _framework| {
             Box::pin(async move {
-                info!("Logged in as {}", _ready.user.name);
+                info!("Logged in as {}", ready.user.name);
                 Ok(Data { database_pool, redis_client })
             })
         });
 
     let built_framework = framework.build().await.expect("Err building poise client");
 
-    logging::install_framework(built_framework.clone());
+    logging::setup_discord_logging(built_framework.clone(), db_clone).await;
 
     built_framework.start().await.expect("Err running poise client");
 }
