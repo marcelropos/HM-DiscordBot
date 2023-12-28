@@ -7,6 +7,7 @@ use sqlx::{MySql, Pool};
 use tracing::{error, info};
 
 mod commands;
+mod checks;
 
 /// User data, which is stored and accessible in all command invocations
 pub struct Data {
