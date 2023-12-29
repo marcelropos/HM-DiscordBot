@@ -5,6 +5,7 @@ use std::num::NonZeroU64;
 use std::sync::Arc;
 use std::sync::OnceLock;
 
+use poise::serenity_prelude::GuildId;
 use poise::serenity_prelude::futures::executor::block_on;
 use poise::serenity_prelude::ChannelId;
 use rolling_file::RollingConditionBasic;
@@ -36,8 +37,6 @@ static DISCORD_LAYER_CHANGE_HANDLE: OnceLock<Handle<DiscordTracingLayer, Registr
 pub async fn setup_logging() -> WorkerGuard {
     // create log dir
     fs::create_dir_all("./appdata/logs").expect("Could not create log directory");
-    let absolute_path = fs::canonicalize("./appdata/logs").unwrap();
-    println!("Absolute path: {absolute_path:?}");
 
     let (rolling_file_writer, worker_guard) = tracing_appender::non_blocking(
         rolling_file::BasicRollingFileAppender::new(
@@ -102,7 +101,7 @@ pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySq
         .filter_map(|guild| {
             guild
                 .logger_pipe_channel
-                .map(|logger_pipe_channel| (guild.guild_id.0, logger_pipe_channel.0))
+                .map(|logger_pipe_channel| (GuildId(guild.guild_id.0), ChannelId(logger_pipe_channel.0)))
         })
         .collect();
 
@@ -124,7 +123,7 @@ fn modify_discord_layer(f: impl FnOnce(&mut DiscordTracingLayer)) {
 
 #[allow(dead_code)]
 /// Panics if called before [`install_framework`]
-pub fn add_per_server_logging(guild_id: u64, log_channel_id: u64) {
+pub fn add_per_server_logging(guild_id: GuildId, log_channel_id: ChannelId) {
     let layer_change_handle = DISCORD_LAYER_CHANGE_HANDLE.get().unwrap();
     let result = layer_change_handle.modify(|layer| {
         layer.guild_to_log_channel.insert(guild_id, log_channel_id);
@@ -141,7 +140,7 @@ struct DiscordTracingLayer {
     main_log_channel: Option<NonZeroU64>,
     poise_framework: Option<Arc<bot::Framework>>,
     /// HashMap of GuilId's -> ChannelId's
-    guild_to_log_channel: HashMap<u64, u64>,
+    guild_to_log_channel: HashMap<GuildId, ChannelId>,
 }
 
 impl DiscordTracingLayer {
@@ -189,8 +188,7 @@ where
         }
 
         if let Some(guild_id) = guild_id {
-            if let Some(channel_id) = self.guild_to_log_channel.get(&guild_id.get()) {
-                let channel_id = ChannelId(*channel_id);
+            if let Some(channel_id) = self.guild_to_log_channel.get(&guild_id.get().into()) {
                 let _ = block_on(
                     channel_id
                         .send_message(http, |m| m.content(format!("{event_level} {message}"))),
