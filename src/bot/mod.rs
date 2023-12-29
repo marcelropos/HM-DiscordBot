@@ -1,16 +1,14 @@
-
-use std::env;
 use std::time::Duration;
 
 use poise::serenity_prelude as serenity;
 use redis::Client;
 use sqlx::{MySql, Pool};
-use tracing::{error, info};
+use tracing::info;
 
-use crate::logging;
+use crate::{env, logging};
 
-mod commands;
 mod checks;
+mod commands;
 
 /// User data, which is stored and accessible in all command invocations
 #[derive(Debug)]
@@ -30,19 +28,9 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     info!("Starting the bot");
 
     let db_clone = database_pool.clone();
-
-    let bot_token = match env::var("BOT_TOKEN") {
-        Ok(val) => val,
-        Err(_) => {
-            error!("No Bot Token given");
-            return;
-        }
-    };
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![
-                commands::ping(),
-            ],
+            commands: vec![commands::ping()],
             allowed_mentions: Some({
                 let mut f = serenity::CreateAllowedMentions::default();
                 f.empty_parse()
@@ -70,14 +58,17 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
             },
             ..Default::default()
         })
-        .token(bot_token)
+        .token(env::BOT_TOKEN.get().unwrap())
         .intents(
             serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT,
         )
         .setup(|_ctx, ready, _framework| {
             Box::pin(async move {
                 info!("Logged in as {}", ready.user.name);
-                Ok(Data { database_pool, redis_client })
+                Ok(Data {
+                    database_pool,
+                    redis_client,
+                })
             })
         });
 
@@ -85,5 +76,8 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
 
     logging::setup_discord_logging(built_framework.clone(), db_clone).await;
 
-    built_framework.start().await.expect("Err running poise client");
+    built_framework
+        .start()
+        .await
+        .expect("Err running poise client");
 }

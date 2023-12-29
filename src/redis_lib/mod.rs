@@ -1,32 +1,21 @@
-use std::env;
-
 use redis::{aio::Connection, AsyncCommands, Client};
 use sha1::Digest;
 use tracing::error;
 
+use crate::env;
+
 /// Tries to establish a connection with the given env variables and return the Redis client if
 /// successful.
-///
-/// # Env Variables
-///
-/// * REDIS_PORT: the port of redis, defaults to 6379
-/// * REDIS_HOST: the host of redis, ip or hostname or domain, defaults to 127.0.0.1
 pub async fn get_connection() -> Option<Client> {
-    let redis_port: u16 = match env::var("REDIS_PORT").unwrap_or("6379".to_owned()).parse() {
-        Ok(val) => val,
-        Err(err) => {
-            error!(error = err.to_string(), "Failed to parse int");
-            return None;
-        }
-    };
-
-    let redis_hostname = env::var("REDIS_HOST").unwrap_or("127.0.0.1".to_owned());
-
-    let client = Client::open(format!("redis://{redis_hostname}:{redis_port}"))
-        .map_err(|e| {
-            error!(error = e.to_string(), "Problem creating redis client");
-        })
-        .ok()?;
+    let client = Client::open(format!(
+        "redis://{}:{}",
+        env::REDIS_HOST.get().unwrap(),
+        env::REDIS_PORT.get().unwrap()
+    ))
+    .map_err(|e| {
+        error!(error = e.to_string(), "Problem creating redis client");
+    })
+    .ok()?;
 
     match client.get_async_connection().await {
         Err(err) => {

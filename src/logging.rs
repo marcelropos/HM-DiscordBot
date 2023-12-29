@@ -1,29 +1,19 @@
 use std::collections::HashMap;
-use std::env;
 use std::fs;
 use std::num::NonZeroU64;
-use std::sync::Arc;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use poise::serenity_prelude::futures::executor::block_on;
 use poise::serenity_prelude::{ChannelId, GuildId};
 use rolling_file::RollingConditionBasic;
-use sqlx::MySql;
-use sqlx::Pool;
-use tracing::error;
-use tracing::info;
-use tracing::Level;
-use tracing::Subscriber;
+use sqlx::{MySql, Pool};
+use tracing::{error, info, Level, Subscriber};
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::filter;
-use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::*;
-use tracing_subscriber::reload;
 use tracing_subscriber::reload::Handle;
-use tracing_subscriber::Registry;
+use tracing_subscriber::{filter, fmt, reload, Registry};
 
-use crate::bot;
-use crate::mysql_lib;
+use crate::{bot, env, mysql_lib};
 
 const LOG_FILE_MAX_SIZE_MB: u64 = 10;
 const MAX_AMOUNT_LOG_FILES: usize = 10;
@@ -75,14 +65,8 @@ pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySq
     let http = &framework.client().cache_and_http.http;
 
     // Setup main logging guild/channel
-
-    let main_guild_id: u64 = env::var("MAIN_GUILD_ID")
-        .expect("No main logging guild id configured")
-        .parse()
-        .expect("Could not parse MAIN_GUILD_ID env variable");
-
     let main_guild = http
-        .get_channels(main_guild_id)
+        .get_channels(*env::MAIN_GUILD_ID.get().unwrap())
         .await
         .expect("Could not get main guild");
 

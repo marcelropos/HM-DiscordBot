@@ -4,9 +4,11 @@ mod bot;
 mod mysql_lib;
 mod redis_lib;
 mod logging;
+mod env;
 
 #[tokio::main]
 async fn main() {
+    env::init();
     let _log_file_guard = logging::setup_logging().await;
 
     info!("Starting hm-discord-bot");

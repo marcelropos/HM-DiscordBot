@@ -1,25 +1,8 @@
-use once_cell::sync::Lazy;
 use poise::serenity_prelude::{ChannelId, Permissions, RoleId};
 use sqlx::{MySql, Pool};
-use std::env;
-use tracing::error;
 
 use crate::bot::Context;
-use crate::mysql_lib;
-
-static MAIN_GUILD_ID: Lazy<Option<u64>> = Lazy::new(|| match env::var("MAIN_GUILD_ID") {
-    Ok(val) => match val.parse() {
-        Ok(val) => Some(val),
-        Err(err) => {
-            error!(error = err.to_string(), "Failed to parse int");
-            None
-        }
-    },
-    Err(_) => {
-        error!("No Main Guild ID given");
-        None
-    }
-});
+use crate::{env, mysql_lib};
 
 /// Checks if the author has any of the specified roles
 ///
@@ -89,13 +72,13 @@ pub async fn is_owner(ctx: Context<'_>) -> bool {
 ///
 /// Will return false when:
 /// - guild is not main guild
-/// - guild id env variable is not set
-/// - guild id env variable can't be parsed to u64
 /// - message was not sent in guild
 #[allow(dead_code)]
 pub async fn sent_in_main_guild(ctx: Context<'_>) -> bool {
     if let Some(guild) = ctx.guild() {
-        return MAIN_GUILD_ID.map_or(false, |main_guild_id|  guild.id.0 == main_guild_id);
+        return env::MAIN_GUILD_ID
+            .get()
+            .map_or(false, |&main_guild_id| guild.id.0 == main_guild_id);
     }
     false
 }
