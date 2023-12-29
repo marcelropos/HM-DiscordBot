@@ -711,6 +711,7 @@ name = "hm-discord-bot"
 version = "0.1.0"
 dependencies = [
  "hex",
+ "once_cell",
  "poise",
  "redis",
  "serial_test",
