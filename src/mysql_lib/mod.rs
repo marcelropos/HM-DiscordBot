@@ -12,14 +12,6 @@ pub mod validate;
 
 /// Tries to establish a Connection with the given env variables and return the MySQL connection
 /// Pool if successful.
-///
-/// # Env Variables
-///
-/// * MYSQL_PORT: the port of the mysql database, defaults to 3306
-/// * MYSQL_HOST: the host of the mysql database, ip or hostname or domain, defaults to 127.0.0.1
-/// * MYSQL_DATABASE: the name of the database to use, needs to be present
-/// * MYSQL_USER: the username of the user that has access to the database, needs to be present
-/// * MYSQL_PASSWORD: the password of the user specified, needs to be present
 pub async fn get_connection(max_concurrent_connections: u32) -> Option<Pool<MySql>> {
     match MySqlPoolOptions::new()
         .max_connections(max_concurrent_connections)
