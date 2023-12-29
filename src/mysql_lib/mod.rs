@@ -127,91 +127,91 @@ enum Column {
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseGuild {
     pub guild_id: GuildId,
-    ghost_warning_deadline: u32,
-    ghost_kick_deadline: u32,
-    ghost_time_to_check: Time,
-    ghost_enabled: bool,
-    debug_channel: ChannelId,
-    bot_channel: ChannelId,
-    help_channel: ChannelId,
+    pub ghost_warning_deadline: u32,
+    pub ghost_kick_deadline: u32,
+    pub ghost_time_to_check: Time,
+    pub ghost_enabled: bool,
+    pub debug_channel: ChannelId,
+    pub bot_channel: ChannelId,
+    pub help_channel: ChannelId,
     pub logger_pipe_channel: Option<ChannelId>,
-    study_group_category: ChannelId,
-    subject_group_category: ChannelId,
-    studenty_role: RoleId,
-    tmp_studenty_role: Option<RoleId>,
-    moderator_role: RoleId,
-    newsletter_role: RoleId,
-    nsfw_role: RoleId,
-    study_role_separator_role: RoleId,
-    subject_role_separator_role: RoleId,
-    friend_role: RoleId,
-    tmpc_keep_time: Time,
-    alumni_role: RoleId,
-    alumni_role_separator_role: RoleId,
+    pub study_group_category: ChannelId,
+    pub subject_group_category: ChannelId,
+    pub studenty_role: RoleId,
+    pub tmp_studenty_role: Option<RoleId>,
+    pub moderator_role: RoleId,
+    pub newsletter_role: RoleId,
+    pub nsfw_role: RoleId,
+    pub study_role_separator_role: RoleId,
+    pub subject_role_separator_role: RoleId,
+    pub friend_role: RoleId,
+    pub tmpc_keep_time: Time,
+    pub alumni_role: RoleId,
+    pub alumni_role_separator_role: RoleId,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseAlumniRole {
-    role: RoleId,
-    guild_id: GuildId,
+    pub role: RoleId,
+    pub guild_id: GuildId,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseStudyGroup {
-    id: Option<i32>,
-    guild_id: GuildId,
-    name: String,
-    color: u32,
-    active: bool,
+    pub id: Option<i32>,
+    pub guild_id: GuildId,
+    pub name: String,
+    pub color: u32,
+    pub active: bool,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseSemesterStudyGroup {
-    role: RoleId,
-    study_group_id: i32,
-    semester: u32,
-    text_channel: ChannelId,
+    pub role: RoleId,
+    pub study_group_id: i32,
+    pub semester: u32,
+    pub text_channel: ChannelId,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseSubject {
-    role: RoleId,
-    guild_id: GuildId,
-    name: String,
-    text_channel: ChannelId,
+    pub role: RoleId,
+    pub guild_id: GuildId,
+    pub name: String,
+    pub text_channel: ChannelId,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseStudySubjectLink {
-    study_group_role: RoleId,
-    subject_role: RoleId,
-    guild_id: GuildId,
+    pub study_group_role: RoleId,
+    pub subject_role: RoleId,
+    pub guild_id: GuildId,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseTmpcJoinChannel {
-    voice_channel: ChannelId,
-    guild_id: GuildId,
-    persist: bool,
+    pub voice_channel: ChannelId,
+    pub guild_id: GuildId,
+    pub persist: bool,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseTmpc {
-    voice_channel: ChannelId,
-    text_channel: ChannelId,
-    guild_id: GuildId,
-    owner: UserId,
-    persist: bool,
-    token: u32,
-    keep: bool,
-    delete_at: Option<PrimitiveDateTime>,
+    pub voice_channel: ChannelId,
+    pub text_channel: ChannelId,
+    pub guild_id: GuildId,
+    pub owner: UserId,
+    pub persist: bool,
+    pub token: u32,
+    pub keep: bool,
+    pub delete_at: Option<PrimitiveDateTime>,
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseTokenMessage {
-    tmpc_voice_channel: ChannelId,
-    message_channel: ChannelId,
-    message: MessageId,
+    pub tmpc_voice_channel: ChannelId,
+    pub message_channel: ChannelId,
+    pub message: MessageId,
 }
 
 impl FromRow<'_, MySqlRow> for DatabaseGuild {
