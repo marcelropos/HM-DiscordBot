@@ -1,11 +1,11 @@
-use std::env;
-
 use poise::serenity_prelude::{ChannelId, GuildId, MessageId, RoleId, UserId};
 use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::{PrimitiveDateTime, Time};
 use sqlx::{migrate, FromRow, MySql, Pool, Row};
 use tracing::error;
+
+use crate::env;
 
 mod test;
 pub mod validate;
@@ -21,50 +21,15 @@ pub mod validate;
 /// * MYSQL_USER: the username of the user that has access to the database, needs to be present
 /// * MYSQL_PASSWORD: the password of the user specified, needs to be present
 pub async fn get_connection(max_concurrent_connections: u32) -> Option<Pool<MySql>> {
-    let sql_port = env::var("MYSQL_PORT").unwrap_or("3306".to_owned());
-    let sql_port = match sql_port.parse() {
-        Ok(val) => val,
-        Err(_) => {
-            error!("Could not parse MYSQL_PORT");
-            return None;
-        }
-    };
-
-    let sql_hostname = env::var("MYSQL_HOST").unwrap_or("127.0.0.1".to_owned());
-
-    let sql_database = match env::var("MYSQL_DATABASE") {
-        Ok(val) => val,
-        Err(_) => {
-            error!("No database given");
-            return None;
-        }
-    };
-
-    let sql_username = match env::var("MYSQL_USER") {
-        Ok(val) => val,
-        Err(_) => {
-            error!("No database username given");
-            return None;
-        }
-    };
-
-    let sql_password = match env::var("MYSQL_PASSWORD") {
-        Ok(val) => val,
-        Err(_) => {
-            error!("No password for user given");
-            return None;
-        }
-    };
-
     match MySqlPoolOptions::new()
         .max_connections(max_concurrent_connections)
         .connect_with(
             MySqlConnectOptions::new()
-                .host(sql_hostname.as_str())
-                .port(sql_port)
-                .database(sql_database.as_str())
-                .username(sql_username.as_str())
-                .password(sql_password.as_str()),
+                .host(env::MYSQL_HOST.get().unwrap().as_str())
+                .port(*env::MYSQL_PORT.get().unwrap())
+                .database(env::MYSQL_DATABASE.get().unwrap().as_str())
+                .username(env::MYSQL_USER.get().unwrap().as_str())
+                .password(env::MYSQL_PASSWORD.get().unwrap().as_str()),
         )
         .await
     {
