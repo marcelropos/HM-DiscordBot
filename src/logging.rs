@@ -5,9 +5,8 @@ use std::num::NonZeroU64;
 use std::sync::Arc;
 use std::sync::OnceLock;
 
-use poise::serenity_prelude::GuildId;
 use poise::serenity_prelude::futures::executor::block_on;
-use poise::serenity_prelude::ChannelId;
+use poise::serenity_prelude::{ChannelId, GuildId};
 use rolling_file::RollingConditionBasic;
 use sqlx::MySql;
 use sqlx::Pool;
@@ -101,7 +100,7 @@ pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySq
         .filter_map(|guild| {
             guild
                 .logger_pipe_channel
-                .map(|logger_pipe_channel| (GuildId(guild.guild_id.0), ChannelId(logger_pipe_channel.0)))
+                .map(|logger_pipe_channel| (guild.guild_id, logger_pipe_channel))
         })
         .collect();
 
@@ -229,11 +228,11 @@ impl GuildIdVisitor {
 }
 
 impl tracing::field::Visit for GuildIdVisitor {
-    fn record_debug(&mut self, _field: &tracing::field::Field, _value: &dyn std::fmt::Debug) {}
-
     fn record_u64(&mut self, field: &tracing::field::Field, value: u64) {
         if field.name() == "guild_id" {
             self.guild_id = NonZeroU64::new(value);
         }
     }
+
+    fn record_debug(&mut self, _field: &tracing::field::Field, _value: &dyn std::fmt::Debug) {}
 }
