@@ -95,10 +95,14 @@ pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySq
     });
 
     // Setup logging channels per server
-    let guild_to_log_channel = mysql_lib::get_all_guilds(&db).await.into_iter()
+    let guild_to_log_channel = mysql_lib::get_all_guilds(&db)
+        .await
+        .unwrap()
+        .into_iter()
         .filter_map(|guild| {
-            guild.logger_pipe_channel.map(|logger_pipe_channel|
-                (guild.guild_id.0, logger_pipe_channel.0))
+            guild
+                .logger_pipe_channel
+                .map(|logger_pipe_channel| (guild.guild_id.0, logger_pipe_channel.0))
         })
         .collect();
 
