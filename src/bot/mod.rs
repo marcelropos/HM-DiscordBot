@@ -1,3 +1,4 @@
+
 use std::env;
 use std::time::Duration;
 
@@ -6,9 +7,12 @@ use redis::Client;
 use sqlx::{MySql, Pool};
 use tracing::{error, info};
 
+use crate::logging;
+
 mod commands;
 
 /// User data, which is stored and accessible in all command invocations
+#[derive(Debug)]
 pub struct Data {
     #[allow(unused)]
     database_pool: Pool<MySql>,
@@ -18,11 +22,14 @@ pub struct Data {
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
+pub type Framework = poise::Framework<Data, Error>;
 
 /// Entrypoint to start the Bot
 pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     info!("Starting the bot");
-    
+
+    let db_clone = database_pool.clone();
+
     let bot_token = match env::var("BOT_TOKEN") {
         Ok(val) => val,
         Err(_) => {
@@ -66,12 +73,16 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
         .intents(
             serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT,
         )
-        .setup(|_ctx, _ready, _framework| {
+        .setup(|_ctx, ready, _framework| {
             Box::pin(async move {
-                info!("Logged in as {}", _ready.user.name);
+                info!("Logged in as {}", ready.user.name);
                 Ok(Data { database_pool, redis_client })
             })
         });
 
-    framework.run().await.expect("Err creating client");
+    let built_framework = framework.build().await.expect("Err building poise client");
+
+    logging::setup_discord_logging(built_framework.clone(), db_clone).await;
+
+    built_framework.start().await.expect("Err running poise client");
 }
