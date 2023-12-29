@@ -10,6 +10,7 @@ use tracing::{error, info};
 use crate::logging;
 
 mod commands;
+mod checks;
 
 /// User data, which is stored and accessible in all command invocations
 #[derive(Debug)]
