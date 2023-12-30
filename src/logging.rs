@@ -93,6 +93,30 @@ pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySq
     });
 }
 
+/// Panics if called before [`install_framework`]
+pub fn add_per_server_logging(guild_id: GuildId, log_channel_id: ChannelId) {
+    modify_discord_layer(|layer| {
+        layer.guild_to_log_channel.insert(guild_id, log_channel_id);
+    });
+}
+
+/// Panics if called before [`install_framework`]
+pub fn remove_per_server_logging(guild_id: GuildId) {
+    modify_discord_layer(|layer| {
+        layer.guild_to_log_channel.remove(&guild_id);
+    });
+}
+
+/// Panics if called before [`install_framework`]
+pub fn add_main_logging_channel(log_channel_id: ChannelId) {
+    modify_discord_layer(|layer| layer.main_log_channel = NonZeroU64::new(log_channel_id.0));
+}
+
+/// Panics if called before [`install_framework`]
+pub fn remove_main_logging_channel() {
+    modify_discord_layer(|layer| layer.main_log_channel = None);
+}
+
 fn modify_discord_layer(f: impl FnOnce(&mut DiscordTracingLayer)) {
     let result = DISCORD_LAYER_CHANGE_HANDLE.get().unwrap().modify(f);
 
@@ -100,21 +124,6 @@ fn modify_discord_layer(f: impl FnOnce(&mut DiscordTracingLayer)) {
         error!(
             error = err.to_string(),
             "Something went wrong while trying to modify the discord tracing layer"
-        );
-    }
-}
-
-#[allow(dead_code)]
-/// Panics if called before [`install_framework`]
-pub fn add_per_server_logging(guild_id: GuildId, log_channel_id: ChannelId) {
-    let layer_change_handle = DISCORD_LAYER_CHANGE_HANDLE.get().unwrap();
-    let result = layer_change_handle.modify(|layer| {
-        layer.guild_to_log_channel.insert(guild_id, log_channel_id);
-    });
-    if let Err(err) = result {
-        error!(
-            error = err.to_string(),
-            "Failed to install poise framework into discord tracing layer"
         );
     }
 }

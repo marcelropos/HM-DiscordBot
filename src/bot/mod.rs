@@ -30,7 +30,10 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     let db_clone = database_pool.clone();
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ping()],
+            commands: vec![
+                commands::ping(),
+                commands::logger_pipe()
+            ],
             allowed_mentions: Some({
                 let mut f = serenity::CreateAllowedMentions::default();
                 f.empty_parse()
