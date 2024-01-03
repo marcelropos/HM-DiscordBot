@@ -65,12 +65,12 @@ pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySq
     let http = &framework.client().cache_and_http.http;
 
     // Setup main logging guild/channel
-    let main_guild = http
+    let main_guild_channels = http
         .get_channels(*env::MAIN_GUILD_ID.get().unwrap())
         .await
         .expect("Could not get main guild");
 
-    let main_logging_channel = main_guild[0].id;
+    let main_logging_channel = main_guild_channels[0].id;
 
     modify_discord_layer(|discord_layer| {
         discord_layer.main_log_channel = NonZeroU64::new(main_logging_channel.0);
@@ -105,16 +105,6 @@ pub fn remove_per_server_logging(guild_id: GuildId) {
     modify_discord_layer(|layer| {
         layer.guild_to_log_channel.remove(&guild_id);
     });
-}
-
-/// Panics if called before [`install_framework`]
-pub fn add_main_logging_channel(log_channel_id: ChannelId) {
-    modify_discord_layer(|layer| layer.main_log_channel = NonZeroU64::new(log_channel_id.0));
-}
-
-/// Panics if called before [`install_framework`]
-pub fn remove_main_logging_channel() {
-    modify_discord_layer(|layer| layer.main_log_channel = None);
 }
 
 fn modify_discord_layer(f: impl FnOnce(&mut DiscordTracingLayer)) {

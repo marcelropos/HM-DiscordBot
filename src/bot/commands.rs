@@ -31,19 +31,13 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(prefix_command)]
 pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
     // Check permissions
-    if !checks::is_owner(ctx).await && !checks::is_admin(ctx).await {
-        match checks::is_bot_admin(ctx).await {
-            None => {
-                ctx.say("Internal error, contact bot admins").await?;
-                return Ok(());
-            }
-            Some(false) => {
-                ctx.say("Missing permissions, requires admin permissions")
-                    .await?;
-                return Ok(());
-            }
-            Some(true) => {} // user is bot admin
-        }
+    if !checks::is_owner(ctx).await
+        && !checks::is_admin(ctx).await
+        && !checks::is_bot_admin(ctx).await
+    {
+        ctx.say("Missing permissions, requires admin permissions")
+            .await?;
+        return Ok(());
     }
 
     let guild_id = if let Some(guild_id) = ctx.guild_id() {
@@ -57,7 +51,7 @@ pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
     let db_guild = if let Some(db_guild) = mysql_lib::get_guild(db, guild_id).await {
         db_guild
     } else {
-        ctx.say("Needs to be executed in a already setup guild")
+        ctx.say("Needs to be executed in an already setup guild")
             .await?;
         return Ok(());
     };
@@ -69,13 +63,12 @@ pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
         // => deactivate logger pipe
         info!(?guild_id, "Deactivating logger pipe");
 
+        ctx.say("Deactivating logger pipe in current channel")
+            .await?;
+
         mysql_lib::update_logger_pipe_channel(db, guild_id, None).await;
 
-        if checks::sent_in_main_guild(ctx).await {
-            logging::remove_main_logging_channel();
-        } else {
-            logging::remove_per_server_logging(guild_id);
-        }
+        logging::remove_per_server_logging(guild_id);
     } else {
         // Logger pipe either not setup, or not the current channel
         // => set current channel as logger pipe
@@ -84,13 +77,12 @@ pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
             "Setting logger pipe"
         );
 
+        ctx.say("Setting logger pipe to the current channel")
+            .await?;
+
         mysql_lib::update_logger_pipe_channel(db, guild_id, Some(ctx.channel_id())).await;
 
-        if checks::sent_in_main_guild(ctx).await {
-            logging::add_main_logging_channel(ctx.channel_id());
-        } else {
-            logging::add_per_server_logging(guild_id, ctx.channel_id());
-        }
+        logging::add_per_server_logging(guild_id, ctx.channel_id());
     }
 
     Ok(())

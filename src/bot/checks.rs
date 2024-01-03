@@ -56,10 +56,8 @@ pub async fn is_admin(ctx: Context<'_>) -> bool {
     false
 }
 
-/// Returns None when there was an error,
-/// Some(true) when the user is a bot admin and
-/// Some(false) when the user is not a bot admin
-pub async fn is_bot_admin(ctx: Context<'_>) -> Option<bool> {
+/// Returns false in case of an error
+pub async fn is_bot_admin(ctx: Context<'_>) -> bool {
     let author_id = ctx.author().id.0;
     let main_guild_id = env::MAIN_GUILD_ID.get().unwrap();
 
@@ -68,12 +66,24 @@ pub async fn is_bot_admin(ctx: Context<'_>) -> Option<bool> {
                 error = err.to_string(),
                 member_id = author_id,
                 "Could not get main guild member"
-            )).ok()?;
+            )).ok();
+
+    let main_guild_member = if let Some(main_guild_member) = main_guild_member {
+        main_guild_member
+    } else {
+        return false;
+    };
 
 
     let main_guild_roles = GuildId(*main_guild_id).roles(ctx.http()).await
         .map_err(|err| error!(error = err.to_string(), "Could not get main guild roles"))
-        .ok()?;
+        .ok();
+
+    let main_guild_roles = if let Some(main_guild_roles) = main_guild_roles {
+        main_guild_roles
+    } else {
+        return false;
+    };
 
     let is_admin = main_guild_member.roles.iter().any(|role_id| {
         main_guild_roles.get(role_id).map_or(false, |role| {
@@ -81,7 +91,7 @@ pub async fn is_bot_admin(ctx: Context<'_>) -> Option<bool> {
         })
     });
 
-    Some(is_admin)
+    is_admin
 }
 
 /// Checks if the author is the owner of the guild where the message was sent
