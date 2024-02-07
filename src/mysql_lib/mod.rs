@@ -240,6 +240,7 @@ pub struct DatabaseSemesterStudyGroup {
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseSubject {
+    pub id: Option<i32>,
     pub role: RoleId,
     pub guild_id: GuildId,
     pub name: String,
@@ -347,6 +348,7 @@ impl FromRow<'_, MySqlRow> for DatabaseSemesterStudyGroup {
 impl FromRow<'_, MySqlRow> for DatabaseSubject {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
+            id: row.try_get("id")?,
             role: RoleId::new(row.try_get("role")?),
             guild_id: GuildId::new(row.try_get("guild_id")?),
             name: row.try_get("name")?,
