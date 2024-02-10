@@ -1186,6 +1186,7 @@ pub async fn get_semester_study_groups_in_study_group(
     }
 }
 
+
 /// Inserts a new Subject into the Database. Return if the Subject was inserted into the
 /// Database, may be false if the Subject was already in the Database.
 #[allow(dead_code)]
@@ -1344,6 +1345,44 @@ pub async fn get_study_subject_links_for_study_group(
         "SELECT * FROM Study_subject_link WHERE study_group_role=?",
     )
     .bind(study_group_role.get())
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+
+/// Gets all subjects for this semester study group role
+/// 
+/// SQL Query explanation:
+/// 
+/// Get all study subject links for a certain semester study group role:
+/// "SELECT * FROM Study_subject_link WHERE study_group_role=?"
+///
+/// Get subject from role:
+/// "SELECT * FROM Subject WHERE role=?"
+///
+/// Combined:
+/// "SELECT * FROM Subject
+/// LEFT JOIN Study_subject_link
+/// ON Subject.role = Study_subject_link.subject_role
+/// WHERE study_group_role=?"
+pub async fn get_subjects_for_semester_study_group(
+    pool: &Pool<MySql>,
+    semester_study_group_role: RoleId,
+) -> Option<Vec<DatabaseSubject>> {
+    match sqlx::query_as::<_, DatabaseSubject>(
+        "SELECT * FROM Subject
+        LEFT JOIN Study_subject_link
+        ON Subject.role = Study_subject_link.subject_role
+        WHERE study_group_role=?"
+    )
+    .bind(semester_study_group_role.0)
     .fetch_all(pool)
     .await
     {

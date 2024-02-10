@@ -1,8 +1,9 @@
 //! TODO: Permissions
-use std::borrow::BorrowMut;
 
-use poise::serenity_prelude::{GuildId, UserId};
+use futures::future::join_all;
+use poise::serenity_prelude::{GuildId, RoleId};
 use sqlx::{MySql, Pool};
+use itertools::Itertools;
 
 use crate::{
     bot::{Context, Error},
@@ -25,15 +26,18 @@ pub async fn subject(_ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(slash_command, prefix_command)]
 pub async fn add(
     ctx: Context<'_>,
-    #[description = "list of subject names or id's from \"subject show\""]
-    names_or_ids: Vec<String>,
+    #[description = "list of subject names or id's from \"subject show\""] names_or_ids: Vec<
+        String,
+    >,
 ) -> Result<(), Error> {
-    let author_id = ctx.author().id;
+    let user_roles = &ctx.author_member().await.unwrap().roles;
     let guild_id = ctx.guild_id().unwrap();
 
     let requested_subjects =
-        parse_subject_names_or_ids(&ctx.data().database_pool, guild_id, author_id, names_or_ids)
+        get_subjects_from_user_input(&ctx.data().database_pool, guild_id, user_roles, names_or_ids)
             .await;
+
+    let formatted_subjects = format_subjects(&requested_subjects);
 
     let roles: Vec<_> = requested_subjects
         .into_iter()
@@ -43,34 +47,27 @@ pub async fn add(
     let mut author_member = ctx.author_member().await.unwrap();
     author_member.to_mut().add_roles(ctx.http(), &roles).await?;
 
-    // TODO: Feedback to user
+    ctx.reply(format!("Added following subjects to you:\n{formatted_subjects}")).await?;
 
     Ok(())
-}
-
-/// Gets all available subjects for this user from the database, sorted alphabetically by the subject name
-/// TODO: Filter out only the ones that the user should be able to access
-async fn get_available_subjects(
-    db: &Pool<MySql>,
-    guild: GuildId,
-    user: UserId,
-) -> Vec<DatabaseSubject> {
-    mysql_lib::get_subjects(db, guild).await.unwrap()
 }
 
 /// Removes a subject from the user that sent this command
 #[poise::command(slash_command, prefix_command)]
 pub async fn remove(
     ctx: Context<'_>,
-    #[description = "list of subject names or id's from \"subject show\""]
-    names_or_ids: Vec<String>
+    #[description = "list of subject names or id's from \"subject show\""] names_or_ids: Vec<
+        String,
+    >,
 ) -> Result<(), Error> {
-    let author_id = ctx.author().id;
+    let user_roles = &ctx.author_member().await.unwrap().roles;
     let guild_id = ctx.guild_id().unwrap();
 
     let requested_subjects =
-        parse_subject_names_or_ids(&ctx.data().database_pool, guild_id, author_id, names_or_ids)
+        get_subjects_from_user_input(&ctx.data().database_pool, guild_id, user_roles, names_or_ids)
             .await;
+    
+    let formatted_subjects = format_subjects(&requested_subjects);
 
     let roles: Vec<_> = requested_subjects
         .into_iter()
@@ -78,9 +75,12 @@ pub async fn remove(
         .collect();
 
     let mut author_member = ctx.author_member().await.unwrap();
-    author_member.to_mut().remove_roles(ctx.http(), &roles).await?;
+    author_member
+        .to_mut()
+        .remove_roles(ctx.http(), &roles)
+        .await?;
 
-    // TODO: Feedback to user
+    ctx.reply(format!("Removed following subjects from you:\n{formatted_subjects}")).await?;
 
     Ok(())
 }
@@ -90,25 +90,90 @@ pub async fn remove(
 pub async fn show(ctx: Context<'_>) -> Result<(), Error> {
     let db = &ctx.data().database_pool;
     let guild = ctx.guild_id().unwrap();
-    let user = ctx.author().id;
+    let user_roles = &ctx.author_member().await.unwrap().roles;
 
-    let available_subjects = get_available_subjects(db, guild, user).await;
+    let available_subjects = get_available_subjects(db, guild, user_roles).await;
 
-    // TODO: Feedback to user
+    let formatted_subjects = format_subjects(&available_subjects);
+
+    ctx.reply(format!(
+        "
+    The following subjects are available (add them using \"subject add/remove\":
+    {formatted_subjects}
+    "
+    ))
+    .await?;
 
     Ok(())
 }
 
+fn format_subjects(subjects: &[DatabaseSubject]) -> String {
+    subjects
+        .iter()
+        .map(|subject| format!("{}: {}", subject.id.unwrap_or(-1), subject.name))
+        .join("\n")
+}
 
-
-/// TODO: Handle failures correctly
-async fn parse_subject_names_or_ids(
+/// Gets all available subjects for this user from the database
+/// 
+/// This could probably be rewritten to use only a single SQL statement,
+/// which would be substantially better
+/// 
+/// TODO: Test this
+async fn get_available_subjects(
     db: &Pool<MySql>,
     guild: GuildId,
-    user: UserId,
+    user_roles: &[RoleId],
+) -> Vec<DatabaseSubject> {
+
+
+    // objective: Get all semester study groups below or at the user's
+
+    // get all semester study groups for guild (they have an associated discord role)
+    let guild_semester_study_groups = mysql_lib::get_semester_study_groups_in_guild(db, guild).await.unwrap();
+    
+    // find out which semester study group user is in using that role
+    let user_semester_study_group = guild_semester_study_groups
+        .iter()
+        .find(|group| user_roles.contains(&group.role))
+        .unwrap();
+
+    // get all related semester study groups
+    let related_semester_study_groups = mysql_lib::get_semester_study_groups_in_study_group(db, user_semester_study_group.study_group_id).await.unwrap();
+
+    // filter out to only those whose semester <= user's semester
+    let valid_semester_study_groups = related_semester_study_groups.into_iter()
+        .filter(|sem_study_group| sem_study_group.semester <= user_semester_study_group.semester);
+
+    // get all subject's for all those semester study groups
+    let subjects: Vec<_> = valid_semester_study_groups
+        .map(|sem_study_group| {
+            mysql_lib::get_subjects_for_semester_study_group(db, sem_study_group.role)
+        })
+        .collect();
+
+    let subjects = join_all(subjects).await;
+
+    subjects.iter()
+        .flatten().flatten().cloned()
+        .sorted_by_key(|subject| subject.id)
+        .dedup()
+        .collect()
+}
+
+/// Parses subject names/ids from user input, then
+/// gets the appropriate database objects for it.
+/// Needs the user's roles because those dictate which
+/// subjects are available to them.
+/// 
+/// TODO: Handle failures correctly
+async fn get_subjects_from_user_input(
+    db: &Pool<MySql>,
+    guild: GuildId,
+    user_roles: &[RoleId],
     names_or_ids: Vec<String>,
 ) -> Vec<DatabaseSubject> {
-    let available_subjects = get_available_subjects(db, guild, user).await;
+    let available_subjects = get_available_subjects(db, guild, user_roles).await;
 
     names_or_ids
         .into_iter()
@@ -135,7 +200,6 @@ async fn parse_subject_names_or_ids(
         })
         .collect()
 }
-
 
 /// Admin commands for creating/deleting subjects
 #[poise::command(prefix_command, subcommands("create", "delete"), subcommand_required)]

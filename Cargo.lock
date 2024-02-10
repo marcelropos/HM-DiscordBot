@@ -772,7 +772,9 @@ name = "hm-discord-bot"
 version = "0.1.0"
 dependencies = [
  "dotenvy",
+ "futures",
  "hex",
+ "itertools",
  "once_cell",
  "poise",
  "redis",
