@@ -107,6 +107,31 @@ pub struct DatabaseGuild {
     pub alumni_role_separator_role: RoleId,
 }
 
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord, Default)]
+pub struct NewGuild {
+    pub guild_id: GuildId,
+    pub ghost_warning_deadline: Option<u32>,
+    pub ghost_kick_deadline: Option<u32>,
+    pub ghost_time_to_check: Option<Time>,
+    pub ghost_enabled: Option<bool>,
+    pub debug_channel: Option<ChannelId>,
+    pub bot_channel: Option<ChannelId>,
+    pub help_channel: Option<ChannelId>,
+    pub study_group_category: Option<ChannelId>,
+    pub subject_group_category: Option<ChannelId>,
+    pub studenty_role: Option<RoleId>,
+    pub tmp_studenty_role: Option<RoleId>,
+    pub moderator_role: Option<RoleId>,
+    pub newsletter_role: Option<RoleId>,
+    pub nsfw_role: Option<RoleId>,
+    pub study_role_separator_role: Option<RoleId>,
+    pub subject_role_separator_role: Option<RoleId>,
+    pub friend_role: Option<RoleId>,
+    pub tmpc_keep_time: Option<Time>,
+    pub alumni_role: Option<RoleId>,
+    pub alumni_role_separator_role: Option<RoleId>,
+}
+
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseAlumniRole {
     pub role: RoleId,

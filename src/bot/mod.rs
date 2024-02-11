@@ -1,12 +1,15 @@
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::GuildId;
 use redis::Client;
 use sqlx::{MySql, Pool};
 use tracing::info;
 
 use crate::{env, logging};
+use crate::mysql_lib::NewGuild;
 
 mod checks;
 mod commands;
@@ -18,6 +21,7 @@ pub struct Data {
     database_pool: Pool<MySql>,
     #[allow(unused)]
     redis_client: Client,
+    setup_in_progress: Mutex<HashMap<GuildId, NewGuild>>,
 }
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -31,7 +35,7 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     let db_clone = database_pool.clone();
     let framework = Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ping(), commands::logger_pipe()],
+            commands: vec![commands::ping(), commands::logger_pipe(), commands::setup()],
             allowed_mentions: Some({
                 serenity::CreateAllowedMentions::default()
                     .replied_user(true)
@@ -69,6 +73,7 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
                 Ok(Data {
                     database_pool,
                     redis_client,
+                    setup_in_progress: Mutex::new(HashMap::new()),
                 })
             })
         })
