@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::time::Duration;
 
 use poise::serenity_prelude as serenity;
@@ -30,33 +31,30 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     let db_clone = database_pool.clone();
     let framework = Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![
-                commands::ping(),
-                commands::logger_pipe()
-            ],
+            commands: vec![commands::ping(), commands::logger_pipe()],
             allowed_mentions: Some({
-                let mut f = serenity::CreateAllowedMentions::default();
-                f.empty_parse()
-                    .parse(serenity::ParseValue::Users)
-                    .replied_user(true);
-                f
+                serenity::CreateAllowedMentions::default()
+                    .replied_user(true)
+                    .all_users(true)
             }),
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("!".into()),
-                edit_tracker: Some(poise::EditTracker::for_timespan(Duration::from_secs(3600))),
+                edit_tracker: Some(Arc::new(poise::EditTracker::for_timespan(
+                    Duration::from_secs(3600),
+                ))),
                 ..Default::default()
             },
             pre_command: |ctx| {
                 Box::pin(async move {
                     info!(
-                        guild_id = ctx.guild_id().map(|id| id.0).unwrap_or(0),
+                        guild_id = ctx.guild_id().map(|id| id.get()).unwrap_or(1),
                         "Received Command from @{}, in guild {}, in channel #{}: `{}`",
                         ctx.author().name,
                         ctx.guild()
-                            .map(|guild| guild.name)
+                            .map(|guild| guild.name.clone())
                             .unwrap_or("no-guild".to_string()),
                         ctx.channel_id()
-                            .name(ctx.cache())
+                            .name(ctx)
                             .await
                             .unwrap_or("Unknown".to_string()),
                         ctx.invocation_string(),
@@ -65,10 +63,6 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
             },
             ..Default::default()
         })
-        .token(env::BOT_TOKEN.get().unwrap())
-        .intents(
-            serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT,
-        )
         .setup(|_ctx, ready, _framework| {
             Box::pin(async move {
                 info!("Logged in as {}", ready.user.name);
@@ -77,18 +71,18 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
                     redis_client,
                 })
             })
-        });
+        })
+        .build();
 
-    let built_framework = framework.build().await.expect("Err building poise client");
-
-    logging::setup_discord_logging(
-        built_framework.client().cache_and_http.http.clone(),
-        db_clone,
+    let mut client = serenity::Client::builder(
+        env::BOT_TOKEN.get().unwrap(),
+        serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT,
     )
-    .await;
+    .framework(framework)
+    .await
+    .unwrap();
 
-    built_framework
-        .start()
-        .await
-        .expect("Err running poise client");
+    logging::setup_discord_logging(client.http.clone(), db_clone).await;
+
+    client.start().await.expect("Err running poise client");
 }

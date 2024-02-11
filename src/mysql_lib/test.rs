@@ -16,6 +16,7 @@ mod tests {
 
     async fn get_connection_pool() -> Pool<MySql> {
         INIT.call_once(|| {
+            env::init();
             tracing_subscriber::fmt::init();
         });
         let pool = get_connection(1)
@@ -29,26 +30,26 @@ mod tests {
 
     async fn create_guild_in_database(pool: &Pool<MySql>) -> DatabaseGuild {
         let guild = DatabaseGuild {
-            guild_id: GuildId(1),
+            guild_id: GuildId::new(1),
             ghost_warning_deadline: 2,
             ghost_kick_deadline: 3,
             ghost_time_to_check: Time::from_hms(8, 0, 0).unwrap(),
             ghost_enabled: true,
-            debug_channel: ChannelId(4),
-            bot_channel: ChannelId(5),
-            help_channel: ChannelId(6),
-            study_group_category: ChannelId(7),
-            subject_group_category: ChannelId(8),
-            studenty_role: RoleId(9),
-            moderator_role: RoleId(10),
-            newsletter_role: RoleId(11),
-            nsfw_role: RoleId(12),
-            study_role_separator_role: RoleId(13),
-            subject_role_separator_role: RoleId(14),
-            friend_role: RoleId(15),
+            debug_channel: ChannelId::new(4),
+            bot_channel: ChannelId::new(5),
+            help_channel: ChannelId::new(6),
+            study_group_category: ChannelId::new(7),
+            subject_group_category: ChannelId::new(8),
+            studenty_role: RoleId::new(9),
+            moderator_role: RoleId::new(10),
+            newsletter_role: RoleId::new(11),
+            nsfw_role: RoleId::new(12),
+            study_role_separator_role: RoleId::new(13),
+            subject_role_separator_role: RoleId::new(14),
+            friend_role: RoleId::new(15),
             tmpc_keep_time: Time::from_hms(12, 0, 0).unwrap(),
-            alumni_role: RoleId(16),
-            alumni_role_separator_role: RoleId(17),
+            alumni_role: RoleId::new(16),
+            alumni_role_separator_role: RoleId::new(17),
             logger_pipe_channel: None,
             tmp_studenty_role: None,
         };
@@ -85,23 +86,23 @@ mod tests {
             ghost_kick_deadline: guild.ghost_kick_deadline + 1,
             ghost_time_to_check: guild.ghost_time_to_check.add(Duration::from_secs(5)),
             ghost_enabled: !guild.ghost_enabled,
-            debug_channel: ChannelId(guild.debug_channel.0 + 1),
-            bot_channel: ChannelId(guild.bot_channel.0 + 1),
-            help_channel: ChannelId(guild.help_channel.0 + 1),
-            logger_pipe_channel: Some(ChannelId(7)),
-            study_group_category: ChannelId(guild.study_group_category.0 + 1),
-            subject_group_category: ChannelId(guild.subject_group_category.0 + 1),
-            studenty_role: RoleId(guild.studenty_role.0 + 1),
-            tmp_studenty_role: Some(RoleId(42)),
-            moderator_role: RoleId(guild.moderator_role.0 + 1),
-            newsletter_role: RoleId(guild.newsletter_role.0 + 1),
-            nsfw_role: RoleId(guild.nsfw_role.0 + 1),
-            study_role_separator_role: RoleId(guild.study_role_separator_role.0 + 1),
-            subject_role_separator_role: RoleId(guild.subject_role_separator_role.0 + 1),
-            friend_role: RoleId(guild.friend_role.0 + 1),
+            debug_channel: ChannelId::new(guild.debug_channel.get() + 1),
+            bot_channel: ChannelId::new(guild.bot_channel.get() + 1),
+            help_channel: ChannelId::new(guild.help_channel.get() + 1),
+            logger_pipe_channel: Some(ChannelId::new(7)),
+            study_group_category: ChannelId::new(guild.study_group_category.get() + 1),
+            subject_group_category: ChannelId::new(guild.subject_group_category.get() + 1),
+            studenty_role: RoleId::new(guild.studenty_role.get() + 1),
+            tmp_studenty_role: Some(RoleId::new(42)),
+            moderator_role: RoleId::new(guild.moderator_role.get() + 1),
+            newsletter_role: RoleId::new(guild.newsletter_role.get() + 1),
+            nsfw_role: RoleId::new(guild.nsfw_role.get() + 1),
+            study_role_separator_role: RoleId::new(guild.study_role_separator_role.get() + 1),
+            subject_role_separator_role: RoleId::new(guild.subject_role_separator_role.get() + 1),
+            friend_role: RoleId::new(guild.friend_role.get() + 1),
             tmpc_keep_time: guild.tmpc_keep_time.add(Duration::from_secs(5)),
-            alumni_role: RoleId(guild.alumni_role.0 + 1),
-            alumni_role_separator_role: RoleId(guild.alumni_role_separator_role.0 + 1),
+            alumni_role: RoleId::new(guild.alumni_role.get() + 1),
+            alumni_role_separator_role: RoleId::new(guild.alumni_role_separator_role.get() + 1),
         };
         let result =
             update_ghost_warning_deadline(&pool, guild.guild_id, guild.ghost_warning_deadline)
@@ -214,7 +215,7 @@ mod tests {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
         let alumni_role = DatabaseAlumniRole {
-            role: RoleId(5),
+            role: RoleId::new(5),
             guild_id: guild.guild_id,
         };
         let result = insert_alumni_role(&pool, alumni_role)
@@ -222,7 +223,7 @@ mod tests {
             .expect("Query was not successful");
         assert!(result, "Alumni role couldn't be inserted");
         let alumni_role = DatabaseAlumniRole {
-            role: RoleId(6),
+            role: RoleId::new(6),
             guild_id: guild.guild_id,
         };
         let result = insert_alumni_role(&pool, alumni_role)
@@ -314,20 +315,20 @@ mod tests {
         // Semester Study Group
 
         let semester_study_group = DatabaseSemesterStudyGroup {
-            role: RoleId(1),
+            role: RoleId::new(1),
             study_group_id: study_group.id.unwrap(),
             semester: 1,
-            text_channel: ChannelId(2),
+            text_channel: ChannelId::new(2),
         };
         let result = insert_semester_study_group(&pool, semester_study_group)
             .await
             .expect("Query was not successful");
         assert!(result, "Semester Study role couldn't get inserted");
         let semester_study_group = DatabaseSemesterStudyGroup {
-            role: RoleId(2),
+            role: RoleId::new(2),
             study_group_id: study_group2.id.unwrap(),
             semester: 1,
-            text_channel: ChannelId(3),
+            text_channel: ChannelId::new(3),
         };
         let result = insert_semester_study_group(&pool, semester_study_group)
             .await
@@ -380,20 +381,20 @@ mod tests {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
         let subject = DatabaseSubject {
-            role: RoleId(5),
+            role: RoleId::new(5),
             guild_id: guild.guild_id,
             name: "SE1".to_string(),
-            text_channel: ChannelId(4),
+            text_channel: ChannelId::new(4),
         };
         let result = insert_subject(&pool, subject.clone())
             .await
             .expect("Query was not successful");
         assert!(result, "Subject couldn't be inserted");
         let subject2 = DatabaseSubject {
-            role: RoleId(6),
+            role: RoleId::new(6),
             guild_id: guild.guild_id,
             name: "SE2".to_string(),
-            text_channel: ChannelId(5),
+            text_channel: ChannelId::new(5),
         };
         let result = insert_subject(&pool, subject2.clone())
             .await
@@ -427,10 +428,10 @@ mod tests {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
         let subject = DatabaseSubject {
-            role: RoleId(5),
+            role: RoleId::new(5),
             guild_id: guild.guild_id,
             name: "SE1".to_string(),
-            text_channel: ChannelId(4),
+            text_channel: ChannelId::new(4),
         };
         let result = insert_subject(&pool, subject.clone())
             .await
@@ -458,10 +459,10 @@ mod tests {
             .unwrap_or(None);
 
         let semester_study_group = DatabaseSemesterStudyGroup {
-            role: RoleId(1),
+            role: RoleId::new(1),
             study_group_id: study_group.id.unwrap(),
             semester: 1,
-            text_channel: ChannelId(2),
+            text_channel: ChannelId::new(2),
         };
         let result = insert_semester_study_group(&pool, semester_study_group)
             .await
@@ -532,7 +533,7 @@ mod tests {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
         let mut tmpc_join_channel = DatabaseTmpcJoinChannel {
-            voice_channel: ChannelId(2),
+            voice_channel: ChannelId::new(2),
             guild_id: guild.guild_id,
             persist: false,
         };
@@ -589,10 +590,10 @@ mod tests {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
         let mut tmpc = DatabaseTmpc {
-            voice_channel: ChannelId(2),
-            text_channel: ChannelId(3),
+            voice_channel: ChannelId::new(2),
+            text_channel: ChannelId::new(3),
             guild_id: guild.guild_id,
-            owner: UserId(4),
+            owner: UserId::new(4),
             persist: false,
             token: 0,
             keep: false,
@@ -639,8 +640,8 @@ mod tests {
 
         let token_message = DatabaseTokenMessage {
             tmpc_voice_channel: tmpc.voice_channel,
-            message: MessageId(4),
-            message_channel: ChannelId(1),
+            message: MessageId::new(4),
+            message_channel: ChannelId::new(1),
         };
         let result = insert_token_message(&pool, token_message)
             .await
