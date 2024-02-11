@@ -81,7 +81,11 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
 
     let built_framework = framework.build().await.expect("Err building poise client");
 
-    logging::setup_discord_logging(built_framework.clone(), db_clone).await;
+    logging::setup_discord_logging(
+        built_framework.client().cache_and_http.http.clone(),
+        db_clone,
+    )
+    .await;
 
     built_framework
         .start()
