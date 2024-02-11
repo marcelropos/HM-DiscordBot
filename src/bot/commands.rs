@@ -72,10 +72,7 @@ pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
     } else {
         // Logger pipe either not setup, or not the current channel
         // => set current channel as logger pipe
-        info!(
-            ?guild_id, channel_id = ?ctx.channel_id(),
-            "Setting logger pipe"
-        );
+        info!(?guild_id, "Setting logger pipe");
 
         ctx.say("Setting logger pipe to the current channel")
             .await?;
