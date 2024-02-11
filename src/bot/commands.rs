@@ -28,7 +28,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
 
 /// admin-only. Sets the configured logger pipe channel to the current channel.
 /// If the current channel is the current logger pipe channel, it will be deactivated.
-#[poise::command(prefix_command)]
+#[poise::command(prefix_command, guild_only)]
 pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
     // Check permissions
     if !checks::is_owner(ctx).await
@@ -40,12 +40,7 @@ pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
         return Ok(());
     }
 
-    let guild_id = if let Some(guild_id) = ctx.guild_id() {
-        guild_id
-    } else {
-        ctx.say("Needs to be executed in a guild").await?;
-        return Ok(());
-    };
+    let guild_id = ctx.guild_id().unwrap();
 
     let db = &ctx.data().database_pool;
     let db_guild = if let Some(db_guild) = mysql_lib::get_guild(db, guild_id).await {

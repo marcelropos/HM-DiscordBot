@@ -149,9 +149,3 @@ pub async fn sent_in_setup_guild(ctx: Context<'_>, pool: &Pool<MySql>) -> bool {
     }
     false
 }
-
-/// Checks if the message was sent in a guild
-#[allow(dead_code)]
-pub async fn sent_in_guild(ctx: Context<'_>) -> bool {
-    ctx.guild_id().is_some()
-}
