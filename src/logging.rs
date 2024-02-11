@@ -41,12 +41,21 @@ pub async fn setup_logging() -> WorkerGuard {
     let (discord_layer_reloadable, log_reload_handle) = reload::Layer::new(discord_layer);
 
     let discord_layer_filtered = discord_layer_reloadable
-        .with_filter(filter::Targets::new().with_target("discord", Level::INFO));
+        .with_filter(filter::Targets::new().with_target("hm_discord_bot", Level::INFO));
 
     tracing_subscriber::registry()
         .with(discord_layer_filtered)
-        .with(fmt::layer().compact())
-        .with(fmt::layer().compact().with_writer(rolling_file_writer))
+        .with(
+            fmt::layer()
+                .with_writer(std::io::stdout.with_max_level(*env::LOG_LEVEL.get().unwrap()))
+                .compact(),
+        )
+        .with(
+            fmt::layer()
+                .compact()
+                .with_writer(rolling_file_writer.with_max_level(*env::LOG_LEVEL.get().unwrap()))
+                .with_ansi(false),
+        )
         .init();
 
     info!("Setup logging");
