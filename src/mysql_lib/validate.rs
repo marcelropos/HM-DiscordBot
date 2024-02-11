@@ -23,14 +23,14 @@ pub async fn validate_guild<'a>(
         Err(_) => {
             return Err(format!(
                 "Bot doesn't know guild: {}",
-                database_guild.guild_id.0
+                database_guild.guild_id.get()
             ));
         }
         Ok(roles) => {
             if !roles.contains_key(&database_guild.studenty_role) {
                 return Err(format!(
                     "Bot doesn't know studenty role: {}",
-                    database_guild.studenty_role.0
+                    database_guild.studenty_role.get()
                 ));
             }
             if let Some(tmp_studenty_role) = database_guild.tmp_studenty_role {
@@ -53,114 +53,114 @@ pub async fn validate_guild<'a>(
             if !roles.contains_key(&database_guild.moderator_role) {
                 return Err(format!(
                     "Bot doesn't know moderator role: {}",
-                    database_guild.moderator_role.0
+                    database_guild.moderator_role.get()
                 ));
             }
             if !roles.contains_key(&database_guild.newsletter_role) {
                 return Err(format!(
                     "Bot doesn't know newsletter role: {}",
-                    database_guild.newsletter_role.0
+                    database_guild.newsletter_role.get()
                 ));
             }
             if !roles.contains_key(&database_guild.nsfw_role) {
                 return Err(format!(
                     "Bot doesn't know nsfw role: {}",
-                    database_guild.nsfw_role.0
+                    database_guild.nsfw_role.get()
                 ));
             }
             if !roles.contains_key(&database_guild.study_role_separator_role) {
                 return Err(format!(
                     "Bot doesn't know study role separator role: {}",
-                    database_guild.study_role_separator_role.0
+                    database_guild.study_role_separator_role.get()
                 ));
             }
             if !roles.contains_key(&database_guild.subject_role_separator_role) {
                 return Err(format!(
                     "Bot doesn't know subject role separator role: {}",
-                    database_guild.subject_role_separator_role.0
+                    database_guild.subject_role_separator_role.get()
                 ));
             }
             if !roles.contains_key(&database_guild.friend_role) {
                 return Err(format!(
                     "Bot doesn't know friend role: {}",
-                    database_guild.friend_role.0
+                    database_guild.friend_role.get()
                 ));
             }
             if !roles.contains_key(&database_guild.alumni_role) {
                 return Err(format!(
                     "Bot doesn't know alumni role: {}",
-                    database_guild.alumni_role.0
+                    database_guild.alumni_role.get()
                 ));
             }
             if !roles.contains_key(&database_guild.alumni_role_separator_role) {
                 return Err(format!(
                     "Bot doesn't know alumni role separator role: {}",
-                    database_guild.alumni_role_separator_role.0
+                    database_guild.alumni_role_separator_role.get()
                 ));
             }
         }
     }
     if ctx
         .http()
-        .get_channel(database_guild.debug_channel.0)
+        .get_channel(database_guild.debug_channel)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know debug channel: {}",
-            database_guild.debug_channel.0
+            database_guild.debug_channel.get()
         ));
     }
     if ctx
         .http()
-        .get_channel(database_guild.bot_channel.0)
+        .get_channel(database_guild.bot_channel)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know bot channel: {}",
-            database_guild.bot_channel.0
+            database_guild.bot_channel.get()
         ));
     }
     if ctx
         .http()
-        .get_channel(database_guild.help_channel.0)
+        .get_channel(database_guild.help_channel)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know help channel: {}",
-            database_guild.help_channel.0
+            database_guild.help_channel.get()
         ));
     }
     if let Some(logger_pipe_channel) = database_guild.logger_pipe_channel {
-        if ctx.http().get_channel(logger_pipe_channel.0).await.is_err() {
+        if ctx.http().get_channel(logger_pipe_channel).await.is_err() {
             return Err(format!(
                 "Bot doesn't know logger pipe channel: {}",
-                database_guild.help_channel.0
+                database_guild.help_channel.get()
             ));
         }
     }
     if ctx
         .http()
-        .get_channel(database_guild.study_group_category.0)
+        .get_channel(database_guild.study_group_category)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know study group category: {}",
-            database_guild.study_group_category.0
+            database_guild.study_group_category.get()
         ));
     }
     if ctx
         .http()
-        .get_channel(database_guild.subject_group_category.0)
+        .get_channel(database_guild.subject_group_category)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know subject group category: {}",
-            database_guild.subject_group_category.0
+            database_guild.subject_group_category.get()
         ));
     }
 
@@ -178,7 +178,7 @@ pub async fn validate_alumni<'a>(
         Err(_) => {
             return Err(format!(
                 "Bot doesn't know guild: {}",
-                database_alumni_role.guild_id.0
+                database_alumni_role.guild_id.get()
             ));
         }
         Ok(roles) => {
@@ -195,7 +195,7 @@ pub async fn validate_alumni<'a>(
                 }
                 return Err(format!(
                     "Bot doesn't know alumni role: {}",
-                    database_alumni_role.role.0
+                    database_alumni_role.role.get()
                 ));
             }
         }
@@ -211,13 +211,13 @@ pub async fn validate_study_group(
     database_study_group: &DatabaseStudyGroup,
 ) -> Result<&DatabaseStudyGroup, String> {
     if http
-        .get_guild(database_study_group.guild_id.0)
+        .get_guild(database_study_group.guild_id)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know guild: {}",
-            database_study_group.guild_id.0
+            database_study_group.guild_id.get()
         ));
     }
 
@@ -234,7 +234,7 @@ pub async fn validate_semester_study_group<'a>(
 ) -> Result<&'a DatabaseSemesterStudyGroup, String> {
     match guild_id.roles(ctx.http()).await {
         Err(_) => {
-            return Err(format!("Bot doesn't know guild: {}", guild_id.0));
+            return Err(format!("Bot doesn't know guild: {}", guild_id.get()));
         }
         Ok(roles) => {
             if !roles.contains_key(&database_semester_study_group.role) {
@@ -252,7 +252,7 @@ pub async fn validate_semester_study_group<'a>(
                 }
                 return Err(format!(
                     "Bot doesn't know semester study group: {}",
-                    database_semester_study_group.role.0
+                    database_semester_study_group.role.get()
                 ));
             }
         }
@@ -260,7 +260,7 @@ pub async fn validate_semester_study_group<'a>(
 
     if ctx
         .http()
-        .get_channel(database_semester_study_group.text_channel.0)
+        .get_channel(database_semester_study_group.text_channel)
         .await
         .is_err()
     {
@@ -276,7 +276,7 @@ pub async fn validate_semester_study_group<'a>(
         }
         return Err(format!(
             "Bot doesn't know text channel of semester study group: {}",
-            database_semester_study_group.text_channel.0
+            database_semester_study_group.text_channel.get()
         ));
     }
 
@@ -296,7 +296,7 @@ pub async fn validate_subject<'a>(
         Err(_) => {
             return Err(format!(
                 "Bot doesn't know guild: {}",
-                database_subject.guild_id.0
+                database_subject.guild_id.get()
             ));
         }
         Ok(roles) => {
@@ -313,7 +313,7 @@ pub async fn validate_subject<'a>(
                 }
                 return Err(format!(
                     "Bot doesn't know role of subject: {}",
-                    database_subject.role.0
+                    database_subject.role.get()
                 ));
             }
         }
@@ -321,7 +321,7 @@ pub async fn validate_subject<'a>(
 
     if ctx
         .http()
-        .get_channel(database_subject.text_channel.0)
+        .get_channel(database_subject.text_channel)
         .await
         .is_err()
     {
@@ -337,7 +337,7 @@ pub async fn validate_subject<'a>(
         }
         return Err(format!(
             "Bot doesn't know text channel of subject: {}",
-            database_subject.text_channel.0
+            database_subject.text_channel.get()
         ));
     }
 
@@ -357,7 +357,7 @@ pub async fn validate_study_subject_link<'a>(
         Err(_) => {
             return Err(format!(
                 "Bot doesn't know guild: {}",
-                database_study_subject_link.guild_id.0
+                database_study_subject_link.guild_id.get()
             ));
         }
         Ok(roles) => {
@@ -378,7 +378,7 @@ pub async fn validate_study_subject_link<'a>(
                 }
                 return Err(format!(
                     "Bot doesn't know study_group_role or subject role of study-subject link: {}",
-                    database_study_subject_link.study_group_role.0
+                    database_study_subject_link.study_group_role.get()
                 ));
             }
         }
@@ -398,19 +398,19 @@ pub async fn validate_tmpc_join_channel<'a>(
 ) -> Result<&'a DatabaseTmpcJoinChannel, String> {
     if ctx
         .http()
-        .get_guild(database_tmpc_join_channel.guild_id.0)
+        .get_guild(database_tmpc_join_channel.guild_id)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know guild: {}",
-            database_tmpc_join_channel.guild_id.0
+            database_tmpc_join_channel.guild_id.get()
         ));
     }
 
     if ctx
         .http()
-        .get_channel(database_tmpc_join_channel.voice_channel.0)
+        .get_channel(database_tmpc_join_channel.voice_channel)
         .await
         .is_err()
     {
@@ -426,7 +426,7 @@ pub async fn validate_tmpc_join_channel<'a>(
         }
         return Err(format!(
             "Bot doesn't know voice channel of tmpc join channel: {}",
-            database_tmpc_join_channel.voice_channel.0
+            database_tmpc_join_channel.voice_channel.get()
         ));
     }
 
@@ -446,24 +446,24 @@ pub async fn validate_tmpc<'a>(
 ) -> Result<&'a DatabaseTmpc, String> {
     if ctx
         .http()
-        .get_guild(database_tmpc.guild_id.0)
+        .get_guild(database_tmpc.guild_id)
         .await
         .is_err()
     {
         return Err(format!(
             "Bot doesn't know guild: {}",
-            database_tmpc.guild_id.0
+            database_tmpc.guild_id.get()
         ));
     }
 
     if ctx
         .http()
-        .get_channel(database_tmpc.voice_channel.0)
+        .get_channel(database_tmpc.voice_channel)
         .await
         .is_err()
         || ctx
             .http()
-            .get_channel(database_tmpc.text_channel.0)
+            .get_channel(database_tmpc.text_channel)
             .await
             .is_err()
     {
@@ -479,7 +479,7 @@ pub async fn validate_tmpc<'a>(
         }
         return Err(format!(
             "Bot doesn't know tmpc: {} {}",
-            database_tmpc.voice_channel.0, database_tmpc.text_channel.0
+            database_tmpc.voice_channel.get(), database_tmpc.text_channel.get()
         ));
     }
 
@@ -497,14 +497,14 @@ pub async fn validate_token_message<'a>(
 ) -> Result<&'a DatabaseTokenMessage, String> {
     if ctx
         .http()
-        .get_channel(database_token_message.message_channel.0)
+        .get_channel(database_token_message.message_channel)
         .await
         .is_err()
         || ctx
             .http()
             .get_message(
-                database_token_message.message_channel.0,
-                database_token_message.message.0,
+                database_token_message.message_channel,
+                database_token_message.message,
             )
             .await
             .is_err()
@@ -521,7 +521,7 @@ pub async fn validate_token_message<'a>(
         }
         return Err(format!(
             "Bot doesn't know token message: {} {}",
-            database_token_message.message_channel.0, database_token_message.message.0
+            database_token_message.message_channel.get(), database_token_message.message.get()
         ));
     }
 

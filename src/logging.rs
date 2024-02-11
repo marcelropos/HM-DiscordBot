@@ -3,7 +3,7 @@ use std::fs;
 use std::num::NonZeroU64;
 use std::sync::{Arc, OnceLock};
 
-use poise::serenity_prelude::{ChannelId, GuildId, Http};
+use poise::serenity_prelude::{ChannelId, CreateMessage, GuildId, Http};
 use poise::serenity_prelude::futures::executor::block_on;
 use rolling_file::RollingConditionBasic;
 use sqlx::{MySql, Pool};
@@ -74,14 +74,14 @@ pub async fn setup_discord_logging(discord_http: Arc<Http>, db: Pool<MySql>) {
 
     // Setup main logging guild/channel
     let main_guild_channels = discord_http
-        .get_channels(*env::MAIN_GUILD_ID.get().unwrap())
+        .get_channels(GuildId::new(*env::MAIN_GUILD_ID.get().unwrap()))
         .await
         .expect("Could not get main guild");
 
     let main_logging_channel = main_guild_channels[0].id;
 
     modify_discord_layer(|discord_layer| {
-        discord_layer.main_log_channel = NonZeroU64::new(main_logging_channel.0);
+        discord_layer.main_log_channel = NonZeroU64::new(main_logging_channel.get());
     });
 
     // Setup logging channels per server
@@ -172,11 +172,10 @@ where
             let local_discord_http = discord_http.clone();
             let message_copy = message.clone();
             spawn_blocking(move || {
-                let _ = block_on(
-                    ChannelId(channel_id.get()).send_message(local_discord_http, |m| {
-                        m.content(format!("{event_level} {}", message_copy))
-                    }),
-                );
+                let _ = block_on(ChannelId::new(channel_id.get()).send_message(
+                    local_discord_http,
+                    CreateMessage::new().content(format!("{event_level} {}", message_copy)),
+                ));
             });
         }
 
@@ -185,9 +184,10 @@ where
                 let channel_id = *channel_id;
                 let local_discord_http = discord_http.clone();
                 spawn_blocking(move || {
-                    let _ = block_on(channel_id.send_message(local_discord_http.clone(), |m| {
-                        m.content(format!("{event_level} {message}"))
-                    }));
+                    let _ = block_on(channel_id.send_message(
+                        local_discord_http.clone(),
+                        CreateMessage::new().content(format!("{event_level} {message}")),
+                    ));
                 });
             }
         }

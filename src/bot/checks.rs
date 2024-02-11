@@ -58,13 +58,13 @@ pub async fn is_admin(ctx: Context<'_>) -> bool {
 
 /// Returns false in case of an error
 pub async fn is_bot_admin(ctx: Context<'_>) -> bool {
-    let author_id = ctx.author().id.0;
+    let author_id = ctx.author().id;
     let main_guild_id = env::MAIN_GUILD_ID.get().unwrap();
 
-    let main_guild_member = ctx.http().get_member(*main_guild_id, author_id).await
+    let main_guild_member = ctx.http().get_member(GuildId::new(*main_guild_id), author_id).await
         .map_err(|err| error!(
                 error = err.to_string(),
-                member_id = author_id,
+                member_id = author_id.get(),
                 "Could not get main guild member"
             )).ok();
 
@@ -75,7 +75,7 @@ pub async fn is_bot_admin(ctx: Context<'_>) -> bool {
     };
 
 
-    let main_guild_roles = GuildId(*main_guild_id).roles(ctx.http()).await
+    let main_guild_roles = GuildId::new(*main_guild_id).roles(ctx.http()).await
         .map_err(|err| error!(error = err.to_string(), "Could not get main guild roles"))
         .ok();
 
@@ -117,7 +117,7 @@ pub async fn sent_in_main_guild(ctx: Context<'_>) -> bool {
     if let Some(guild) = ctx.guild() {
         return env::MAIN_GUILD_ID
             .get()
-            .map_or(false, |&main_guild_id| guild.id.0 == main_guild_id);
+            .map_or(false, |&main_guild_id| guild.id.get() == main_guild_id);
     }
     false
 }

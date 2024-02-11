@@ -44,7 +44,7 @@ pub async fn migrate_database(pool: &Pool<MySql>) -> Result<(), MigrateError> {
 #[allow(dead_code)]
 pub async fn is_guild_in_database(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool> {
     match sqlx::query("SELECT * FROM Guild WHERE guild_id=?")
-        .bind(guild_id.0)
+        .bind(guild_id.get())
         .fetch_optional(pool)
         .await
     {
@@ -174,32 +174,32 @@ pub struct DatabaseTokenMessage {
 impl FromRow<'_, MySqlRow> for DatabaseGuild {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            guild_id: GuildId(row.try_get("guild_id")?),
+            guild_id: GuildId::new(row.try_get("guild_id")?),
             ghost_warning_deadline: row.try_get("ghost_warn_deadline")?,
             ghost_kick_deadline: row.try_get("ghost_kick_deadline")?,
             ghost_time_to_check: row.try_get("ghost_time_to_check")?,
             ghost_enabled: row.try_get("ghost_enabled")?,
-            debug_channel: ChannelId(row.try_get("debug_channel")?),
-            bot_channel: ChannelId(row.try_get("bot_channel")?),
-            help_channel: ChannelId(row.try_get("help_channel")?),
+            debug_channel: ChannelId::new(row.try_get("debug_channel")?),
+            bot_channel: ChannelId::new(row.try_get("bot_channel")?),
+            help_channel: ChannelId::new(row.try_get("help_channel")?),
             logger_pipe_channel: row
                 .try_get("logger_pipe_channel")
-                .map(|val: Option<u64>| val.map(ChannelId))?,
-            study_group_category: ChannelId(row.try_get("study_group_category")?),
-            subject_group_category: ChannelId(row.try_get("subject_group_category")?),
-            studenty_role: RoleId(row.try_get("studenty_role")?),
+                .map(|val: Option<u64>| val.map(ChannelId::new))?,
+            study_group_category: ChannelId::new(row.try_get("study_group_category")?),
+            subject_group_category: ChannelId::new(row.try_get("subject_group_category")?),
+            studenty_role: RoleId::new(row.try_get("studenty_role")?),
             tmp_studenty_role: row
                 .try_get("tmp_studenty_role")
-                .map(|val: Option<u64>| val.map(RoleId))?,
-            moderator_role: RoleId(row.try_get("moderator_role")?),
-            newsletter_role: RoleId(row.try_get("newsletter_role")?),
-            nsfw_role: RoleId(row.try_get("nsfw_role")?),
-            study_role_separator_role: RoleId(row.try_get("study_role_separator_role")?),
-            subject_role_separator_role: RoleId(row.try_get("subject_role_separator_role")?),
-            friend_role: RoleId(row.try_get("friend_role")?),
+                .map(|val: Option<u64>| val.map(RoleId::new))?,
+            moderator_role: RoleId::new(row.try_get("moderator_role")?),
+            newsletter_role: RoleId::new(row.try_get("newsletter_role")?),
+            nsfw_role: RoleId::new(row.try_get("nsfw_role")?),
+            study_role_separator_role: RoleId::new(row.try_get("study_role_separator_role")?),
+            subject_role_separator_role: RoleId::new(row.try_get("subject_role_separator_role")?),
+            friend_role: RoleId::new(row.try_get("friend_role")?),
             tmpc_keep_time: row.try_get("tmpc_keep_time")?,
-            alumni_role: RoleId(row.try_get("alumni_role")?),
-            alumni_role_separator_role: RoleId(row.try_get("alumni_role_separator_role")?),
+            alumni_role: RoleId::new(row.try_get("alumni_role")?),
+            alumni_role_separator_role: RoleId::new(row.try_get("alumni_role_separator_role")?),
         })
     }
 }
@@ -207,8 +207,8 @@ impl FromRow<'_, MySqlRow> for DatabaseGuild {
 impl FromRow<'_, MySqlRow> for DatabaseAlumniRole {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            role: RoleId(row.try_get("role")?),
-            guild_id: GuildId(row.try_get("guild_id")?),
+            role: RoleId::new(row.try_get("role")?),
+            guild_id: GuildId::new(row.try_get("guild_id")?),
         })
     }
 }
@@ -217,7 +217,7 @@ impl FromRow<'_, MySqlRow> for DatabaseStudyGroup {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
             id: row.try_get("id")?,
-            guild_id: GuildId(row.try_get("guild_id")?),
+            guild_id: GuildId::new(row.try_get("guild_id")?),
             name: row.try_get("name")?,
             color: row.try_get("color")?,
             active: row.try_get("active")?,
@@ -228,10 +228,10 @@ impl FromRow<'_, MySqlRow> for DatabaseStudyGroup {
 impl FromRow<'_, MySqlRow> for DatabaseSemesterStudyGroup {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            role: RoleId(row.try_get("role")?),
+            role: RoleId::new(row.try_get("role")?),
             study_group_id: row.try_get("study_group_id")?,
             semester: row.try_get("semester")?,
-            text_channel: ChannelId(row.try_get("text_channel")?),
+            text_channel: ChannelId::new(row.try_get("text_channel")?),
         })
     }
 }
@@ -239,10 +239,10 @@ impl FromRow<'_, MySqlRow> for DatabaseSemesterStudyGroup {
 impl FromRow<'_, MySqlRow> for DatabaseSubject {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            role: RoleId(row.try_get("role")?),
-            guild_id: GuildId(row.try_get("guild_id")?),
+            role: RoleId::new(row.try_get("role")?),
+            guild_id: GuildId::new(row.try_get("guild_id")?),
             name: row.try_get("name")?,
-            text_channel: ChannelId(row.try_get("text_channel")?),
+            text_channel: ChannelId::new(row.try_get("text_channel")?),
         })
     }
 }
@@ -250,9 +250,9 @@ impl FromRow<'_, MySqlRow> for DatabaseSubject {
 impl FromRow<'_, MySqlRow> for DatabaseStudySubjectLink {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            study_group_role: RoleId(row.try_get("study_group_role")?),
-            subject_role: RoleId(row.try_get("subject_role")?),
-            guild_id: GuildId(row.try_get("guild_id")?),
+            study_group_role: RoleId::new(row.try_get("study_group_role")?),
+            subject_role: RoleId::new(row.try_get("subject_role")?),
+            guild_id: GuildId::new(row.try_get("guild_id")?),
         })
     }
 }
@@ -260,8 +260,8 @@ impl FromRow<'_, MySqlRow> for DatabaseStudySubjectLink {
 impl FromRow<'_, MySqlRow> for DatabaseTmpcJoinChannel {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            voice_channel: ChannelId(row.try_get("voice_channel")?),
-            guild_id: GuildId(row.try_get("guild_id")?),
+            voice_channel: ChannelId::new(row.try_get("voice_channel")?),
+            guild_id: GuildId::new(row.try_get("guild_id")?),
             persist: row.try_get("persist")?,
         })
     }
@@ -270,10 +270,10 @@ impl FromRow<'_, MySqlRow> for DatabaseTmpcJoinChannel {
 impl FromRow<'_, MySqlRow> for DatabaseTmpc {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            voice_channel: ChannelId(row.try_get("voice_channel")?),
-            text_channel: ChannelId(row.try_get("text_channel")?),
-            guild_id: GuildId(row.try_get("guild_id")?),
-            owner: UserId(row.try_get("owner")?),
+            voice_channel: ChannelId::new(row.try_get("voice_channel")?),
+            text_channel: ChannelId::new(row.try_get("text_channel")?),
+            guild_id: GuildId::new(row.try_get("guild_id")?),
+            owner: UserId::new(row.try_get("owner")?),
             persist: row.try_get("persist")?,
             token: row.try_get("token")?,
             keep: row.try_get("keep")?,
@@ -285,9 +285,9 @@ impl FromRow<'_, MySqlRow> for DatabaseTmpc {
 impl FromRow<'_, MySqlRow> for DatabaseTokenMessage {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
-            tmpc_voice_channel: ChannelId(row.try_get("tmpc_voice_channel")?),
-            message: MessageId(row.try_get("message")?),
-            message_channel: ChannelId(row.try_get("message_channel")?),
+            tmpc_voice_channel: ChannelId::new(row.try_get("tmpc_voice_channel")?),
+            message: MessageId::new(row.try_get("message")?),
+            message_channel: ChannelId::new(row.try_get("message_channel")?),
         })
     }
 }
@@ -322,26 +322,26 @@ alumni_role,
 alumni_role_separator_role)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
     )
-    .bind(guild.guild_id.0)
+    .bind(guild.guild_id.get())
     .bind(guild.ghost_warning_deadline)
     .bind(guild.ghost_kick_deadline)
     .bind(guild.ghost_time_to_check)
     .bind(guild.ghost_enabled)
-    .bind(guild.debug_channel.0)
-    .bind(guild.bot_channel.0)
-    .bind(guild.help_channel.0)
-    .bind(guild.study_group_category.0)
-    .bind(guild.subject_group_category.0)
-    .bind(guild.studenty_role.0)
-    .bind(guild.moderator_role.0)
-    .bind(guild.newsletter_role.0)
-    .bind(guild.nsfw_role.0)
-    .bind(guild.study_role_separator_role.0)
-    .bind(guild.subject_role_separator_role.0)
-    .bind(guild.friend_role.0)
+    .bind(guild.debug_channel.get())
+    .bind(guild.bot_channel.get())
+    .bind(guild.help_channel.get())
+    .bind(guild.study_group_category.get())
+    .bind(guild.subject_group_category.get())
+    .bind(guild.studenty_role.get())
+    .bind(guild.moderator_role.get())
+    .bind(guild.newsletter_role.get())
+    .bind(guild.nsfw_role.get())
+    .bind(guild.study_role_separator_role.get())
+    .bind(guild.subject_role_separator_role.get())
+    .bind(guild.friend_role.get())
     .bind(guild.tmpc_keep_time)
-    .bind(guild.alumni_role.0)
-    .bind(guild.alumni_role_separator_role.0)
+    .bind(guild.alumni_role.get())
+    .bind(guild.alumni_role_separator_role.get())
     .execute(pool)
     .await
     {
@@ -357,7 +357,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 #[allow(dead_code)]
 pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool> {
     match sqlx::query("DELETE FROM Guild WHERE guild_id=?")
-        .bind(guild_id.0)
+        .bind(guild_id.get())
         .execute(pool)
         .await
     {
@@ -373,7 +373,7 @@ pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool>
 #[allow(dead_code)]
 pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<DatabaseGuild> {
     match sqlx::query_as::<_, DatabaseGuild>("SELECT * FROM Guild WHERE guild_id=?")
-        .bind(guild_id.0)
+        .bind(guild_id.get())
         .fetch_one(pool)
         .await
     {
@@ -683,59 +683,59 @@ async fn update_guild_table_value(
         }
         Column::DebugChannel(val) => {
             query = query_format!("debug_channel");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::BotChannel(val) => {
             query = query_format!("bot_channel");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::HelpChannel(val) => {
             query = query_format!("help_channel");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::LoggerPipeChannel(val) => {
             query = query_format!("logger_pipe_channel");
-            sqlx::query(query.as_str()).bind(val.map(|val| val.0))
+            sqlx::query(query.as_str()).bind(val.map(|val| val.get()))
         }
         Column::StudyGroupCategory(val) => {
             query = query_format!("study_group_category");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::SubjectGroupCategory(val) => {
             query = query_format!("subject_group_category");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::StudentyRole(val) => {
             query = query_format!("studenty_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::TmpStudentyRole(val) => {
             query = query_format!("tmp_studenty_role");
-            sqlx::query(query.as_str()).bind(val.map(|val| val.0))
+            sqlx::query(query.as_str()).bind(val.map(|val| val.get()))
         }
         Column::ModeratorRole(val) => {
             query = query_format!("moderator_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::NewsletterRole(val) => {
             query = query_format!("newsletter_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::NsfwRole(val) => {
             query = query_format!("nsfw_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::StudyRoleSeparatorRole(val) => {
             query = query_format!("study_role_separator_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::SubjectRoleSeparatorRole(val) => {
             query = query_format!("subject_role_separator_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::FriendRole(val) => {
             query = query_format!("friend_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::TmpcKeepTime(val) => {
             query = query_format!("tmpc_keep_time");
@@ -743,14 +743,14 @@ async fn update_guild_table_value(
         }
         Column::AlumniRole(val) => {
             query = query_format!("alumni_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
         Column::AlumniRoleSeparatorRole(val) => {
             query = query_format!("alumni_role_separator_role");
-            sqlx::query(query.as_str()).bind(val.0)
+            sqlx::query(query.as_str()).bind(val.get())
         }
     }
-    .bind(guild_id.0)
+    .bind(guild_id.get())
     .execute(pool)
     .await
     {
@@ -770,8 +770,8 @@ pub async fn insert_alumni_role(
     alumni_role: DatabaseAlumniRole,
 ) -> Option<bool> {
     match sqlx::query("INSERT IGNORE INTO Alumni_roles (role, guild_id) VALUES (?, ?);")
-        .bind(alumni_role.role.0)
-        .bind(alumni_role.guild_id.0)
+        .bind(alumni_role.role.get())
+        .bind(alumni_role.guild_id.get())
         .execute(pool)
         .await
     {
@@ -790,8 +790,8 @@ pub async fn delete_alumni_role(
     alumni_role: DatabaseAlumniRole,
 ) -> Option<bool> {
     match sqlx::query("DELETE FROM Alumni_roles WHERE role=? AND guild_id=?")
-        .bind(alumni_role.role.0)
-        .bind(alumni_role.guild_id.0)
+        .bind(alumni_role.role.get())
+        .bind(alumni_role.guild_id.get())
         .execute(pool)
         .await
     {
@@ -810,7 +810,7 @@ pub async fn get_alumni_roles(
     guild_id: GuildId,
 ) -> Option<Vec<DatabaseAlumniRole>> {
     match sqlx::query_as::<_, DatabaseAlumniRole>("SELECT * FROM Alumni_roles WHERE guild_id=?")
-        .bind(guild_id.0)
+        .bind(guild_id.get())
         .fetch_all(pool)
         .await
     {
@@ -834,7 +834,7 @@ pub async fn insert_study_group(
     match sqlx::query(
         "INSERT IGNORE INTO Study_groups (guild_id, name, color, active) VALUES (?, ?, ?, ?);",
     )
-    .bind(study_group.guild_id.0)
+    .bind(study_group.guild_id.get())
     .bind(study_group.name)
     .bind(study_group.color)
     .bind(study_group.active)
@@ -861,7 +861,7 @@ pub async fn delete_study_group(
     }
     match sqlx::query("DELETE FROM Study_groups WHERE id=? AND guild_id=?")
         .bind(study_group.id)
-        .bind(study_group.guild_id.0)
+        .bind(study_group.guild_id.get())
         .execute(pool)
         .await
     {
@@ -880,7 +880,7 @@ pub async fn get_study_groups(
     guild_id: GuildId,
 ) -> Option<Vec<DatabaseStudyGroup>> {
     match sqlx::query_as::<_, DatabaseStudyGroup>("SELECT * FROM Study_groups WHERE guild_id=?")
-        .bind(guild_id.0)
+        .bind(guild_id.get())
         .fetch_all(pool)
         .await
     {
@@ -910,7 +910,7 @@ pub async fn update_study_group(
         .bind(study_group.color)
         .bind(study_group.active)
         .bind(study_group.id)
-        .bind(study_group.guild_id.0)
+        .bind(study_group.guild_id.get())
         .execute(pool)
         .await
     {
@@ -937,10 +937,10 @@ semester,
 text_channel)
 VALUES (?, ?, ?, ?);",
     )
-    .bind(semester_study_group.role.0)
+    .bind(semester_study_group.role.get())
     .bind(semester_study_group.study_group_id)
     .bind(semester_study_group.semester)
-    .bind(semester_study_group.text_channel.0)
+    .bind(semester_study_group.text_channel.get())
     .execute(pool)
     .await
     {
@@ -959,7 +959,7 @@ pub async fn delete_semester_study_group(
     semester_study_group: DatabaseSemesterStudyGroup,
 ) -> Option<bool> {
     match sqlx::query("DELETE FROM Semester_study_groups WHERE role=? AND study_group_id=?")
-        .bind(semester_study_group.role.0)
+        .bind(semester_study_group.role.get())
         .bind(semester_study_group.study_group_id)
         .execute(pool)
         .await
@@ -984,7 +984,7 @@ FROM Semester_study_groups
 INNER JOIN Study_groups ON Semester_study_groups.study_group_id = Study_groups.id
 WHERE guild_id=?",
     )
-    .bind(guild_id.0)
+    .bind(guild_id.get())
     .fetch_all(pool)
     .await
     {
@@ -1024,10 +1024,10 @@ pub async fn insert_subject(pool: &Pool<MySql>, subject: DatabaseSubject) -> Opt
     match sqlx::query(
         "INSERT IGNORE INTO Subject (role, guild_id, name, text_channel) VALUES (?, ?, ?, ?);",
     )
-    .bind(subject.role.0)
-    .bind(subject.guild_id.0)
+    .bind(subject.role.get())
+    .bind(subject.guild_id.get())
     .bind(subject.name)
-    .bind(subject.text_channel.0)
+    .bind(subject.text_channel.get())
     .execute(pool)
     .await
     {
@@ -1043,8 +1043,8 @@ pub async fn insert_subject(pool: &Pool<MySql>, subject: DatabaseSubject) -> Opt
 #[allow(dead_code)]
 pub async fn delete_subject(pool: &Pool<MySql>, subject: DatabaseSubject) -> Option<bool> {
     match sqlx::query("DELETE FROM Subject WHERE role=? AND guild_id=?")
-        .bind(subject.role.0)
-        .bind(subject.guild_id.0)
+        .bind(subject.role.get())
+        .bind(subject.guild_id.get())
         .execute(pool)
         .await
     {
@@ -1060,7 +1060,7 @@ pub async fn delete_subject(pool: &Pool<MySql>, subject: DatabaseSubject) -> Opt
 #[allow(dead_code)]
 pub async fn get_subjects(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<DatabaseSubject>> {
     match sqlx::query_as::<_, DatabaseSubject>("SELECT * FROM Subject WHERE guild_id=?")
-        .bind(guild_id.0)
+        .bind(guild_id.get())
         .fetch_all(pool)
         .await
     {
@@ -1086,9 +1086,9 @@ subject_role,
 guild_id)
 VALUES (?, ?, ?);",
     )
-    .bind(study_subject_link.study_group_role.0)
-    .bind(study_subject_link.subject_role.0)
-    .bind(study_subject_link.guild_id.0)
+    .bind(study_subject_link.study_group_role.get())
+    .bind(study_subject_link.subject_role.get())
+    .bind(study_subject_link.guild_id.get())
     .execute(pool)
     .await
     {
@@ -1109,9 +1109,9 @@ pub async fn delete_study_subject_link(
     match sqlx::query(
         "DELETE FROM Study_subject_link WHERE study_group_role=? AND subject_role=? AND guild_id=?",
     )
-    .bind(study_subject_link.study_group_role.0)
-    .bind(study_subject_link.subject_role.0)
-    .bind(study_subject_link.guild_id.0)
+    .bind(study_subject_link.study_group_role.get())
+    .bind(study_subject_link.subject_role.get())
+    .bind(study_subject_link.guild_id.get())
     .execute(pool)
     .await
     {
@@ -1132,7 +1132,7 @@ pub async fn get_study_subject_links_in_guild(
     match sqlx::query_as::<_, DatabaseStudySubjectLink>(
         "SELECT * FROM Study_subject_link WHERE guild_id=?",
     )
-    .bind(guild_id.0)
+    .bind(guild_id.get())
     .fetch_all(pool)
     .await
     {
@@ -1153,7 +1153,7 @@ pub async fn get_study_subject_links_for_subject(
     match sqlx::query_as::<_, DatabaseStudySubjectLink>(
         "SELECT * FROM Study_subject_link WHERE subject_role=?",
     )
-    .bind(subject_role_id.0)
+    .bind(subject_role_id.get())
     .fetch_all(pool)
     .await
     {
@@ -1174,7 +1174,7 @@ pub async fn get_study_subject_links_for_study_group(
     match sqlx::query_as::<_, DatabaseStudySubjectLink>(
         "SELECT * FROM Study_subject_link WHERE study_group_role=?",
     )
-    .bind(study_group_role.0)
+    .bind(study_group_role.get())
     .fetch_all(pool)
     .await
     {
@@ -1195,9 +1195,9 @@ pub async fn is_study_subject_link_in_database(
     match sqlx::query_as::<_, DatabaseStudySubjectLink>(
         "SELECT * FROM Study_subject_link WHERE study_group_role=? AND subject_role=? AND guild_id=?",
     )
-    .bind(study_subject_link.study_group_role.0)
-    .bind(study_subject_link.subject_role.0)
-    .bind(study_subject_link.guild_id.0)
+    .bind(study_subject_link.study_group_role.get())
+    .bind(study_subject_link.subject_role.get())
+    .bind(study_subject_link.guild_id.get())
     .fetch_optional(pool)
     .await
     {
@@ -1219,8 +1219,8 @@ pub async fn insert_tmpc_join_channel(
     match sqlx::query(
         "INSERT IGNORE INTO Tmpc_join_channel (voice_channel, guild_id, persist) VALUES (?, ?, ?);",
     )
-    .bind(tmpc_join_channel.voice_channel.0)
-    .bind(tmpc_join_channel.guild_id.0)
+    .bind(tmpc_join_channel.voice_channel.get())
+    .bind(tmpc_join_channel.guild_id.get())
     .bind(tmpc_join_channel.persist)
     .execute(pool)
     .await
@@ -1240,8 +1240,8 @@ pub async fn delete_tmpc_join_channel(
     tmpc_join_channel: DatabaseTmpcJoinChannel,
 ) -> Option<bool> {
     match sqlx::query("DELETE FROM Tmpc_join_channel WHERE voice_channel=? AND guild_id=?")
-        .bind(tmpc_join_channel.voice_channel.0)
-        .bind(tmpc_join_channel.guild_id.0)
+        .bind(tmpc_join_channel.voice_channel.get())
+        .bind(tmpc_join_channel.guild_id.get())
         .execute(pool)
         .await
     {
@@ -1262,7 +1262,7 @@ pub async fn get_tmpc_join_channel(
     match sqlx::query_as::<_, DatabaseTmpcJoinChannel>(
         "SELECT * FROM Tmpc_join_channel WHERE guild_id=?",
     )
-    .bind(guild_id.0)
+    .bind(guild_id.get())
     .fetch_all(pool)
     .await
     {
@@ -1284,8 +1284,8 @@ pub async fn update_tmpc_join_channel_persist(
 ) -> Option<bool> {
     match sqlx::query("UPDATE Tmpc_join_channel SET persist=? WHERE voice_channel=? AND guild_id=?")
         .bind(tmpc_join_channel.persist)
-        .bind(tmpc_join_channel.voice_channel.0)
-        .bind(tmpc_join_channel.guild_id.0)
+        .bind(tmpc_join_channel.voice_channel.get())
+        .bind(tmpc_join_channel.guild_id.get())
         .execute(pool)
         .await
     {
@@ -1314,10 +1314,10 @@ token,
 keep)
 VALUES (?, ?, ?, ?, ?, ?, ?);",
     )
-    .bind(tmpc.voice_channel.0)
-    .bind(tmpc.text_channel.0)
-    .bind(tmpc.guild_id.0)
-    .bind(tmpc.owner.0)
+    .bind(tmpc.voice_channel.get())
+    .bind(tmpc.text_channel.get())
+    .bind(tmpc.guild_id.get())
+    .bind(tmpc.owner.get())
     .bind(tmpc.persist)
     .bind(tmpc.token)
     .bind(tmpc.keep)
@@ -1337,8 +1337,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?);",
 pub async fn update_tmpc_delete_at(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
     match sqlx::query("UPDATE Tmpc SET deleteAt=? WHERE voice_channel=? AND guild_id=?")
         .bind(tmpc.delete_at)
-        .bind(tmpc.voice_channel.0)
-        .bind(tmpc.guild_id.0)
+        .bind(tmpc.voice_channel.get())
+        .bind(tmpc.guild_id.get())
         .execute(pool)
         .await
     {
@@ -1355,8 +1355,8 @@ pub async fn update_tmpc_delete_at(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Op
 pub async fn update_tmpc_token(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
     match sqlx::query("UPDATE Tmpc SET token=? WHERE voice_channel=? AND guild_id=?")
         .bind(tmpc.token)
-        .bind(tmpc.voice_channel.0)
-        .bind(tmpc.guild_id.0)
+        .bind(tmpc.voice_channel.get())
+        .bind(tmpc.guild_id.get())
         .execute(pool)
         .await
     {
@@ -1373,8 +1373,8 @@ pub async fn update_tmpc_token(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option
 pub async fn update_tmpc_keep(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
     match sqlx::query("UPDATE Tmpc SET keep=? WHERE voice_channel=? AND guild_id=?")
         .bind(tmpc.keep)
-        .bind(tmpc.voice_channel.0)
-        .bind(tmpc.guild_id.0)
+        .bind(tmpc.voice_channel.get())
+        .bind(tmpc.guild_id.get())
         .execute(pool)
         .await
     {
@@ -1390,8 +1390,8 @@ pub async fn update_tmpc_keep(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<
 #[allow(dead_code)]
 pub async fn delete_tmpc(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool> {
     match sqlx::query("DELETE FROM Tmpc WHERE voice_channel=? AND guild_id=?")
-        .bind(tmpc.voice_channel.0)
-        .bind(tmpc.guild_id.0)
+        .bind(tmpc.voice_channel.get())
+        .bind(tmpc.guild_id.get())
         .execute(pool)
         .await
     {
@@ -1407,7 +1407,7 @@ pub async fn delete_tmpc(pool: &Pool<MySql>, tmpc: DatabaseTmpc) -> Option<bool>
 #[allow(dead_code)]
 pub async fn get_tmpc(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<DatabaseTmpc>> {
     match sqlx::query_as::<_, DatabaseTmpc>("SELECT * FROM Tmpc WHERE guild_id=?")
-        .bind(guild_id.0)
+        .bind(guild_id.get())
         .fetch_all(pool)
         .await
     {
@@ -1429,9 +1429,9 @@ pub async fn insert_token_message(
     match sqlx::query(
         "INSERT IGNORE INTO Token_message (tmpc_voice_channel, message, message_channel) VALUES (?, ?, ?);",
     )
-    .bind(token_message.tmpc_voice_channel.0)
-    .bind(token_message.message.0)
-    .bind(token_message.message_channel.0)
+    .bind(token_message.tmpc_voice_channel.get())
+    .bind(token_message.message.get())
+    .bind(token_message.message_channel.get())
     .execute(pool)
     .await
     {
@@ -1452,9 +1452,9 @@ pub async fn delete_token_message(
     match sqlx::query(
         "DELETE FROM Token_message WHERE tmpc_voice_channel=? AND message=? AND message_channel=?",
     )
-    .bind(token_message.tmpc_voice_channel.0)
-    .bind(token_message.message.0)
-    .bind(token_message.message_channel.0)
+    .bind(token_message.tmpc_voice_channel.get())
+    .bind(token_message.message.get())
+    .bind(token_message.message_channel.get())
     .execute(pool)
     .await
     {
@@ -1474,7 +1474,7 @@ pub async fn delete_all_token_messages(
     tmpc_voice_channel: ChannelId,
 ) -> Option<bool> {
     match sqlx::query("DELETE FROM Token_message WHERE tmpc_voice_channel=?")
-        .bind(tmpc_voice_channel.0)
+        .bind(tmpc_voice_channel.get())
         .execute(pool)
         .await
     {
@@ -1495,7 +1495,7 @@ pub async fn get_token_messages(
     match sqlx::query_as::<_, DatabaseTokenMessage>(
         "SELECT * FROM Token_message WHERE tmpc_voice_channel=?",
     )
-    .bind(tmpc_voice_channel.0)
+    .bind(tmpc_voice_channel.get())
     .fetch_all(pool)
     .await
     {
