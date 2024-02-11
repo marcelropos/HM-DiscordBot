@@ -3,17 +3,18 @@ use std::fs;
 use std::num::NonZeroU64;
 use std::sync::{Arc, OnceLock};
 
+use poise::serenity_prelude::{ChannelId, GuildId, Http};
 use poise::serenity_prelude::futures::executor::block_on;
-use poise::serenity_prelude::{ChannelId, GuildId};
 use rolling_file::RollingConditionBasic;
 use sqlx::{MySql, Pool};
+use tokio::task::spawn_blocking;
 use tracing::{error, info, Level, Subscriber};
 use tracing_appender::non_blocking::WorkerGuard;
+use tracing_subscriber::{filter, fmt, Registry, reload};
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::reload::Handle;
-use tracing_subscriber::{filter, fmt, reload, Registry};
 
-use crate::{bot, env, mysql_lib};
+use crate::{env, mysql_lib};
 
 const LOG_FILE_MAX_SIZE_MB: u64 = 10;
 const MAX_AMOUNT_LOG_FILES: usize = 10;
@@ -29,7 +30,7 @@ pub async fn setup_logging() -> WorkerGuard {
 
     let (rolling_file_writer, worker_guard) = tracing_appender::non_blocking(
         rolling_file::BasicRollingFileAppender::new(
-            "./appdata/logs/hm-discord-bot",
+            "./appdata/logs/hm-discord-bot.log",
             RollingConditionBasic::new().max_size(LOG_FILE_MAX_SIZE_MB * 1024 * 1024),
             MAX_AMOUNT_LOG_FILES,
         )
@@ -41,12 +42,21 @@ pub async fn setup_logging() -> WorkerGuard {
     let (discord_layer_reloadable, log_reload_handle) = reload::Layer::new(discord_layer);
 
     let discord_layer_filtered = discord_layer_reloadable
-        .with_filter(filter::Targets::new().with_target("discord", Level::INFO));
+        .with_filter(filter::Targets::new().with_target("hm_discord_bot", Level::INFO));
 
     tracing_subscriber::registry()
         .with(discord_layer_filtered)
-        .with(fmt::layer().compact())
-        .with(fmt::layer().compact().with_writer(rolling_file_writer))
+        .with(
+            fmt::layer()
+                .with_writer(std::io::stdout.with_max_level(*env::LOG_LEVEL.get().unwrap()))
+                .compact(),
+        )
+        .with(
+            fmt::layer()
+                .compact()
+                .with_writer(rolling_file_writer.with_max_level(*env::LOG_LEVEL.get().unwrap()))
+                .with_ansi(false),
+        )
         .init();
 
     info!("Setup logging");
@@ -57,20 +67,18 @@ pub async fn setup_logging() -> WorkerGuard {
 }
 
 /// Panics if called twice
-pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySql>) {
+pub async fn setup_discord_logging(discord_http: Arc<Http>, db: Pool<MySql>) {
     modify_discord_layer(|discord_layer| {
-        discord_layer.poise_framework = Some(framework.clone());
+        discord_layer.discord_http = Some(discord_http.clone());
     });
 
-    let http = &framework.client().cache_and_http.http;
-
     // Setup main logging guild/channel
-    let main_guild = http
+    let main_guild_channels = discord_http
         .get_channels(*env::MAIN_GUILD_ID.get().unwrap())
         .await
         .expect("Could not get main guild");
 
-    let main_logging_channel = main_guild[0].id;
+    let main_logging_channel = main_guild_channels[0].id;
 
     modify_discord_layer(|discord_layer| {
         discord_layer.main_log_channel = NonZeroU64::new(main_logging_channel.0);
@@ -93,6 +101,20 @@ pub async fn setup_discord_logging(framework: Arc<bot::Framework>, db: Pool<MySq
     });
 }
 
+/// Panics if called before [`setup_discord_logging`]
+pub fn add_per_server_logging(guild_id: GuildId, log_channel_id: ChannelId) {
+    modify_discord_layer(|layer| {
+        layer.guild_to_log_channel.insert(guild_id, log_channel_id);
+    });
+}
+
+/// Panics if called before [`setup_discord_logging`]
+pub fn remove_per_server_logging(guild_id: GuildId) {
+    modify_discord_layer(|layer| {
+        layer.guild_to_log_channel.remove(&guild_id);
+    });
+}
+
 fn modify_discord_layer(f: impl FnOnce(&mut DiscordTracingLayer)) {
     let result = DISCORD_LAYER_CHANGE_HANDLE.get().unwrap().modify(f);
 
@@ -104,24 +126,9 @@ fn modify_discord_layer(f: impl FnOnce(&mut DiscordTracingLayer)) {
     }
 }
 
-#[allow(dead_code)]
-/// Panics if called before [`install_framework`]
-pub fn add_per_server_logging(guild_id: GuildId, log_channel_id: ChannelId) {
-    let layer_change_handle = DISCORD_LAYER_CHANGE_HANDLE.get().unwrap();
-    let result = layer_change_handle.modify(|layer| {
-        layer.guild_to_log_channel.insert(guild_id, log_channel_id);
-    });
-    if let Err(err) = result {
-        error!(
-            error = err.to_string(),
-            "Failed to install poise framework into discord tracing layer"
-        );
-    }
-}
-
 struct DiscordTracingLayer {
     main_log_channel: Option<NonZeroU64>,
-    poise_framework: Option<Arc<bot::Framework>>,
+    discord_http: Option<Arc<Http>>,
     /// HashMap of GuilId's -> ChannelId's
     guild_to_log_channel: HashMap<GuildId, ChannelId>,
 }
@@ -130,7 +137,7 @@ impl DiscordTracingLayer {
     pub fn new() -> DiscordTracingLayer {
         DiscordTracingLayer {
             main_log_channel: None,
-            poise_framework: None,
+            discord_http: None,
             guild_to_log_channel: HashMap::new(),
         }
     }
@@ -145,8 +152,8 @@ where
         event: &tracing::Event<'_>,
         _ctx: tracing_subscriber::layer::Context<'_, S>,
     ) {
-        let poise_framework = if let Some(poise_framework) = &self.poise_framework {
-            poise_framework
+        let discord_http = if let Some(discord_http) = &self.discord_http {
+            discord_http
         } else {
             return;
         };
@@ -161,21 +168,27 @@ where
         event.record(&mut guild_id_visitor);
         let guild_id = guild_id_visitor.guild_id;
 
-        let http = &poise_framework.client().cache_and_http.http;
-
         if let Some(channel_id) = self.main_log_channel {
-            let _ = block_on(
-                ChannelId(channel_id.get())
-                    .send_message(http, |m| m.content(format!("{event_level} {message}"))),
-            );
+            let local_discord_http = discord_http.clone();
+            let message_copy = message.clone();
+            spawn_blocking(move || {
+                let _ = block_on(
+                    ChannelId(channel_id.get()).send_message(local_discord_http, |m| {
+                        m.content(format!("{event_level} {}", message_copy))
+                    }),
+                );
+            });
         }
 
         if let Some(guild_id) = guild_id {
             if let Some(channel_id) = self.guild_to_log_channel.get(&guild_id.get().into()) {
-                let _ = block_on(
-                    channel_id
-                        .send_message(http, |m| m.content(format!("{event_level} {message}"))),
-                );
+                let channel_id = *channel_id;
+                let local_discord_http = discord_http.clone();
+                spawn_blocking(move || {
+                    let _ = block_on(channel_id.send_message(local_discord_http.clone(), |m| {
+                        m.content(format!("{event_level} {message}"))
+                    }));
+                });
             }
         }
     }

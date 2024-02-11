@@ -28,9 +28,12 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
     info!("Starting the bot");
 
     let db_clone = database_pool.clone();
-    let framework = poise::Framework::builder()
+    let framework = Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![commands::ping()],
+            commands: vec![
+                commands::ping(),
+                commands::logger_pipe()
+            ],
             allowed_mentions: Some({
                 let mut f = serenity::CreateAllowedMentions::default();
                 f.empty_parse()
@@ -46,13 +49,17 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
             pre_command: |ctx| {
                 Box::pin(async move {
                     info!(
-                        "Received Command from {} in channel {}: {}",
+                        guild_id = ctx.guild_id().map(|id| id.0).unwrap_or(0),
+                        "Received Command from @{}, in guild {}, in channel #{}: `{}`",
                         ctx.author().name,
+                        ctx.guild()
+                            .map(|guild| guild.name)
+                            .unwrap_or("no-guild".to_string()),
                         ctx.channel_id()
                             .name(ctx.cache())
                             .await
-                            .unwrap_or_else(|| { "Unknown".to_string() }),
-                        ctx.invocation_string()
+                            .unwrap_or("Unknown".to_string()),
+                        ctx.invocation_string(),
                     );
                 })
             },
@@ -74,7 +81,11 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
 
     let built_framework = framework.build().await.expect("Err building poise client");
 
-    logging::setup_discord_logging(built_framework.clone(), db_clone).await;
+    logging::setup_discord_logging(
+        built_framework.client().cache_and_http.http.clone(),
+        db_clone,
+    )
+    .await;
 
     built_framework
         .start()

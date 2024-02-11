@@ -1,4 +1,5 @@
 use std::env;
+use std::str::FromStr;
 use std::sync::OnceLock;
 
 pub static MAIN_GUILD_ID: OnceLock<u64> = OnceLock::new();
@@ -10,8 +11,16 @@ pub static MYSQL_DATABASE: OnceLock<String> = OnceLock::new();
 pub static MYSQL_USER: OnceLock<String> = OnceLock::new();
 pub static MYSQL_PASSWORD: OnceLock<String> = OnceLock::new();
 pub static BOT_TOKEN: OnceLock<String> = OnceLock::new();
+pub static LOG_LEVEL: OnceLock<tracing::Level> = OnceLock::new();
 
 pub fn init() {
+    LOG_LEVEL.get_or_init(|| {
+        env::var("RUST_LOG")
+            .map(|level| {
+                tracing::Level::from_str(level.as_str()).expect("Could not parse Logger level")
+            })
+            .unwrap_or(tracing::Level::INFO)
+    });
     MAIN_GUILD_ID.get_or_init(|| {
         env::var("MAIN_GUILD_ID")
             .expect("No Main Guild ID given")

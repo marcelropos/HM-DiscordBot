@@ -1,5 +1,6 @@
-use poise::serenity_prelude::{ChannelId, Permissions, RoleId};
+use poise::serenity_prelude::{ChannelId, GuildId, Permissions, RoleId};
 use sqlx::{MySql, Pool};
+use tracing::error;
 
 use crate::bot::Context;
 use crate::{env, mysql_lib};
@@ -53,6 +54,44 @@ pub async fn is_admin(ctx: Context<'_>) -> bool {
         }
     }
     false
+}
+
+/// Returns false in case of an error
+pub async fn is_bot_admin(ctx: Context<'_>) -> bool {
+    let author_id = ctx.author().id.0;
+    let main_guild_id = env::MAIN_GUILD_ID.get().unwrap();
+
+    let main_guild_member = ctx.http().get_member(*main_guild_id, author_id).await
+        .map_err(|err| error!(
+                error = err.to_string(),
+                member_id = author_id,
+                "Could not get main guild member"
+            )).ok();
+
+    let main_guild_member = if let Some(main_guild_member) = main_guild_member {
+        main_guild_member
+    } else {
+        return false;
+    };
+
+
+    let main_guild_roles = GuildId(*main_guild_id).roles(ctx.http()).await
+        .map_err(|err| error!(error = err.to_string(), "Could not get main guild roles"))
+        .ok();
+
+    let main_guild_roles = if let Some(main_guild_roles) = main_guild_roles {
+        main_guild_roles
+    } else {
+        return false;
+    };
+
+    let is_admin = main_guild_member.roles.iter().any(|role_id| {
+        main_guild_roles.get(role_id).map_or(false, |role| {
+            role.has_permission(Permissions::ADMINISTRATOR)
+        })
+    });
+
+    is_admin
 }
 
 /// Checks if the author is the owner of the guild where the message was sent
@@ -109,10 +148,4 @@ pub async fn sent_in_setup_guild(ctx: Context<'_>, pool: &Pool<MySql>) -> bool {
             .unwrap_or(false);
     }
     false
-}
-
-/// Checks if the message was sent in a guild
-#[allow(dead_code)]
-pub async fn sent_in_guild(ctx: Context<'_>) -> bool {
-    ctx.guild_id().is_some()
 }
