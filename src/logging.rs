@@ -29,7 +29,7 @@ pub async fn setup_logging() -> WorkerGuard {
 
     let (rolling_file_writer, worker_guard) = tracing_appender::non_blocking(
         rolling_file::BasicRollingFileAppender::new(
-            "./appdata/logs/hm-discord-bot",
+            "./appdata/logs/hm-discord-bot.log",
             RollingConditionBasic::new().max_size(LOG_FILE_MAX_SIZE_MB * 1024 * 1024),
             MAX_AMOUNT_LOG_FILES,
         )
