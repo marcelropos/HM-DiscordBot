@@ -1,7 +1,7 @@
 //! TODO: Permissions
 
 use futures::future::join_all;
-use poise::serenity_prelude::{GuildId, RoleId};
+use poise::serenity_prelude::{CacheHttp, ChannelId, ChannelType, GuildId, RoleId};
 use sqlx::{MySql, Pool};
 use itertools::Itertools;
 
@@ -207,12 +207,106 @@ pub async fn manage(_ctx: Context<'_>) -> Result<(), Error> {
     unimplemented!()
 }
 
+/// Creates a new subject, together with role and text channel
 #[poise::command(prefix_command)]
-pub async fn create(_ctx: Context<'_>) -> Result<(), Error> {
-    todo!()
+pub async fn create(ctx: Context<'_>, name: String) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().unwrap();
+    let db = &ctx.data().database_pool;
+    let discord_http = ctx.http();
+
+    let subjects = mysql_lib::get_subjects(db, guild_id).await.unwrap_or_default();
+
+    let similar_subject = subjects.into_iter()
+        .find(|sub| {
+            sub.name == name
+        });
+
+    if let Some(similar_subject) = similar_subject {
+        ctx.reply(format!("Found subject with same name/role/text channel: {}", similar_subject.name)).await?;
+        return Ok(());
+    }
+
+    let db_guild = mysql_lib::get_guild(db, guild_id).await.unwrap();
+    let discord_guild = ctx.guild().unwrap();
+
+    // create role
+    let new_role = discord_guild.create_role(discord_http, |r|
+        r.name(&name).mentionable(true)).await?;
+
+    let role = new_role.id;
+
+    // create channel
+    let base_category = db_guild.subject_group_category;
+
+    let new_channel = discord_guild.create_channel(discord_http, |c|
+            c.category(base_category).name(&name).kind(ChannelType::Text)).await?;
+
+    let text_channel = new_channel.id;
+
+    let subject = DatabaseSubject {
+        id: None,
+        role,
+        guild_id,
+        name,
+        text_channel
+    };
+
+    match mysql_lib::insert_subject(db, subject).await {
+        Some(true) => {
+            ctx.reply("Created subject").await?
+        },
+        Some(false) => {
+            ctx.reply("Didn't create subject, was it already in the database?").await?
+        },
+        None => {
+            ctx.reply("Error while trying to execute query").await?
+        }
+    };
+    
+    Ok(())
 }
 
+/// Deletes the subject, it's role, and it's text channel
 #[poise::command(prefix_command)]
-pub async fn delete(_ctx: Context<'_>) -> Result<(), Error> {
-    todo!()
+pub async fn delete(ctx: Context<'_>, role: RoleId) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().unwrap();
+    let db = &ctx.data().database_pool;
+
+    let db_subject = match mysql_lib::get_subject_for_role(db, guild_id, role).await {
+        Some(subject) => subject,
+        None => {
+            ctx.reply("Could not find subject for this role, is this a subject?").await?;
+            return Ok(());
+        }
+    };
+
+    let discord_guild = ctx.guild().unwrap();
+    let discord_http = ctx.http();
+
+    discord_guild.delete_role(discord_http, role).await?;
+
+    db_subject.text_channel.delete(discord_http).await?;
+
+    // delete_subject only cares about role and guild_id
+    let subject = DatabaseSubject {
+        id: None,
+        role,
+        guild_id,
+        name: "".to_string(),
+        text_channel: ChannelId(0),
+    };
+
+    match mysql_lib::delete_subject(db, subject).await {
+        Some(true) => {
+            ctx.reply("Deleted subject").await?
+        },
+        Some(false) => {
+            ctx.reply("Didn't delete subject, was it already deleted?").await?
+        },
+        None => {
+            ctx.reply("Error while trying to execute query").await?
+        }
+    };
+    
+    Ok(())
 }

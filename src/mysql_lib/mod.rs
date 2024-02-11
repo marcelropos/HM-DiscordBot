@@ -1242,6 +1242,21 @@ pub async fn get_subjects(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<D
     }
 }
 
+pub async fn get_subject_for_role(pool: &Pool<MySql>, guild_id: GuildId, role: RoleId) -> Option<DatabaseSubject> {
+    match sqlx::query_as::<_, DatabaseSubject>("SELECT * FROM Subject WHERE guild_id=? AND role=?")
+        .bind(guild_id.0)
+        .bind(role.0)
+        .fetch_one(pool)
+        .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
 /// Inserts a new Study-Subject Link into the Database. Return if the Study-Subject Link was
 /// inserted into the Database, may be false if the Study-Subject Link was already in the Database.
 #[allow(dead_code)]
