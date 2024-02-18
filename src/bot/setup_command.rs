@@ -1,7 +1,7 @@
 use poise::serenity_prelude::{GuildChannel, GuildId, Mentionable, Role};
 use time::Time;
 
-use crate::bot::{checks, Context, Error};
+use crate::bot::{Context, Error};
 use crate::mysql_lib;
 use crate::mysql_lib::{DatabaseGuild, NewGuild};
 
@@ -1480,13 +1480,6 @@ pub async fn setup(
             number = Some(flag.into());
         }
     }
-    // Check permissions
-    if !checks::is_owner(ctx).await && !checks::is_admin(ctx).await {
-        ctx.say("Missing permissions, requires admin permissions")
-            .await?;
-        return Ok(());
-    }
-
     let guild_id = ctx.guild_id().unwrap();
 
     let db = &ctx.data().database_pool;

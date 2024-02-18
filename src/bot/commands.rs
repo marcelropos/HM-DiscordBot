@@ -110,5 +110,11 @@ pub async fn setup(
     number: Option<u32>,
     #[rest] rest: Option<String>,
 ) -> Result<(), Error> {
+    // Check permissions
+    if !checks::is_owner(ctx).await && !checks::is_admin(ctx).await {
+        ctx.say("Missing permissions, requires admin permissions")
+            .await?;
+        return Ok(());
+    }
     setup_command::setup(ctx, role_mention, channel_mention, flag, number, rest).await
 }
