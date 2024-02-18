@@ -76,7 +76,7 @@ enum Column {
     StudyRoleSeparatorRole(RoleId),
     SubjectRoleSeparatorRole(RoleId),
     FriendRole(RoleId),
-    TmpcKeepTime(Time),
+    TmpcKeepTime(u32),
     AlumniRole(RoleId),
     AlumniRoleSeparatorRole(RoleId),
 }
@@ -102,7 +102,7 @@ pub struct DatabaseGuild {
     pub study_role_separator_role: RoleId,
     pub subject_role_separator_role: RoleId,
     pub friend_role: RoleId,
-    pub tmpc_keep_time: Time,
+    pub tmpc_keep_time: u32,
     pub alumni_role: RoleId,
     pub alumni_role_separator_role: RoleId,
 }
@@ -625,7 +625,7 @@ pub async fn update_friend_role(
 pub async fn update_tmpc_keep_time(
     pool: &Pool<MySql>,
     guild_id: GuildId,
-    tmpc_keep_time: Time,
+    tmpc_keep_time: u32,
 ) -> Option<bool> {
     update_guild_table_value(pool, guild_id, Column::TmpcKeepTime(tmpc_keep_time)).await
 }

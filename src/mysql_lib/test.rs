@@ -47,7 +47,7 @@ mod tests {
             study_role_separator_role: RoleId::new(13),
             subject_role_separator_role: RoleId::new(14),
             friend_role: RoleId::new(15),
-            tmpc_keep_time: Time::from_hms(12, 0, 0).unwrap(),
+            tmpc_keep_time: 12,
             alumni_role: RoleId::new(16),
             alumni_role_separator_role: RoleId::new(17),
             logger_pipe_channel: None,
@@ -100,7 +100,7 @@ mod tests {
             study_role_separator_role: RoleId::new(guild.study_role_separator_role.get() + 1),
             subject_role_separator_role: RoleId::new(guild.subject_role_separator_role.get() + 1),
             friend_role: RoleId::new(guild.friend_role.get() + 1),
-            tmpc_keep_time: guild.tmpc_keep_time.add(Duration::from_secs(5)),
+            tmpc_keep_time: guild.tmpc_keep_time + 5,
             alumni_role: RoleId::new(guild.alumni_role.get() + 1),
             alumni_role_separator_role: RoleId::new(guild.alumni_role_separator_role.get() + 1),
         };
