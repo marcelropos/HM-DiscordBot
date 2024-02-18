@@ -1,12 +1,14 @@
+use std::time::SystemTime;
+
+use poise::CreateReply;
 use tracing::info;
 
-use super::checks;
 use crate::{
     bot::{Context, Error},
     logging, mysql_lib,
 };
-use std::time::SystemTime;
-use poise::CreateReply;
+
+use super::checks;
 
 /// ping command
 #[poise::command(slash_command, prefix_command)]
@@ -15,13 +17,14 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     let now = SystemTime::now();
     let reply_message = ctx.say(response).await?;
     reply_message
-        .edit(ctx, CreateReply::default()
-            .content(match now.elapsed() {
+        .edit(
+            ctx,
+            CreateReply::default().content(match now.elapsed() {
                 Ok(elapsed) => {
                     format!("Pong: {} ms", elapsed.as_millis())
                 }
                 Err(_) => "Pong: could not calculate time difference".to_owned(),
-            })
+            }),
         )
         .await?;
     Ok(())
@@ -77,6 +80,21 @@ pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
 
         logging::add_per_server_logging(guild_id, ctx.channel_id());
     }
+
+    Ok(())
+}
+
+/// bot shutdown command
+#[poise::command(prefix_command, guild_only)]
+pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
+    if !checks::is_bot_admin(ctx).await {
+        ctx.say("Missing permissions, requires bot admin permissions")
+            .await?;
+        return Ok(());
+    }
+
+    info!("Shutting down due to command");
+    ctx.framework().shard_manager.shutdown_all().await;
 
     Ok(())
 }
