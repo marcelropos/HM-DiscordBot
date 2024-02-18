@@ -85,6 +85,21 @@ pub async fn logger_pipe(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// bot shutdown command
+#[poise::command(prefix_command, guild_only)]
+pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
+    if !checks::is_bot_admin(ctx).await {
+        ctx.say("Missing permissions, requires bot admin permissions")
+            .await?;
+        return Ok(());
+    }
+
+    info!("Shutting down due to command");
+    ctx.framework().shard_manager.shutdown_all().await;
+
+    Ok(())
+}
+
 /// admin-only. Enter setup mode, either new server setup or edit setup information
 #[poise::command(prefix_command, invoke_on_edit, reuse_response, guild_only)]
 pub async fn setup(
