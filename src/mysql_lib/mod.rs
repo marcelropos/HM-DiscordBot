@@ -107,6 +107,37 @@ pub struct DatabaseGuild {
     pub alumni_role_separator_role: RoleId,
 }
 
+impl TryFrom<NewGuild> for DatabaseGuild {
+    type Error = ();
+
+    fn try_from(new_guild: NewGuild) -> Result<Self, ()> {
+        Ok(DatabaseGuild {
+            guild_id: new_guild.guild_id,
+            ghost_warning_deadline: new_guild.ghost_warning_deadline.ok_or(())?,
+            ghost_kick_deadline: new_guild.ghost_kick_deadline.ok_or(())?,
+            ghost_time_to_check: new_guild.ghost_time_to_check.ok_or(())?,
+            ghost_enabled: new_guild.ghost_enabled.ok_or(())?,
+            debug_channel: new_guild.debug_channel.ok_or(())?,
+            bot_channel: new_guild.bot_channel.ok_or(())?,
+            help_channel: new_guild.help_channel.ok_or(())?,
+            logger_pipe_channel: None,
+            study_group_category: new_guild.study_group_category.ok_or(())?,
+            subject_group_category: new_guild.subject_group_category.ok_or(())?,
+            studenty_role: new_guild.studenty_role.ok_or(())?,
+            tmp_studenty_role: new_guild.tmp_studenty_role.ok_or(())?,
+            moderator_role: new_guild.moderator_role.ok_or(())?,
+            newsletter_role: new_guild.newsletter_role.ok_or(())?,
+            nsfw_role: new_guild.nsfw_role.ok_or(())?,
+            study_role_separator_role: new_guild.study_role_separator_role.ok_or(())?,
+            subject_role_separator_role: new_guild.subject_role_separator_role.ok_or(())?,
+            friend_role: new_guild.friend_role.ok_or(())?,
+            tmpc_keep_time: new_guild.tmpc_keep_time.ok_or(())?,
+            alumni_role: new_guild.alumni_role.ok_or(())?,
+            alumni_role_separator_role: new_guild.alumni_role_separator_role.ok_or(())?,
+        })
+    }
+}
+
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord, Default)]
 pub struct NewGuild {
     pub guild_id: GuildId,
@@ -120,16 +151,68 @@ pub struct NewGuild {
     pub study_group_category: Option<ChannelId>,
     pub subject_group_category: Option<ChannelId>,
     pub studenty_role: Option<RoleId>,
-    pub tmp_studenty_role: Option<RoleId>,
+    pub tmp_studenty_role: Option<Option<RoleId>>,
     pub moderator_role: Option<RoleId>,
     pub newsletter_role: Option<RoleId>,
     pub nsfw_role: Option<RoleId>,
     pub study_role_separator_role: Option<RoleId>,
     pub subject_role_separator_role: Option<RoleId>,
     pub friend_role: Option<RoleId>,
-    pub tmpc_keep_time: Option<Time>,
+    pub tmpc_keep_time: Option<u32>,
     pub alumni_role: Option<RoleId>,
     pub alumni_role_separator_role: Option<RoleId>,
+}
+
+impl NewGuild {
+    pub fn is_setup(&self) -> bool {
+        self.ghost_warning_deadline.is_some()
+            && self.ghost_kick_deadline.is_some()
+            && self.ghost_time_to_check.is_some()
+            && self.ghost_enabled.is_some()
+            && self.debug_channel.is_some()
+            && self.bot_channel.is_some()
+            && self.help_channel.is_some()
+            && self.study_group_category.is_some()
+            && self.subject_group_category.is_some()
+            && self.studenty_role.is_some()
+            && self.tmp_studenty_role.is_some()
+            && self.moderator_role.is_some()
+            && self.newsletter_role.is_some()
+            && self.nsfw_role.is_some()
+            && self.study_role_separator_role.is_some()
+            && self.subject_role_separator_role.is_some()
+            && self.friend_role.is_some()
+            && self.tmpc_keep_time.is_some()
+            && self.alumni_role.is_some()
+            && self.alumni_role_separator_role.is_some()
+    }
+}
+
+impl PartialEq<DatabaseGuild> for NewGuild {
+    fn eq(&self, db_guild: &DatabaseGuild) -> bool {
+        self.guild_id == db_guild.guild_id
+            && self.is_setup()
+            && self.ghost_warning_deadline.unwrap() == db_guild.ghost_warning_deadline
+            && self.ghost_kick_deadline.unwrap() == db_guild.ghost_kick_deadline
+            && self.ghost_time_to_check.unwrap() == db_guild.ghost_time_to_check
+            && self.ghost_enabled.unwrap() == db_guild.ghost_enabled
+            && self.debug_channel.unwrap() == db_guild.debug_channel
+            && self.bot_channel.unwrap() == db_guild.bot_channel
+            && self.help_channel.unwrap() == db_guild.help_channel
+            && self.study_group_category.unwrap() == db_guild.study_group_category
+            && self.subject_group_category.unwrap() == db_guild.subject_group_category
+            && self.studenty_role.unwrap() == db_guild.studenty_role
+            && self.tmp_studenty_role.unwrap() == db_guild.tmp_studenty_role
+            && self.moderator_role.unwrap() == db_guild.moderator_role
+            && self.newsletter_role.unwrap() == db_guild.newsletter_role
+            && self.nsfw_role.unwrap() == db_guild.nsfw_role
+            && self.study_role_separator_role.unwrap() == db_guild.study_role_separator_role
+            && self.subject_role_separator_role.unwrap() == db_guild.subject_role_separator_role
+            && self.friend_role.unwrap() == db_guild.friend_role
+            && self.tmpc_keep_time.unwrap() == db_guild.tmpc_keep_time
+            && self.alumni_role.unwrap() == db_guild.alumni_role
+            && self.alumni_role_separator_role.unwrap() == db_guild.alumni_role_separator_role
+    }
 }
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
@@ -320,7 +403,7 @@ impl FromRow<'_, MySqlRow> for DatabaseTokenMessage {
 /// Inserts a new Guild into the Database. Return if the guild was inserted into the Database,
 /// may be false if the guild was already in the Database.
 ///
-/// `DatabaseGuild::logger_pipe_channel` and `DatabaseGuild::tmp_studenty_role` are ignored.
+/// `DatabaseGuild::logger_pipe_channel` is ignored.
 #[allow(dead_code)]
 pub async fn insert_guild(pool: &Pool<MySql>, guild: DatabaseGuild) -> Option<bool> {
     match sqlx::query(
@@ -336,6 +419,7 @@ help_channel,
 study_group_category,
 subject_group_category,
 studenty_role,
+tmp_studenty_role,
 moderator_role,
 newsletter_role,
 nsfw_role,
@@ -345,7 +429,7 @@ friend_role,
 tmpc_keep_time,
 alumni_role,
 alumni_role_separator_role)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
     )
     .bind(guild.guild_id.get())
     .bind(guild.ghost_warning_deadline)
@@ -358,6 +442,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
     .bind(guild.study_group_category.get())
     .bind(guild.subject_group_category.get())
     .bind(guild.studenty_role.get())
+    .bind(guild.tmp_studenty_role.map(|role| role.get()))
     .bind(guild.moderator_role.get())
     .bind(guild.newsletter_role.get())
     .bind(guild.nsfw_role.get())
@@ -776,6 +861,67 @@ async fn update_guild_table_value(
         }
     }
     .bind(guild_id.get())
+    .execute(pool)
+    .await
+    {
+        Ok(val) => Some(val.rows_affected() != 0),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+/// Update everything in a Guild in the Database. Return if the guild was changed
+///
+/// `DatabaseGuild::logger_pipe_channel` is ignored.
+#[allow(dead_code)]
+pub async fn update_guild(pool: &Pool<MySql>, guild: DatabaseGuild) -> Option<bool> {
+    match sqlx::query(
+        "UPDATE Guild SET
+ghost_warn_deadline=?,
+ghost_kick_deadline=?,
+ghost_time_to_check=?,
+ghost_enabled=?,
+debug_channel=?,
+bot_channel=?,
+help_channel=?,
+study_group_category=?,
+subject_group_category=?,
+studenty_role=?,
+tmp_studenty_role=?,
+moderator_role=?,
+newsletter_role=?,
+nsfw_role=?,
+study_role_separator_role=?,
+subject_role_separator_role=?,
+friend_role=?,
+tmpc_keep_time=?,
+alumni_role=?,
+alumni_role_separator_role=?
+WHERE guild_id=?;",
+    )
+    .bind(guild.ghost_warning_deadline)
+    .bind(guild.ghost_kick_deadline)
+    .bind(guild.ghost_time_to_check)
+    .bind(guild.ghost_enabled)
+    .bind(guild.debug_channel.get())
+    .bind(guild.bot_channel.get())
+    .bind(guild.help_channel.get())
+    .bind(guild.study_group_category.get())
+    .bind(guild.subject_group_category.get())
+    .bind(guild.studenty_role.get())
+    .bind(guild.tmp_studenty_role.map(|role| role.get()))
+    .bind(guild.moderator_role.get())
+    .bind(guild.newsletter_role.get())
+    .bind(guild.nsfw_role.get())
+    .bind(guild.study_role_separator_role.get())
+    .bind(guild.subject_role_separator_role.get())
+    .bind(guild.friend_role.get())
+    .bind(guild.tmpc_keep_time)
+    .bind(guild.alumni_role.get())
+    .bind(guild.alumni_role_separator_role.get())
+    .bind(guild.guild_id.get())
     .execute(pool)
     .await
     {
