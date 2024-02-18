@@ -1,12 +1,14 @@
 //! TODO: Permissions
+//! TODO: Logging
 
 use futures::future::join_all;
-use poise::serenity_prelude::{CacheHttp, ChannelId, ChannelType, GuildId, RoleId};
-use sqlx::{MySql, Pool};
 use itertools::Itertools;
+use poise::serenity_prelude::{ChannelId, ChannelType, CreateChannel, EditRole, GuildId, RoleId};
+use sqlx::{MySql, Pool};
+use tracing::info;
 
 use crate::{
-    bot::{Context, Error},
+    bot::{checks, Context, Error},
     mysql_lib::{self, DatabaseSubject},
 };
 
@@ -30,14 +32,26 @@ pub async fn add(
         String,
     >,
 ) -> Result<(), Error> {
+    if !checks::is_user_verified(ctx).await {
+        ctx.reply("You need to be verified for this command").await?;
+        return Ok(());
+    }
+    
+    if names_or_ids.is_empty() {
+        ctx.reply("You need to supply at least one subject id / name (from \"subject show\")").await?;
+        return Ok(());
+    }
+
     let user_roles = &ctx.author_member().await.unwrap().roles;
     let guild_id = ctx.guild_id().unwrap();
 
-    let requested_subjects =
-        get_subjects_from_user_input(&ctx.data().database_pool, guild_id, user_roles, names_or_ids)
-            .await;
-
-    let formatted_subjects = format_subjects(&requested_subjects);
+    let requested_subjects = get_subjects_from_user_input(
+        &ctx.data().database_pool,
+        guild_id,
+        user_roles,
+        names_or_ids,
+    )
+    .await;
 
     let roles: Vec<_> = requested_subjects
         .into_iter()
@@ -45,9 +59,27 @@ pub async fn add(
         .collect();
 
     let mut author_member = ctx.author_member().await.unwrap();
-    author_member.to_mut().add_roles(ctx.http(), &roles).await?;
 
-    ctx.reply(format!("Added following subjects to you:\n{formatted_subjects}")).await?;
+    let (present_roles, missing_roles): (Vec<_>, Vec<_>) = roles.into_iter()
+        .partition(|role| author_member.roles.contains(role));
+
+    author_member.to_mut().add_roles(ctx.http(), &missing_roles).await?;
+
+    let mut message = String::new();
+
+    if !present_roles.is_empty() {
+        let present_roles_fmt = present_roles.iter().map(|role| format!("<@&{}>", role.get())).join("\n");
+
+        message.push_str(format!("Ignoring subjects that you already have:\n{present_roles_fmt}\n").as_str());
+    }
+
+    if !missing_roles.is_empty() {
+        let missing_roles_fmt = missing_roles.iter().map(|role| format!("<@&{}>", role.get())).join("\n");
+    
+        message.push_str(format!("Added following subjects to you:\n{missing_roles_fmt}").as_str());
+    }
+    
+    ctx.reply(message).await?;
 
     Ok(())
 }
@@ -60,14 +92,26 @@ pub async fn remove(
         String,
     >,
 ) -> Result<(), Error> {
+    if !checks::is_user_verified(ctx).await {
+        ctx.reply("You need to be verified for this command").await?;
+        return Ok(());
+    }
+
+    if names_or_ids.is_empty() {
+        ctx.reply("You need to supply at least one subject id / name (from \"subject show\")").await?;
+        return Ok(());
+    }
+    
     let user_roles = &ctx.author_member().await.unwrap().roles;
     let guild_id = ctx.guild_id().unwrap();
 
-    let requested_subjects =
-        get_subjects_from_user_input(&ctx.data().database_pool, guild_id, user_roles, names_or_ids)
-            .await;
-    
-    let formatted_subjects = format_subjects(&requested_subjects);
+    let requested_subjects = get_subjects_from_user_input(
+        &ctx.data().database_pool,
+        guild_id,
+        user_roles,
+        names_or_ids,
+    )
+    .await;
 
     let roles: Vec<_> = requested_subjects
         .into_iter()
@@ -75,12 +119,30 @@ pub async fn remove(
         .collect();
 
     let mut author_member = ctx.author_member().await.unwrap();
+
+    let (present_roles, missing_roles): (Vec<_>, Vec<_>) = roles.into_iter()
+        .partition(|role| author_member.roles.contains(role));
+
     author_member
         .to_mut()
-        .remove_roles(ctx.http(), &roles)
+        .remove_roles(ctx.http(), &present_roles)
         .await?;
 
-    ctx.reply(format!("Removed following subjects from you:\n{formatted_subjects}")).await?;
+    let mut message = String::new();
+
+    if !missing_roles.is_empty() {
+        let missing_roles_fmt = missing_roles.iter().map(|role| format!("<@&{}>", role.get())).join("\n");
+        
+        message.push_str(format!("Ignoring subjects that you don't have:\n{missing_roles_fmt}").as_str());
+    }
+    
+    if !present_roles.is_empty() {
+        let present_roles_fmt = present_roles.iter().map(|role| format!("<@&{}>", role.get())).join("\n");
+
+        message.push_str(format!("Removing subjects:\n{present_roles_fmt}\n").as_str());
+    }
+
+    ctx.reply(message).await?;
 
     Ok(())
 }
@@ -88,6 +150,11 @@ pub async fn remove(
 /// Show available subjects for a user
 #[poise::command(slash_command, prefix_command)]
 pub async fn show(ctx: Context<'_>) -> Result<(), Error> {
+    if !checks::is_user_verified(ctx).await {
+        ctx.reply("You need to be verified for this command").await?;
+        return Ok(());
+    }
+
     let db = &ctx.data().database_pool;
     let guild = ctx.guild_id().unwrap();
     let user_roles = &ctx.author_member().await.unwrap().roles;
@@ -97,10 +164,7 @@ pub async fn show(ctx: Context<'_>) -> Result<(), Error> {
     let formatted_subjects = format_subjects(&available_subjects);
 
     ctx.reply(format!(
-        "
-    The following subjects are available (add them using \"subject add/remove\":
-    {formatted_subjects}
-    "
+    "The following subjects are available (add them using \"subject add/remove\":\n{formatted_subjects}"
     ))
     .await?;
 
@@ -115,23 +179,26 @@ fn format_subjects(subjects: &[DatabaseSubject]) -> String {
 }
 
 /// Gets all available subjects for this user from the database
-/// 
+///
 /// This could probably be rewritten to use only a single SQL statement,
 /// which would be substantially better
-/// 
+///
 /// TODO: Test this
 async fn get_available_subjects(
     db: &Pool<MySql>,
     guild: GuildId,
     user_roles: &[RoleId],
 ) -> Vec<DatabaseSubject> {
-
-
     // objective: Get all semester study groups below or at the user's
+    info!("Getting all available subjects for a user");
 
     // get all semester study groups for guild (they have an associated discord role)
-    let guild_semester_study_groups = mysql_lib::get_semester_study_groups_in_guild(db, guild).await.unwrap();
-    
+    let guild_semester_study_groups = mysql_lib::get_semester_study_groups_in_guild(db, guild)
+        .await
+        .unwrap();
+
+    info!(?guild_semester_study_groups, "All semester study groups in the guild");
+
     // find out which semester study group user is in using that role
     let user_semester_study_group = guild_semester_study_groups
         .iter()
@@ -139,10 +206,16 @@ async fn get_available_subjects(
         .unwrap();
 
     // get all related semester study groups
-    let related_semester_study_groups = mysql_lib::get_semester_study_groups_in_study_group(db, user_semester_study_group.study_group_id).await.unwrap();
+    let related_semester_study_groups = mysql_lib::get_semester_study_groups_in_study_group(
+        db,
+        user_semester_study_group.study_group_id,
+    )
+    .await
+    .unwrap();
 
     // filter out to only those whose semester <= user's semester
-    let valid_semester_study_groups = related_semester_study_groups.into_iter()
+    let valid_semester_study_groups = related_semester_study_groups
+        .into_iter()
         .filter(|sem_study_group| sem_study_group.semester <= user_semester_study_group.semester);
 
     // get all subject's for all those semester study groups
@@ -154,8 +227,11 @@ async fn get_available_subjects(
 
     let subjects = join_all(subjects).await;
 
-    subjects.iter()
-        .flatten().flatten().cloned()
+    subjects
+        .iter()
+        .flatten()
+        .flatten()
+        .cloned()
         .sorted_by_key(|subject| subject.id)
         .dedup()
         .collect()
@@ -165,7 +241,7 @@ async fn get_available_subjects(
 /// gets the appropriate database objects for it.
 /// Needs the user's roles because those dictate which
 /// subjects are available to them.
-/// 
+///
 /// TODO: Handle failures correctly
 async fn get_subjects_from_user_input(
     db: &Pool<MySql>,
@@ -178,9 +254,9 @@ async fn get_subjects_from_user_input(
     names_or_ids
         .into_iter()
         .map(|name_or_id| {
-            if let Ok(subject_id) = name_or_id.parse::<usize>() {
+            if let Ok(subject_id) = name_or_id.parse::<i32>() {
                 // user specified a subject id
-                available_subjects.get(subject_id).unwrap().clone()
+                available_subjects.iter().find(|subject| subject.id == Some(subject_id)).unwrap().clone()
             } else {
                 // user specified a name
                 let subject_name = name_or_id;
@@ -202,44 +278,56 @@ async fn get_subjects_from_user_input(
 }
 
 /// Admin commands for creating/deleting subjects
-#[poise::command(prefix_command, subcommands("create", "delete"), subcommand_required)]
+#[poise::command(
+    prefix_command,
+    subcommands("create", "delete"),
+    subcommand_required,
+    required_permissions = "ADMINISTRATOR"
+)]
 pub async fn manage(_ctx: Context<'_>) -> Result<(), Error> {
     unimplemented!()
 }
 
 /// Creates a new subject, together with role and text channel
-#[poise::command(prefix_command)]
+#[poise::command(prefix_command, required_permissions = "ADMINISTRATOR")]
 pub async fn create(ctx: Context<'_>, name: String) -> Result<(), Error> {
     let guild_id = ctx.guild_id().unwrap();
     let db = &ctx.data().database_pool;
     let discord_http = ctx.http();
 
-    let subjects = mysql_lib::get_subjects(db, guild_id).await.unwrap_or_default();
+    let subjects = mysql_lib::get_subjects(db, guild_id)
+        .await
+        .unwrap_or_default();
 
-    let similar_subject = subjects.into_iter()
-        .find(|sub| {
-            sub.name == name
-        });
+    let similar_subject = subjects.into_iter().find(|sub| sub.name == name);
 
     if let Some(similar_subject) = similar_subject {
-        ctx.reply(format!("Found subject with same name/role/text channel: {}", similar_subject.name)).await?;
+        ctx.reply(format!(
+            "Found subject with same name/role/text channel: {}",
+            similar_subject.name
+        ))
+        .await?;
         return Ok(());
     }
 
     let db_guild = mysql_lib::get_guild(db, guild_id).await.unwrap();
-    let discord_guild = ctx.guild().unwrap();
+    let discord_guild = ctx.partial_guild().await.unwrap();
 
     // create role
-    let new_role = discord_guild.create_role(discord_http, |r|
-        r.name(&name).mentionable(true)).await?;
+    let new_role = discord_guild
+        .create_role(discord_http, EditRole::default().name(&name).mentionable(true))
+        .await?;
 
     let role = new_role.id;
 
     // create channel
     let base_category = db_guild.subject_group_category;
 
-    let new_channel = discord_guild.create_channel(discord_http, |c|
-            c.category(base_category).name(&name).kind(ChannelType::Text)).await?;
+    let new_channel = discord_guild
+        .create_channel(discord_http, CreateChannel::new(&name)
+            .category(base_category)
+            .kind(ChannelType::Text))
+            .await?;
 
     let text_channel = new_channel.id;
 
@@ -248,26 +336,23 @@ pub async fn create(ctx: Context<'_>, name: String) -> Result<(), Error> {
         role,
         guild_id,
         name,
-        text_channel
+        text_channel,
     };
 
     match mysql_lib::insert_subject(db, subject).await {
-        Some(true) => {
-            ctx.reply("Created subject").await?
-        },
+        Some(true) => ctx.reply("Created subject").await?,
         Some(false) => {
-            ctx.reply("Didn't create subject, was it already in the database?").await?
-        },
-        None => {
-            ctx.reply("Error while trying to execute query").await?
+            ctx.reply("Didn't create subject, was it already in the database?")
+                .await?
         }
+        None => ctx.reply("Error while trying to execute query").await?,
     };
-    
+
     Ok(())
 }
 
 /// Deletes the subject, it's role, and it's text channel
-#[poise::command(prefix_command)]
+#[poise::command(prefix_command, required_permissions = "ADMINISTRATOR")]
 pub async fn delete(ctx: Context<'_>, role: RoleId) -> Result<(), Error> {
     let guild_id = ctx.guild_id().unwrap();
     let db = &ctx.data().database_pool;
@@ -275,12 +360,13 @@ pub async fn delete(ctx: Context<'_>, role: RoleId) -> Result<(), Error> {
     let db_subject = match mysql_lib::get_subject_for_role(db, guild_id, role).await {
         Some(subject) => subject,
         None => {
-            ctx.reply("Could not find subject for this role, is this a subject?").await?;
+            ctx.reply("Could not find subject for this role, is this a subject?")
+                .await?;
             return Ok(());
         }
     };
 
-    let discord_guild = ctx.guild().unwrap();
+    let discord_guild = ctx.partial_guild().await.unwrap();
     let discord_http = ctx.http();
 
     discord_guild.delete_role(discord_http, role).await?;
@@ -293,20 +379,17 @@ pub async fn delete(ctx: Context<'_>, role: RoleId) -> Result<(), Error> {
         role,
         guild_id,
         name: "".to_string(),
-        text_channel: ChannelId(0),
+        text_channel: ChannelId::new(u64::MAX),
     };
 
     match mysql_lib::delete_subject(db, subject).await {
-        Some(true) => {
-            ctx.reply("Deleted subject").await?
-        },
+        Some(true) => ctx.reply(format!("Deleted subject {}", db_subject.name)).await?,
         Some(false) => {
-            ctx.reply("Didn't delete subject, was it already deleted?").await?
-        },
-        None => {
-            ctx.reply("Error while trying to execute query").await?
+            ctx.reply("Didn't delete subject, was it already deleted?")
+                .await?
         }
+        None => ctx.reply("Error while trying to execute query").await?,
     };
-    
+
     Ok(())
 }

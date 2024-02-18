@@ -13,6 +13,8 @@ use super::checks;
 
 mod setup;
 
+pub mod subject;
+
 /// ping command
 #[poise::command(slash_command, prefix_command)]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {

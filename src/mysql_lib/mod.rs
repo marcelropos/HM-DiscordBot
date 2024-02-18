@@ -3,7 +3,7 @@ use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::{PrimitiveDateTime, Time};
 use sqlx::{migrate, FromRow, MySql, Pool, Row};
-use tracing::error;
+use tracing::{error, trace};
 
 use crate::env;
 
@@ -13,6 +13,7 @@ pub mod validate;
 /// Tries to establish a Connection with the given env variables and return the MySQL connection
 /// Pool if successful.
 pub async fn get_connection(max_concurrent_connections: u32) -> Option<Pool<MySql>> {
+    trace!("REMOVE ME name: {} password {}", env::MYSQL_USER.get().unwrap().as_str(), env::MYSQL_PASSWORD.get().unwrap().as_str());
     match MySqlPoolOptions::new()
         .max_connections(max_concurrent_connections)
         .connect_with(
@@ -1244,8 +1245,8 @@ pub async fn get_subjects(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<D
 
 pub async fn get_subject_for_role(pool: &Pool<MySql>, guild_id: GuildId, role: RoleId) -> Option<DatabaseSubject> {
     match sqlx::query_as::<_, DatabaseSubject>("SELECT * FROM Subject WHERE guild_id=? AND role=?")
-        .bind(guild_id.0)
-        .bind(role.0)
+        .bind(guild_id.get())
+        .bind(role.get())
         .fetch_one(pool)
         .await
     {
@@ -1397,7 +1398,7 @@ pub async fn get_subjects_for_semester_study_group(
         ON Subject.role = Study_subject_link.subject_role
         WHERE study_group_role=?"
     )
-    .bind(semester_study_group_role.0)
+    .bind(semester_study_group_role.get())
     .fetch_all(pool)
     .await
     {

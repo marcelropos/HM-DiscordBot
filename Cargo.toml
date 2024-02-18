@@ -11,14 +11,15 @@ poise = "0.6.1" # https://github.com/serenity-rs/poise
 futures = "0.3"
 itertools = "0.12"
 tracing = "0.1.40" # https://github.com/tokio-rs/tracing
-tracing-subscriber = "0.3.18"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"]}
 tracing-appender = "0.2.3"
 rolling-file = "0.2.0"
 sqlx = { version = "0.7.3", features = [
     "runtime-tokio",
     "mysql",
     "migrate",
-    "time"
+    "time",
+    "tls-native-tls"
 ] } # https://github.com/launchbadge/sqlx
 redis = { version = "0.24.0", features = [
     "tokio-comp",
