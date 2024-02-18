@@ -482,17 +482,13 @@ pub async fn delete_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<bool>
 /// Gets the guild information from the Database
 #[allow(dead_code)]
 pub async fn get_guild(pool: &Pool<MySql>, guild_id: GuildId) -> Option<DatabaseGuild> {
-    match sqlx::query_as::<_, DatabaseGuild>("SELECT * FROM Guild WHERE guild_id=?")
+    sqlx::query_as::<_, DatabaseGuild>("SELECT * FROM Guild WHERE guild_id=?")
         .bind(guild_id.get())
-        .fetch_one(pool)
-        .await
-    {
-        Ok(val) => Some(val),
-        Err(err) => {
-            error!(error = err.to_string(), "Problem executing query");
-            None
-        }
-    }
+        .fetch_optional(pool)
+        .await.unwrap_or_else(|err| {
+        error!(error = err.to_string(), "Problem executing query");
+        None
+    })
 }
 
 /// Gets the guild information from the Database

@@ -230,13 +230,13 @@ async fn kick_setup(
                     KICK_BASE_STRING,
                     ctx.prefix(),
                     KICK_COMMAND,
-                    warning_deadline,
+                    warning_deadline + 1,
                     skip_message
                 ))
                 .await;
         }
         Some(number) => {
-            if !(warning_deadline..=28).contains(&number) {
+            if !(warning_deadline + 1..=28).contains(&number) {
                 let _ = ctx
                     .say(format!(
                         "{}\n{}\n`{}{}`\n\
@@ -245,7 +245,7 @@ async fn kick_setup(
                         KICK_BASE_STRING,
                         ctx.prefix(),
                         KICK_COMMAND,
-                        warning_deadline,
+                        warning_deadline + 1,
                         skip_message
                     ))
                     .await;
@@ -1472,9 +1472,14 @@ pub async fn setup(
     role_mention: Option<Role>,
     channel_mention: Option<GuildChannel>,
     flag: Option<bool>,
-    number: Option<u32>,
+    mut number: Option<u32>,
     rest: Option<String>,
 ) -> Result<(), Error> {
+    if number.is_none() {
+        if let Some(flag) = flag {
+            number = Some(flag.into());
+        }
+    }
     // Check permissions
     if !checks::is_owner(ctx).await && !checks::is_admin(ctx).await {
         ctx.say("Missing permissions, requires admin permissions")
@@ -1938,13 +1943,6 @@ pub async fn setup(
             }
         }
     }
-
-    let _ = ctx
-        .say(format!(
-            "**Role Mention:** {:?}\n**Channel Mention:** {:?}\n**Number** {:?}\n**Rest:** {:?}",
-            role_mention, channel_mention, number, rest
-        ))
-        .await;
 
     Ok(())
 }
