@@ -1,5 +1,6 @@
 use std::time::SystemTime;
 
+use poise::serenity_prelude::{GuildChannel, Role};
 use poise::CreateReply;
 use tracing::info;
 
@@ -9,6 +10,8 @@ use crate::{
 };
 
 use super::checks;
+
+mod setup;
 
 /// ping command
 #[poise::command(slash_command, prefix_command)]
@@ -97,4 +100,23 @@ pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
     ctx.framework().shard_manager.shutdown_all().await;
 
     Ok(())
+}
+
+/// admin-only. Enter setup mode, either new server setup or edit setup information
+#[poise::command(prefix_command, invoke_on_edit, reuse_response, guild_only)]
+pub async fn setup(
+    ctx: Context<'_>,
+    role_mention: Option<Role>,
+    channel_mention: Option<GuildChannel>,
+    flag: Option<bool>,
+    number: Option<u32>,
+    #[rest] rest: Option<String>,
+) -> Result<(), Error> {
+    // Check permissions
+    if !checks::is_owner(ctx).await && !checks::is_admin(ctx).await {
+        ctx.say("Missing permissions, requires admin permissions")
+            .await?;
+        return Ok(());
+    }
+    setup::setup(ctx, role_mention, channel_mention, flag, number, rest).await
 }

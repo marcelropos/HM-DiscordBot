@@ -41,6 +41,7 @@ mod tests {
             study_group_category: ChannelId::new(7),
             subject_group_category: ChannelId::new(8),
             studenty_role: RoleId::new(9),
+            tmp_studenty_role: Some(RoleId::new(18)),
             moderator_role: RoleId::new(10),
             newsletter_role: RoleId::new(11),
             nsfw_role: RoleId::new(12),
@@ -51,7 +52,6 @@ mod tests {
             alumni_role: RoleId::new(16),
             alumni_role_separator_role: RoleId::new(17),
             logger_pipe_channel: None,
-            tmp_studenty_role: None,
         };
         let result = insert_guild(pool, guild)
             .await
@@ -65,6 +65,55 @@ mod tests {
             .await
             .expect("Query was not successful");
         assert!(result, "Guild could not be deleted");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn update_guild_test() {
+        let pool = get_connection_pool().await;
+        let mut guild = create_guild_in_database(&pool).await;
+        let result = is_guild_in_database(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert!(result, "Guild was not found in Database");
+        let result = get_guild(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(guild, result, "Guild had not the information expected");
+        guild = DatabaseGuild {
+            guild_id: guild.guild_id,
+            ghost_warning_deadline: guild.ghost_warning_deadline + 1,
+            ghost_kick_deadline: guild.ghost_kick_deadline + 1,
+            ghost_time_to_check: guild.ghost_time_to_check.add(Duration::from_secs(5)),
+            ghost_enabled: !guild.ghost_enabled,
+            debug_channel: ChannelId::new(guild.debug_channel.get() + 1),
+            bot_channel: ChannelId::new(guild.bot_channel.get() + 1),
+            help_channel: ChannelId::new(guild.help_channel.get() + 1),
+            logger_pipe_channel: None,
+            study_group_category: ChannelId::new(guild.study_group_category.get() + 1),
+            subject_group_category: ChannelId::new(guild.subject_group_category.get() + 1),
+            studenty_role: RoleId::new(guild.studenty_role.get() + 1),
+            tmp_studenty_role: Some(RoleId::new(42)),
+            moderator_role: RoleId::new(guild.moderator_role.get() + 1),
+            newsletter_role: RoleId::new(guild.newsletter_role.get() + 1),
+            nsfw_role: RoleId::new(guild.nsfw_role.get() + 1),
+            study_role_separator_role: RoleId::new(guild.study_role_separator_role.get() + 1),
+            subject_role_separator_role: RoleId::new(guild.subject_role_separator_role.get() + 1),
+            friend_role: RoleId::new(guild.friend_role.get() + 1),
+            tmpc_keep_time: guild.tmpc_keep_time + 5,
+            alumni_role: RoleId::new(guild.alumni_role.get() + 1),
+            alumni_role_separator_role: RoleId::new(guild.alumni_role_separator_role.get() + 1),
+        };
+        let result =
+            update_guild(&pool, guild)
+                .await
+                .expect("Query was not successful");
+        assert!(result, "Guild couldn't be updated");
+        let result = get_guild(&pool, guild.guild_id)
+            .await
+            .expect("Query was not successful");
+        assert_eq!(guild, result, "Guild had not the information expected");
+        delete_guild_test(&pool, guild.guild_id).await;
     }
 
     #[tokio::test]
