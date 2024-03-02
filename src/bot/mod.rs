@@ -13,7 +13,6 @@ use crate::mysql_lib::NewGuild;
 
 mod checks;
 mod commands;
-mod setup_command;
 
 /// User data, which is stored and accessible in all command invocations
 #[derive(Debug)]

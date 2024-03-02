@@ -9,7 +9,9 @@ use crate::{
     logging, mysql_lib,
 };
 
-use super::{checks, setup_command};
+use super::checks;
+
+mod setup;
 
 /// ping command
 #[poise::command(slash_command, prefix_command)]
@@ -116,5 +118,5 @@ pub async fn setup(
             .await?;
         return Ok(());
     }
-    setup_command::setup(ctx, role_mention, channel_mention, flag, number, rest).await
+    setup::setup(ctx, role_mention, channel_mention, flag, number, rest).await
 }
