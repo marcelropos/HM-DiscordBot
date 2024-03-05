@@ -2,6 +2,26 @@
 
 This is the code for the **Sebastian** Bot used on HM Discord Servers
 
+# Local setup
+
+Start a mariadb and redis instance, for example through the provided docker-compose:
+
+```bash
+docker compose up -d redis mariadb
+```
+
+Put your discord bot token in a `.env.local` at the root of the repo:
+
+```bash
+BOT_TOKEN=...
+```
+
+Start the bot:
+
+```bash
+cargo run
+```
+
 # Redesign documentation
 
 In an effort to improve the Bot, the bot will be rewritten from ground up, switching from Python to Rust.

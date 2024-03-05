@@ -1,3 +1,4 @@
 /target
 .idea/
 appdata/
+.env.local
