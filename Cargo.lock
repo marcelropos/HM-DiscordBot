@@ -771,6 +771,7 @@ dependencies = [
 name = "hm-discord-bot"
 version = "0.1.0"
 dependencies = [
+ "dotenvy",
  "hex",
  "once_cell",
  "poise",
