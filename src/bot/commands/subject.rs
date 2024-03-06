@@ -1,6 +1,3 @@
-//! TODO: Permissions
-//! TODO: Logging
-
 use futures::future::join_all;
 use itertools::Itertools;
 use poise::serenity_prelude::{ChannelId, ChannelType, CreateChannel, EditRole, GuildId, RoleId};

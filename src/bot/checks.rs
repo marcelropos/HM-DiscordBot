@@ -181,5 +181,4 @@ pub async fn is_user_verified(ctx: Context<'_>) -> bool {
         );
         false
     }
-
 }
