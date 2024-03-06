@@ -1,6 +1,6 @@
 use poise::serenity_prelude::{ChannelId, GuildId, Permissions, RoleId};
 use sqlx::{MySql, Pool};
-use tracing::error;
+use tracing::{error, warn};
 
 use crate::bot::Context;
 use crate::{env, mysql_lib};
@@ -148,4 +148,37 @@ pub async fn sent_in_setup_guild(ctx: Context<'_>, pool: &Pool<MySql>) -> bool {
             .unwrap_or(false);
     }
     false
+}
+
+/// Checks if the user has the studenty role.
+/// Will return false when the message wasn't sent in a guild
+/// or when the guild isn't setup.
+pub async fn is_user_verified(ctx: Context<'_>) -> bool {
+    let guild_id = if let Some(guild_id) = ctx.guild_id() {
+        guild_id
+    } else {
+        warn!(
+            user_name = ctx.author().name,
+            user_id = ctx.author().id.get(),
+            "Tried to check if user is verified outside a guild"
+        );
+        return false;
+    };
+
+
+    let db = &ctx.data().database_pool;
+
+    let db_guild = mysql_lib::get_guild(db, guild_id).await;
+
+    if let Some(db_guild) = db_guild {
+        has_role(ctx, db_guild.studenty_role).await
+    } else {
+        warn!(
+            user_name = ctx.author().name,
+            user_id = ctx.author().id.get(),
+            guild_id = guild_id.get(),
+            "Tried to check if user is verified inside an unconfigured guild"
+        );
+        false
+    }
 }

@@ -430,6 +430,7 @@ mod tests {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
         let subject = DatabaseSubject {
+            id: None,
             role: RoleId::new(5),
             guild_id: guild.guild_id,
             name: "SE1".to_string(),
@@ -440,6 +441,7 @@ mod tests {
             .expect("Query was not successful");
         assert!(result, "Subject couldn't be inserted");
         let subject2 = DatabaseSubject {
+            id: None,
             role: RoleId::new(6),
             guild_id: guild.guild_id,
             name: "SE2".to_string(),
@@ -477,6 +479,7 @@ mod tests {
         let pool = get_connection_pool().await;
         let guild = create_guild_in_database(&pool).await;
         let subject = DatabaseSubject {
+            id: None,
             role: RoleId::new(5),
             guild_id: guild.guild_id,
             name: "SE1".to_string(),

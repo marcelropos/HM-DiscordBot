@@ -3,7 +3,7 @@ use sqlx::migrate::MigrateError;
 use sqlx::mysql::{MySqlConnectOptions, MySqlPoolOptions, MySqlRow};
 use sqlx::types::time::{PrimitiveDateTime, Time};
 use sqlx::{migrate, FromRow, MySql, Pool, Row};
-use tracing::error;
+use tracing::{error, trace};
 
 use crate::env;
 
@@ -13,6 +13,7 @@ pub mod validate;
 /// Tries to establish a Connection with the given env variables and return the MySQL connection
 /// Pool if successful.
 pub async fn get_connection(max_concurrent_connections: u32) -> Option<Pool<MySql>> {
+    trace!("REMOVE ME name: {} password {}", env::MYSQL_USER.get().unwrap().as_str(), env::MYSQL_PASSWORD.get().unwrap().as_str());
     match MySqlPoolOptions::new()
         .max_connections(max_concurrent_connections)
         .connect_with(
@@ -240,6 +241,7 @@ pub struct DatabaseSemesterStudyGroup {
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct DatabaseSubject {
+    pub id: Option<i32>,
     pub role: RoleId,
     pub guild_id: GuildId,
     pub name: String,
@@ -347,6 +349,7 @@ impl FromRow<'_, MySqlRow> for DatabaseSemesterStudyGroup {
 impl FromRow<'_, MySqlRow> for DatabaseSubject {
     fn from_row(row: &'_ MySqlRow) -> sqlx::Result<Self> {
         Ok(Self {
+            id: row.try_get("id")?,
             role: RoleId::new(row.try_get("role")?),
             guild_id: GuildId::new(row.try_get("guild_id")?),
             name: row.try_get("name")?,
@@ -1184,6 +1187,7 @@ pub async fn get_semester_study_groups_in_study_group(
     }
 }
 
+
 /// Inserts a new Subject into the Database. Return if the Subject was inserted into the
 /// Database, may be false if the Subject was already in the Database.
 #[allow(dead_code)]
@@ -1229,6 +1233,21 @@ pub async fn get_subjects(pool: &Pool<MySql>, guild_id: GuildId) -> Option<Vec<D
     match sqlx::query_as::<_, DatabaseSubject>("SELECT * FROM Subject WHERE guild_id=?")
         .bind(guild_id.get())
         .fetch_all(pool)
+        .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+pub async fn get_subject_for_role(pool: &Pool<MySql>, guild_id: GuildId, role: RoleId) -> Option<DatabaseSubject> {
+    match sqlx::query_as::<_, DatabaseSubject>("SELECT * FROM Subject WHERE guild_id=? AND role=?")
+        .bind(guild_id.get())
+        .bind(role.get())
+        .fetch_one(pool)
         .await
     {
         Ok(val) => Some(val),
@@ -1342,6 +1361,44 @@ pub async fn get_study_subject_links_for_study_group(
         "SELECT * FROM Study_subject_link WHERE study_group_role=?",
     )
     .bind(study_group_role.get())
+    .fetch_all(pool)
+    .await
+    {
+        Ok(val) => Some(val),
+        Err(err) => {
+            error!(error = err.to_string(), "Problem executing query");
+            None
+        }
+    }
+}
+
+
+/// Gets all subjects for this semester study group role
+/// 
+/// SQL Query explanation:
+/// 
+/// Get all study subject links for a certain semester study group role:
+/// "SELECT * FROM Study_subject_link WHERE study_group_role=?"
+///
+/// Get subject from role:
+/// "SELECT * FROM Subject WHERE role=?"
+///
+/// Combined:
+/// "SELECT * FROM Subject
+/// LEFT JOIN Study_subject_link
+/// ON Subject.role = Study_subject_link.subject_role
+/// WHERE study_group_role=?"
+pub async fn get_subjects_for_semester_study_group(
+    pool: &Pool<MySql>,
+    semester_study_group_role: RoleId,
+) -> Option<Vec<DatabaseSubject>> {
+    match sqlx::query_as::<_, DatabaseSubject>(
+        "SELECT * FROM Subject
+        LEFT JOIN Study_subject_link
+        ON Subject.role = Study_subject_link.subject_role
+        WHERE study_group_role=?"
+    )
+    .bind(semester_study_group_role.get())
     .fetch_all(pool)
     .await
     {

@@ -40,6 +40,7 @@ pub async fn entrypoint(database_pool: Pool<MySql>, redis_client: Client) {
                 commands::logger_pipe(),
                 commands::shutdown(),
                 commands::setup(),
+                commands::subject::subject(),
             ],
             allowed_mentions: Some({
                 serenity::CreateAllowedMentions::default()

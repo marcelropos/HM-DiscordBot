@@ -2,3 +2,4 @@
 .idea/
 appdata/
 .env.local
+.editorconfig

@@ -14,10 +14,10 @@ pub static BOT_TOKEN: OnceLock<String> = OnceLock::new();
 pub static LOG_LEVEL: OnceLock<tracing::Level> = OnceLock::new();
 
 pub fn init() {
-    dotenvy::dotenv().unwrap();
-
     #[cfg(debug_assertions)]
     let _ = dotenvy::from_filename(".env.local");
+
+    dotenvy::dotenv().unwrap();    
 
     LOG_LEVEL.get_or_init(|| {
         env::var("RUST_LOG")
